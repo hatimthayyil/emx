@@ -44,7 +44,7 @@ let
     empv
 
     # emx-programming
-    lsp-bridge
+    #lsp-bridge
 
     # emx-research
     pdf-tools
