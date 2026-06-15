@@ -69,15 +69,15 @@
   (setq dirvish-mode-line-format
         '(:left (sort symlink) :right (omit yank index)))
   (setq dirvish-attributes
-        '(vc-state subtree-state nerd-icons collapse git-msg file-time file-size)
+        '(vc-state subtree-state collapse git-msg file-time file-size)
         dirvish-side-attributes
-        '(vc-state nerd-icons collapse file-size))
+        '(vc-state collapse file-size))
   :bind
-  (("C-c C-c" . dirvish)
+  (("C-c d" . dirvish)
    :map dirvish-mode-map
    ("?" . dirvish-dispatch)
    ("f" . dirvish-history-go-forward)
-   ("b" . dirvish-history-go-bacward)
+   ("b" . dirvish-history-go-backward)
    ("y" . dirvish-yank-menu)
    ("N" . dirvish-narrow)
    ("^" . dirvish-history-last)
