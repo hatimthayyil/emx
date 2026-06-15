@@ -58,7 +58,8 @@
   (setq lsp-bridge-enable-hover-diagnostic t)
   (setq lsp-bridge-enable-inlay-hint t)
   (setq lsp-bridge-enable-org-babel t)
-  (setq acm-enable-tabnine t)
+  (setq acm-enable-tabnine nil)         ; TabNine binary is not provided; enabling
+                                        ; it makes acm try to run a missing program
   (setq acm-candidate-match-function 'regexp-quote) ; default, try
                                                     ; 'orderless-flex later
 
