@@ -44,7 +44,10 @@ let
     empv
 
     # emx-programming
-    #lsp-bridge
+    # lsp-bridge: self-contained in nixpkgs (Python sidecar deps are baked in
+    # via a hardcoded interpreter); language servers come from home.packages
+    # (e.g. basedpyright below).
+    lsp-bridge
 
     # emx-research
     pdf-tools
