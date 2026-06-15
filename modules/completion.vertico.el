@@ -290,23 +290,4 @@
 ;; Base snippet colletion
 (use-package tempel-collection)
 
-;; lacarte - Menu navigation
-;;
-;; Allows for the menu items that are normally stored in the menu bar to be
-;; accessed through the minibuffer and executed, with completion.
-;;
-;; * Alternative workflows:
-;;
-;; 1. 'menu-bar-open' (F10) may be used to open the menub-bar and use the arrow
-;;    keys to navigate the menu items.
-;;
-;; 2. 'tmm.el' is a built-in altrnative, that allows for step-by-step going
-;;    through the menu items.
-;;
-;; see 'https://www.emacswiki.org/emacs/LaCarte'
-(use-package lacarte
-  :ensure nil
-  :defer t
-  :bind ("C-M-x" . lacarte-execute-menu-command))
-
 (provide 'emx-completion)
