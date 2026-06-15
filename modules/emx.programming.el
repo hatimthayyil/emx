@@ -51,6 +51,8 @@
 ;;
 ;; Has a number of python deps
 (use-package lsp-bridge
+  :ensure nil                           ; provided by Nix (native/Python deps)
+  :if (locate-library "lsp-bridge")     ; don't break prog-mode when absent
   :hook (prog-mode . lsp-bridge-mode)
   :config
   (global-lsp-bridge-mode)
