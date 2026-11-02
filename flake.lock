@@ -1,12 +1,78 @@
 {
   "nodes": {
+    "elisp-helpers": {
+      "inputs": {
+        "fromElisp": "fromElisp"
+      },
+      "locked": {
+        "lastModified": 1782098990,
+        "narHash": "sha256-cdzwG8NRXtwlG25Tjfvscx9nKllZbNbEHvK/q7Sdmak=",
+        "owner": "emacs-twist",
+        "repo": "elisp-helpers",
+        "rev": "6ed8c5617af3d62a456ad1407c2e22feefd48b1b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "emacs-twist",
+        "repo": "elisp-helpers",
+        "type": "github"
+      }
+    },
+    "emacs-overlay": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793373858,
+        "narHash": "sha256-G6v/PXcvnGlh3QKBguf/HYVPv+rFYyom+4ppmRSzFvQ=",
+        "owner": "nix-community",
+        "repo": "emacs-overlay",
+        "rev": "cb4a7f35306c7b041ff2c996a5e0c3e0d93da7b3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "emacs-overlay",
+        "type": "github"
+      }
+    },
+    "fromElisp": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1723987997,
+        "narHash": "sha256-OhaVgTG6zjLByzl+uPTvtCld3p2uqgbCXmOl/s3LVRo=",
+        "owner": "talyz",
+        "repo": "fromElisp",
+        "rev": "f071a0e262c02c0895b575c4e322b7fd90713543",
+        "type": "github"
+      },
+      "original": {
+        "owner": "talyz",
+        "repo": "fromElisp",
+        "type": "github"
+      }
+    },
+    "melpa": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793636292,
+        "narHash": "sha256-d6OEoof7J80ijWIBjo36CKNiIByVrVe4CtilZ5Oaw4A=",
+        "owner": "melpa",
+        "repo": "melpa",
+        "rev": "5e80ac37278e286300186bc66b977e7e0b5576b8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "melpa",
+        "repo": "melpa",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1764517877,
-        "narHash": "sha256-pp3uT4hHijIC8JUK5MEqeAWmParJrgBVzHLNfJDZxg4=",
+        "lastModified": 1793341285,
+        "narHash": "sha256-Y1CiZ4SoBUjLQyQM/pY+rS2dXD3CHLPstF0lmOc73D4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "2d293cbfa5a793b4c50d17c05ef9e385b90edf6c",
+        "rev": "1c89083e451e891152365b799595cf7790a43325",
         "type": "github"
       },
       "original": {
@@ -18,7 +84,28 @@
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "emacs-overlay": "emacs-overlay",
+        "melpa": "melpa",
+        "nixpkgs": "nixpkgs",
+        "twist": "twist"
+      }
+    },
+    "twist": {
+      "inputs": {
+        "elisp-helpers": "elisp-helpers"
+      },
+      "locked": {
+        "lastModified": 1793051394,
+        "narHash": "sha256-q6k3i8+D+wxp/9F0ymkhgQj48+SJvRlTC6q24+5UNmM=",
+        "owner": "emacs-twist",
+        "repo": "twist.nix",
+        "rev": "def085446c993fdfd7a99a8f8c67694be5d8c08b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "emacs-twist",
+        "repo": "twist.nix",
+        "type": "github"
       }
     }
   },

@@ -1,0 +1,292 @@
+{
+  "auctex": {
+    "archive": {
+      "narHash": "sha256-DiBwA/1DpxaOYOqgH0J9wGHcs3C+DxfytAJjpKDQ/zc=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/auctex-14.2.0.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "14.2.0"
+  },
+  "beancount": {
+    "archive": {
+      "narHash": "sha256-XLX2WMWPXljCE6S5fAJaRF5ztmdGhCVd9bZelT+CfaA=",
+      "type": "tarball",
+      "url": "https://elpa.nongnu.org/nongnu/beancount-0.9.0.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.nongnu.org/nongnu/"
+    },
+    "packageRequires": {},
+    "version": "0.9.0"
+  },
+  "compat": {
+    "archive": {
+      "narHash": "sha256-mFj6fC4aRpUwG+QyhyB4Ih6Fco44YvWy4UY0mfvkTOo=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/compat-31.1.0.0.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "31.1.0.0"
+  },
+  "csv-mode": {
+    "archive": {
+      "narHash": "sha256-ErzKM6usjp2FrrbYwadJCfiivenMCDD9uojwJbzV3co=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/csv-mode-1.27.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "cl-lib": "0.5",
+      "emacs": "27.1"
+    },
+    "version": "1.27"
+  },
+  "denote": {
+    "archive": {
+      "narHash": "sha256-w+zWGI3/IvdVqh8slsFo++apdzwkKm6ayC3Rhj3Rbp0=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/denote-4.2.3.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "4.2.3"
+  },
+  "eat": {
+    "archive": {
+      "narHash": "sha256-HuYc7nxcbkIILgVtmLllu/1HfWbOBj3FglK3Q6KEBmQ=",
+      "type": "tarball",
+      "url": "https://elpa.nongnu.org/nongnu/eat-0.9.4.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.nongnu.org/nongnu/"
+    },
+    "packageRequires": {
+      "compat": "29.1",
+      "emacs": "26.1"
+    },
+    "version": "0.9.4"
+  },
+  "ef-themes": {
+    "archive": {
+      "narHash": "sha256-J3yImXskX+aO/qh6ktwEk0joFdn8bHXduvlZuGDcaYo=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/ef-themes-2.2.1.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "28.1",
+      "modus-themes": "5.0.0"
+    },
+    "version": "2.2.1"
+  },
+  "fontaine": {
+    "archive": {
+      "narHash": "sha256-5vcbMqcZad8tij6nUZfIz77N/q1PpMTIj9q2DwtDSAI=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/fontaine-3.1.0.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "29.1"
+    },
+    "version": "3.1.0"
+  },
+  "keymap-popup": {
+    "archive": {
+      "narHash": "sha256-cIMN9JPd41soNduU2ObIMZhLq0J9X3nPXdMtykXNj9A=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/keymap-popup-0.4.5.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "29.1"
+    },
+    "version": "0.4.5"
+  },
+  "lin": {
+    "archive": {
+      "narHash": "sha256-EmkZD3uqmXknSqAE2i3k4ByBeZFHGHILD9wdfkWvaZ0=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/lin-2.0.0.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "27.1"
+    },
+    "version": "2.0.0"
+  },
+  "llm": {
+    "archive": {
+      "narHash": "sha256-rGM3KAK1/t6Vg/ZLIC7bfuYVD1V/hkpB2vnK+Nb1vUo=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/llm-0.34.0.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "compat": "29.1",
+      "emacs": "28.1",
+      "plz": "0.8",
+      "plz-event-source": "0.1.1",
+      "plz-media-type": "0.2.1"
+    },
+    "version": "0.34.0"
+  },
+  "plz": {
+    "archive": {
+      "narHash": "sha256-kbT1QQqYeEYZvpkOZVCXA7sEs1Bb+m49FcfepPJUrmA=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/plz-0.9.1.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "27.1"
+    },
+    "version": "0.9.1"
+  },
+  "plz-event-source": {
+    "archive": {
+      "narHash": "sha256-f8w8/MT2c/v4DEK8zPH7Ci4/Sfpp+OQ+mi8SM1cpc+8=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/plz-event-source-0.1.3.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "26.3",
+      "plz-media-type": "0.2.4"
+    },
+    "version": "0.1.3"
+  },
+  "plz-media-type": {
+    "archive": {
+      "narHash": "sha256-6sdz8KEhmoXT6eqUzbMuwwg/S0exGikpoAOZtJNClxo=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/plz-media-type-0.2.4.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "26.3",
+      "plz": "0.9.1"
+    },
+    "version": "0.2.4"
+  },
+  "queue": {
+    "archive": {
+      "narHash": "sha256-l1a18KhqXRtir2NSDVEY4yWGoUl97Vo9CvD1T9Jpw/Q=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/queue-0.2.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {},
+    "version": "0.2"
+  },
+  "show-font": {
+    "archive": {
+      "narHash": "sha256-Qm39R9yM40fptop5JrgWFNKgsFwPu/IJfzWYAqRWQ6Y=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/show-font-1.0.0.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "29.1"
+    },
+    "version": "1.0.0"
+  },
+  "spacious-padding": {
+    "archive": {
+      "narHash": "sha256-kaiU59rz+1wMx3zGQC42ZPEKCAYGDPti5xxf18x3EL0=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/spacious-padding-0.9.1.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "0.9.1"
+  },
+  "spinner": {
+    "archive": {
+      "narHash": "sha256-GTmbEa/9nVwCCwHCafJglIeNXVt0MeONviguMo3jy/Y=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/spinner-1.7.4.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "24.3"
+    },
+    "version": "1.7.4"
+  },
+  "vundo": {
+    "archive": {
+      "narHash": "sha256-OYVpIL8KO7gDqvBUaxGGA/4n9cWANNAG/TwrOrNQcFA=",
+      "type": "tarball",
+      "url": "https://elpa.gnu.org/packages/vundo-2.4.0.tar"
+    },
+    "inventory": {
+      "type": "archive",
+      "url": "https://elpa.gnu.org/packages/"
+    },
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "2.4.0"
+  }
+}

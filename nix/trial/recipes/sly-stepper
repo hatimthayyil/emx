@@ -1,0 +1,1 @@
+(sly-stepper :fetcher github :repo "joaotavora/sly-stepper" :files (:defaults "*.lisp" "*.asd"))

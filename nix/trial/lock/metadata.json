@@ -1,0 +1,2391 @@
+{
+  "acm": {
+    "author": null,
+    "meta": {},
+    "narHash": "sha256-0U+JzFYeQGcaM30RtlJKbM4TkeQ3K1wxlHkNzBWGxEU=",
+    "packageRequires": {
+      "yasnippet": "0"
+    },
+    "version": "0"
+  },
+  "aidermacs": {
+    "author": "Mingde (Matthew) Zeng <matthewzmd@posteo.net>",
+    "meta": {
+      "description": "AI pair programming with Aider",
+      "homepage": "https://github.com/MatthewZMD/aidermacs",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "Apache License 2.0",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "asl20",
+        "spdxId": "Apache-2.0",
+        "url": "https://spdx.org/licenses/Apache-2.0.html"
+      }
+    },
+    "narHash": "sha256-jl5ZJXVu3GcBJOCa3v6otDxvTJTyyRhydYcbm2pU9Es=",
+    "packageRequires": {
+      "compat": "30.0.2.0",
+      "emacs": "26.1",
+      "markdown-mode": "2.7",
+      "transient": "0.3.0"
+    },
+    "version": "1.13"
+  },
+  "aio": {
+    "author": "Christopher Wellons <wellons@nullprogram.com>",
+    "meta": {
+      "description": "async/await for Emacs Lisp",
+      "homepage": "https://github.com/skeeto/emacs-aio"
+    },
+    "narHash": "sha256-aUQXGySxQqF85Ft//jb7+u0vfqBNSMnobuZb8qvyZqY=",
+    "packageRequires": {
+      "emacs": "26.1"
+    },
+    "version": "1.2"
+  },
+  "async": {
+    "author": "John Wiegley <jwiegley@gmail.com>",
+    "meta": {
+      "description": "Asynchronous processing in Emacs"
+    },
+    "narHash": "sha256-5nTkAnB6SOsFg9aXOxI5oON9RBByVO3Lq/vrmqHVgw4=",
+    "packageRequires": {
+      "cl-lib": "0.5",
+      "emacs": "24"
+    },
+    "version": "1.6"
+  },
+  "auctex": {
+    "author": null,
+    "meta": {
+      "description": "Integrated environment for *TeX*",
+      "homepage": "https://www.gnu.org/software/auctex/",
+      "maintainers": [
+        "auctex-devel@gnu.org"
+      ]
+    },
+    "narHash": "sha256-DiBwA/1DpxaOYOqgH0J9wGHcs3C+DxfytAJjpKDQ/zc=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "14.2.0"
+  },
+  "auto-compile": {
+    "author": "Jonas Bernoulli <emacs.auto-compile@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Automatically compile Emacs Lisp libraries",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-kzAerAUXrjKG7wFIkbPgQLa2VbxThq7nlJwOLtE7HlI=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "2.1.5"
+  },
+  "beancount": {
+    "author": "Martin Blais <blais@furius.ca>",
+    "meta": {
+      "description": "A major mode to edit Beancount input files."
+    },
+    "narHash": "sha256-XLX2WMWPXljCE6S5fAJaRF5ztmdGhCVd9bZelT+CfaA=",
+    "packageRequires": {},
+    "version": "0.9.0"
+  },
+  "beginend": {
+    "author": null,
+    "meta": {
+      "description": "Redefine M-< and M-> for some modes",
+      "homepage": "https://github.com/DamienCassou/beginend"
+    },
+    "narHash": "sha256-MXJ/FpW2Ea9c3o1ZNE4+2lt88RTg3PsJZo4VB4+hgcU=",
+    "packageRequires": {
+      "emacs": "25.3"
+    },
+    "version": "2.4.0"
+  },
+  "benchmark-init": {
+    "author": "Steve Purcell",
+    "meta": {
+      "description": "Benchmarks for require and load calls",
+      "homepage": "https://github.com/dholm/benchmark-init-el",
+      "maintainers": [
+        "David Holm <dholmster@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-9v0KVKObIpDoxsv2OFcQM6hWiGn8clibarzT61bTDMM=",
+    "packageRequires": {
+      "emacs": "24.4"
+    },
+    "version": "1.2"
+  },
+  "biblio": {
+    "author": "Clément Pit-Claudel <clement.pitclaudel@live.com>",
+    "meta": {
+      "description": "Browse and import bibliographic references and BibTeX records from CrossRef, arXiv, DBLP, HAL, IEEE Xplore, Dissemin, and doi.org",
+      "homepage": "https://github.com/cpitclaudel/biblio.el"
+    },
+    "narHash": "sha256-3SK7Uls8p3oysopN60rai9auUZnceIVLvm8Zhj8mW/Y=",
+    "packageRequires": {
+      "biblio-core": "0.3",
+      "emacs": "24.3"
+    },
+    "version": "0.3"
+  },
+  "biblio-core": {
+    "author": "Clément Pit-Claudel <clement.pitclaudel@live.com>",
+    "meta": {
+      "description": "A framework for looking up and displaying bibliographic entries",
+      "homepage": "https://github.com/cpitclaudel/biblio.el"
+    },
+    "narHash": "sha256-3SK7Uls8p3oysopN60rai9auUZnceIVLvm8Zhj8mW/Y=",
+    "packageRequires": {
+      "dash": "2.12.1",
+      "emacs": "24.3",
+      "let-alist": "1.0.4",
+      "seq": "1.11"
+    },
+    "version": "0.3"
+  },
+  "bui": {
+    "author": "Alex Kost <alezost@gmail.com>",
+    "meta": {
+      "description": "Buffer interface library",
+      "homepage": "https://github.com/alezost/bui.el"
+    },
+    "narHash": "sha256-w44G0gWFa99urbjMeB8AkwzEfhTOuA+V8BV+LSDahZg=",
+    "packageRequires": {
+      "emacs": "29.1"
+    },
+    "version": "1.3"
+  },
+  "cdlatex": {
+    "author": "Carsten Dominik <carsten.dominik@gmail.com>",
+    "meta": {
+      "description": "Fast input methods for LaTeX environments and math"
+    },
+    "narHash": "sha256-PkF3pq8l22jvFBzzGKWgObH2vhepo71sgv/Bt4yzoaA=",
+    "packageRequires": {},
+    "version": "4.18e"
+  },
+  "cider": {
+    "author": [
+      "Tim King <kingtim@gmail.com>",
+      "Phil Hagelberg <technomancy@gmail.com>",
+      "Bozhidar Batsov <bozhidar@batsov.dev>",
+      "Artur Malabarba <bruce.connor.am@gmail.com>",
+      "Hugo Duncan <hugo@hugoduncan.org>",
+      "Steve Purcell <steve@sanityinc.com>"
+    ],
+    "meta": {
+      "description": "Clojure Interactive Development Environment that Rocks",
+      "maintainers": [
+        "Bozhidar Batsov <bozhidar@batsov.dev>",
+        ";"
+      ]
+    },
+    "narHash": "sha256-9+5tDk2II6/t8/y2kTjzvhhzFCzceHaIK0lmBy0Ko2s=",
+    "packageRequires": {
+      "clojure-mode": "5.19",
+      "compat": "30",
+      "emacs": "28",
+      "parseedn": "1.2.1",
+      "queue": "0.2",
+      "seq": "2.22",
+      "sesman": "0.3.2",
+      "spinner": "1.7",
+      "transient": "0.4.1"
+    },
+    "version": "2.1.0-snapshot"
+  },
+  "citar": {
+    "author": "Bruce D'Arcus <https://github.com/bdarcus>",
+    "meta": {
+      "description": "Citation-related commands for org, latex, markdown",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      },
+      "maintainers": [
+        "Bruce D'Arcus <https://github.com/bdarcus>"
+      ]
+    },
+    "narHash": "sha256-gELK0tVhtYNO5RCA5LKjw/u3Fj2WBnUzVbfzrwUknsU=",
+    "packageRequires": {
+      "citeproc": "0.9",
+      "emacs": "29.1",
+      "org": "9.5",
+      "parsebib": "4.2"
+    },
+    "version": "1.4.0"
+  },
+  "citar-denote": {
+    "author": "Peter Prevos <peter@prevos.net>",
+    "meta": {
+      "description": "Minor mode integrating Citar and Denote",
+      "maintainers": [
+        "Peter Prevos <peter@prevos.net>"
+      ]
+    },
+    "narHash": "sha256-+LeB9UWk9wz3PTpTDmltJHckcEblLi+pTLx2moKIWkM=",
+    "packageRequires": {
+      "citar": "1.4",
+      "dash": "2.19.1",
+      "denote": "4.1",
+      "emacs": "29.1"
+    },
+    "version": "2.5.3"
+  },
+  "citeproc": {
+    "author": "András Simonyi <andras.simonyi@gmail.com>",
+    "meta": {
+      "description": "A CSL 1.0.2 Citation Processor",
+      "homepage": "https://github.com/andras-simonyi/citeproc-el",
+      "maintainers": [
+        "András Simonyi <andras.simonyi@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-KbxUMduCSP+cdpvMYw20n9mVn+D/nCNUx5/DEXO3Wh8=",
+    "packageRequires": {
+      "compat": "28.1",
+      "dash": "2.13.0",
+      "emacs": "26",
+      "f": "0.18.0",
+      "org": "9",
+      "parsebib": "2.4",
+      "queue": "0.2",
+      "s": "1.12.0",
+      "string-inflection": "1.0"
+    },
+    "version": "0.9.4"
+  },
+  "clojure-mode": {
+    "author": null,
+    "meta": {
+      "description": "Major mode for Clojure code",
+      "homepage": "https://github.com/clojure-emacs/clojure-mode",
+      "maintainers": [
+        "Bozhidar Batsov <bozhidar@batsov.dev>"
+      ]
+    },
+    "narHash": "sha256-H8K0M7k7zzX8SUaUEKaGMQvQw6dGCz16EY/vPayxqr4=",
+    "packageRequires": {
+      "emacs": "27.1"
+    },
+    "version": "5.23.0"
+  },
+  "closql": {
+    "author": "Jonas Bernoulli <emacs.closql@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Store EIEIO objects using EmacSQL",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-5L6KUuLmQDlCOAF/ZM8ZE0DCEOoSAdIUoQHA+2Q6oIY=",
+    "packageRequires": {
+      "compat": "31.1",
+      "cond-let": "1.1",
+      "emacs": "28.1",
+      "emacsql": "4.4",
+      "llama": "1.0"
+    },
+    "version": "2.5.0"
+  },
+  "compat": {
+    "author": "Philip Kaludercic <philipk@posteo.net>, Daniel Mendler <mail@daniel-mendler.de>",
+    "meta": {
+      "description": "Emacs Lisp Compatibility Library",
+      "homepage": "https://github.com/emacs-compat/compat",
+      "maintainers": [
+        "Philip Kaludercic <philipk@posteo.net>, Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-mFj6fC4aRpUwG+QyhyB4Ih6Fco44YvWy4UY0mfvkTOo=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "31.1.0.0"
+  },
+  "cond-let": {
+    "author": "Jonas Bernoulli <emacs.cond-let@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Additional and improved binding conditionals",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-inLkQtu8Fue6zBLbwwi89En2me07Znm2x4rYuCIaqLA=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "1.1.5"
+  },
+  "consult": {
+    "author": "Daniel Mendler and Consult contributors",
+    "meta": {
+      "description": "Search and navigate via completing-read",
+      "homepage": "https://github.com/minad/consult",
+      "maintainers": [
+        "Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-jECeWbXVXx+MxWM5sfwypoReouepXdmSr4q+cdu3K/c=",
+    "packageRequires": {
+      "compat": "31",
+      "emacs": "29.1"
+    },
+    "version": "3.10"
+  },
+  "consult-notes": {
+    "author": "Colin McLear <mclear@fastmail.com>",
+    "meta": {
+      "description": "Manage notes with consult",
+      "maintainers": [
+        "Colin McLear"
+      ]
+    },
+    "narHash": "sha256-BaV9wfLDwygGCHQsysySXRQYMq7l56wRpIw5kOdeJkc=",
+    "packageRequires": {
+      "consult": "1.0",
+      "emacs": "28.1"
+    },
+    "version": "0.9"
+  },
+  "consult-notmuch": {
+    "author": "Jose A Ortega Ruiz <jao@gnu.org>",
+    "meta": {
+      "description": "Notmuch search using consult",
+      "maintainers": [
+        "Jose A Ortega Ruiz"
+      ]
+    },
+    "narHash": "sha256-jBQ5HS01hXnptcFl8qn1ByxOkOoU3vaUfjEUIf8ao/s=",
+    "packageRequires": {
+      "consult": "2.7",
+      "emacs": "28.1",
+      "notmuch": "0.31"
+    },
+    "version": "1.1.0"
+  },
+  "csv-mode": {
+    "author": "\"Francis J. Wright\" <F.J.Wright@qmul.ac.uk>",
+    "meta": {
+      "description": "Major mode for editing comma/char separated values",
+      "maintainers": [
+        "emacs-devel@gnu.org"
+      ]
+    },
+    "narHash": "sha256-ErzKM6usjp2FrrbYwadJCfiivenMCDD9uojwJbzV3co=",
+    "packageRequires": {
+      "cl-lib": "0.5",
+      "emacs": "27.1"
+    },
+    "version": "1.27"
+  },
+  "dash": {
+    "author": "Magnar Sveen <magnars@gmail.com>",
+    "meta": {
+      "description": "A modern list library for Emacs",
+      "homepage": "https://github.com/magnars/dash.el",
+      "maintainers": [
+        "Basil L. Contovounesios <basil@contovou.net>"
+      ]
+    },
+    "narHash": "sha256-t1vs+EbWwHx+cCYTQnoLoE3R+qou+cP2tn4lTazCZyU=",
+    "packageRequires": {
+      "emacs": "24"
+    },
+    "version": "2.20.0"
+  },
+  "denote": {
+    "author": "Protesilaos <info@protesilaos.com>",
+    "meta": {
+      "description": "Simple notes with an efficient file-naming scheme",
+      "homepage": "https://github.com/protesilaos/denote",
+      "maintainers": [
+        "Protesilaos <info@protesilaos.com>"
+      ]
+    },
+    "narHash": "sha256-w+zWGI3/IvdVqh8slsFo++apdzwkKm6ayC3Rhj3Rbp0=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "4.2.3"
+  },
+  "diff-hl": {
+    "author": "Dmitry Gutov <dmitry@gutov.dev>",
+    "meta": {
+      "description": "Highlight uncommitted changes using VC",
+      "homepage": "https://github.com/dgutov/diff-hl"
+    },
+    "narHash": "sha256-Z0HBuwnB3f9AstZqSGxZiJWT85+Bp/XELqiZlRszhPk=",
+    "packageRequires": {
+      "cl-lib": "0.2",
+      "emacs": "27.1"
+    },
+    "version": "1.11.2"
+  },
+  "dirvish": {
+    "author": "Alex Lu <https://github.com/alexluigit>",
+    "meta": {
+      "description": "A modern file manager based on dired mode",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-1oVMZKNhPNCWfL3ksSPCF6N7KAIThxww38eGPru2W+E=",
+    "packageRequires": {
+      "compat": "30",
+      "emacs": "28.1"
+    },
+    "version": "2.3.0"
+  },
+  "docker": {
+    "author": "Philippe Vaucher <philippe.vaucher@gmail.com>",
+    "meta": {
+      "description": "Interface to Docker",
+      "homepage": "https://github.com/Silex/docker.el",
+      "maintainers": [
+        "Philippe Vaucher <philippe.vaucher@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-XENk0HIcPlljVEB18igdxNeTETwwAHXAkmCXN/Olxg4=",
+    "packageRequires": {
+      "aio": "1.2",
+      "dash": "2.19.1",
+      "emacs": "28.1",
+      "s": "1.13.0",
+      "tablist": "1.1",
+      "transient": "0.4.3"
+    },
+    "version": "2.5.0"
+  },
+  "docker-compose-mode": {
+    "author": "Ricardo Martins",
+    "meta": {
+      "description": "Major mode for editing docker-compose files",
+      "homepage": "https://github.com/meqif/docker-compose-mode"
+    },
+    "narHash": "sha256-TfQ0r6bSjQglSyvz9OQVKmJSBRy37pDLqk/LwqPUdYg=",
+    "packageRequires": {
+      "dash": "2.12.0",
+      "emacs": "24.3",
+      "f": "0",
+      "yaml-mode": "0.0.12"
+    },
+    "version": "1.1.0"
+  },
+  "dockerfile-mode": {
+    "author": null,
+    "meta": {
+      "description": "Major mode for editing Docker's Dockerfiles",
+      "homepage": "https://github.com/spotify/dockerfile-mode"
+    },
+    "narHash": "sha256-4HpbVvq+DfINc9xZ3dY14kCA+cS8+RDoPtdHfKeysXc=",
+    "packageRequires": {
+      "emacs": "24"
+    },
+    "version": "1.9"
+  },
+  "doom-themes": {
+    "author": "Henrik Lissner <contact@henrik.io>",
+    "meta": {
+      "description": "an opinionated pack of modern color-themes",
+      "maintainers": [
+        "Henrik Lissner <contact@henrik.io>"
+      ]
+    },
+    "narHash": "sha256-5Iczoqq8P05isVhJ+qYFr2/zmpDhCp7gEKbehd1iENI=",
+    "packageRequires": {
+      "cl-lib": "0.5",
+      "emacs": "25.1"
+    },
+    "version": "2.3.0"
+  },
+  "eat": {
+    "author": "Akib Azmain Turja <akib@disroot.org>",
+    "meta": {
+      "description": "Emulate A Terminal, in a region, in a buffer and in Eshell"
+    },
+    "narHash": "sha256-HuYc7nxcbkIILgVtmLllu/1HfWbOBj3FglK3Q6KEBmQ=",
+    "packageRequires": {
+      "compat": "29.1",
+      "emacs": "26.1"
+    },
+    "version": "0.9.4"
+  },
+  "ebib": {
+    "author": "Joost Kremers <joostkremers@fastmail.fm>",
+    "meta": {
+      "description": "a BibTeX database manager",
+      "homepage": "http://joostkremers.github.io/ebib/",
+      "maintainers": [
+        "Joost Kremers <joostkremers@fastmail.fm>"
+      ]
+    },
+    "narHash": "sha256-SS3mdcadnmMikTHZ6MF8rCfztx511vBIHhsAAjP7Tbc=",
+    "packageRequires": {
+      "compat": "29.1.4.3",
+      "emacs": "27.1",
+      "parsebib": "6.0"
+    },
+    "version": "2.53.1"
+  },
+  "edit-indirect": {
+    "author": "Fanael Linithien <fanael4@gmail.com>",
+    "meta": {
+      "description": "Edit regions in separate buffers",
+      "homepage": "https://github.com/Fanael/edit-indirect"
+    },
+    "narHash": "sha256-FC8QDeRitLstVACn7jpdQblxaDiYRbSAtRAAhhyEVuI=",
+    "packageRequires": {
+      "emacs": "24.3"
+    },
+    "version": "0.1.13"
+  },
+  "ef-themes": {
+    "author": "Protesilaos <info@protesilaos.com>",
+    "meta": {
+      "description": "Colorful and legible themes",
+      "homepage": "https://github.com/protesilaos/ef-themes",
+      "maintainers": [
+        "Protesilaos <info@protesilaos.com>"
+      ]
+    },
+    "narHash": "sha256-J3yImXskX+aO/qh6ktwEk0joFdn8bHXduvlZuGDcaYo=",
+    "packageRequires": {
+      "emacs": "28.1",
+      "modus-themes": "5.0.0"
+    },
+    "version": "2.2.1"
+  },
+  "el-job": {
+    "author": "Martin Edström <meedstrom@runbox.eu>",
+    "meta": {
+      "description": "Contrived way to call a function using all CPU cores",
+      "homepage": "https://github.com/meedstrom/el-job"
+    },
+    "narHash": "sha256-AQ/e2vNCt9s8mzq+X/ujwBg2aqfeWtVDlkSU56dYltM=",
+    "packageRequires": {
+      "emacs": "29.1"
+    },
+    "version": "2.7.4"
+  },
+  "elfeed": {
+    "author": "Christopher Wellons <wellons@nullprogram.com>",
+    "meta": {
+      "description": "An Atom/RSS feed reader",
+      "homepage": "https://github.com/emacs-elfeed/elfeed",
+      "maintainers": [
+        "Karthik Chikmagalur <karthik.chikmagalur@gmail.com>, Ihor Radchenko <yantar92@posteo.net>, Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-eBOZqiIIYSCwFFPL1pEdTnQBx6l0/j7uGIOvbF8RB1Q=",
+    "packageRequires": {
+      "compat": "31",
+      "emacs": "29.1"
+    },
+    "version": "4.2.1"
+  },
+  "ellama": {
+    "author": "Sergey Kostyaev <sskostyaev@gmail.com>",
+    "meta": {
+      "description": "Tool for interacting with LLMs",
+      "homepage": "http://github.com/s-kostyaev/ellama",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-wcjmJTW/YNOMHhWq1YeRBu0aTFp9snlKFNbILDeZdTg=",
+    "packageRequires": {
+      "compat": "29.1",
+      "emacs": "28.1",
+      "llm": "0.31.1",
+      "plz": "0.8",
+      "transient": "0.7",
+      "yaml": "1.2.3"
+    },
+    "version": "1.33.1"
+  },
+  "emacsql": {
+    "author": "Christopher Wellons <wellons@nullprogram.com>",
+    "meta": {
+      "description": "High-level SQL database front-end",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "The Unlicense",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "unlicense",
+        "spdxId": "Unlicense",
+        "url": "https://spdx.org/licenses/Unlicense.html"
+      },
+      "maintainers": [
+        "Jonas Bernoulli <emacs.emacsql@jonas.bernoulli.dev>"
+      ]
+    },
+    "narHash": "sha256-biWPb2aA1PFpSwyZfVBAV3t7Qgul3SuDDoeHFTBRZRo=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "4.4.2"
+  },
+  "embark": {
+    "author": "Omar Antolín Camarena <omar@matem.unam.mx>",
+    "meta": {
+      "description": "Conveniently act on minibuffer completions",
+      "homepage": "https://github.com/oantolin/embark",
+      "maintainers": [
+        "Omar Antolín Camarena <omar@matem.unam.mx>"
+      ]
+    },
+    "narHash": "sha256-g90Ve6+Lq9SF0FMy7viXCV/Dx/f8PBM5n7/g97yw0H0=",
+    "packageRequires": {
+      "compat": "31",
+      "emacs": "29.1"
+    },
+    "version": "1.2"
+  },
+  "embark-consult": {
+    "author": "Omar Antolín Camarena <omar@matem.unam.mx>",
+    "meta": {
+      "description": "Consult integration for Embark",
+      "homepage": "https://github.com/oantolin/embark",
+      "maintainers": [
+        "Omar Antolín Camarena <omar@matem.unam.mx>"
+      ]
+    },
+    "narHash": "sha256-g90Ve6+Lq9SF0FMy7viXCV/Dx/f8PBM5n7/g97yw0H0=",
+    "packageRequires": {
+      "compat": "31",
+      "consult": "3.2",
+      "emacs": "29.1",
+      "embark": "1.1"
+    },
+    "version": "1.2"
+  },
+  "empv": {
+    "author": "Isa Mert Gurbuz <isamertgurbuz@gmail.com>",
+    "meta": {
+      "description": "A multimedia player/manager, YouTube interface"
+    },
+    "narHash": "sha256-1m+ORgeDY39iWhLbn/ilXMSx0MmkNAxG+uDdX81Y5+s=",
+    "packageRequires": {
+      "compat": "29.1.4.4",
+      "emacs": "28.1",
+      "s": "1.13.0"
+    },
+    "version": "6.3.0"
+  },
+  "envrc": {
+    "author": "Steve Purcell <steve@sanityinc.com>",
+    "meta": {
+      "description": "Buffer-local `direnv' support with choice of sync/async"
+    },
+    "narHash": "sha256-nd1cEkPDYFwSmiLIEFCv+3ataSiX9yaFpUXrRwYnsnE=",
+    "packageRequires": {
+      "emacs": "28.1",
+      "inheritenv": "0.1"
+    },
+    "version": "0.16"
+  },
+  "erk": {
+    "author": "Positron Solutions <contact@positron.solutions>",
+    "meta": {
+      "description": "Elisp (GitHub) Repository Kit"
+    },
+    "narHash": "sha256-7mcEB0fOCTyYC7fBP3R71MsQVf23jnSyIqoe+IdhnAU=",
+    "packageRequires": {
+      "auto-compile": "1.2.0",
+      "dash": "2.18.0",
+      "emacs": "28.1",
+      "license-templates": "0.1.3"
+    },
+    "version": "0.5.0"
+  },
+  "f": {
+    "author": "Johan Andersson <johan.rejeep@gmail.com>",
+    "meta": {
+      "description": "Modern API for working with files and directories",
+      "maintainers": [
+        "Lucien Cartier-Tilet <lucien@phundrak.com>"
+      ]
+    },
+    "narHash": "sha256-rDUl2oUlcnSjNbFZn9A/80RVk6neaTScw2kvh6FjmTE=",
+    "packageRequires": {
+      "dash": "2.2.0",
+      "emacs": "24.1",
+      "s": "1.7.0"
+    },
+    "version": "0.21.0"
+  },
+  "flycheck": {
+    "author": "Sebastian Wiesner <swiesner@lunaryorn.com>",
+    "meta": {
+      "description": "On-the-fly syntax checking",
+      "homepage": "https://github.com/flycheck/flycheck",
+      "maintainers": [
+        "Clément Pit-Claudel <clement.pitclaudel@live.com>",
+        "fmdkdd <fmdkdd@gmail.com>",
+        "Bozhidar Batsov <bozhidar@batsov.dev>"
+      ]
+    },
+    "narHash": "sha256-rxUinDLdbpuRBqKd0sw3R7jSorN3Jo44eCLJ7mefTOQ=",
+    "packageRequires": {
+      "emacs": "28.1",
+      "seq": "2.24"
+    },
+    "version": "40.0-snapshot"
+  },
+  "fontaine": {
+    "author": "Protesilaos <info@protesilaos.com>",
+    "meta": {
+      "description": "Set font configurations using presets",
+      "homepage": "https://github.com/protesilaos/fontaine",
+      "maintainers": [
+        "Protesilaos <info@protesilaos.com>"
+      ]
+    },
+    "narHash": "sha256-5vcbMqcZad8tij6nUZfIz77N/q1PpMTIj9q2DwtDSAI=",
+    "packageRequires": {
+      "emacs": "29.1"
+    },
+    "version": "3.1.0"
+  },
+  "forge": {
+    "author": "Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Access Git forges from Magit",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      },
+      "maintainers": [
+        "Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>"
+      ]
+    },
+    "narHash": "sha256-P1YVI6XGvJV403oFMvE//oOocNcWBe8XxC6xrs9VSAo=",
+    "packageRequires": {
+      "closql": "2.4",
+      "compat": "31.0",
+      "cond-let": "1.1",
+      "emacs": "29.1",
+      "emacsql": "4.4",
+      "ghub": "5.3",
+      "llama": "1.0",
+      "magit": "4.7",
+      "markdown-mode": "2.8",
+      "transient": "0.13",
+      "yaml": "1.2"
+    },
+    "version": "0.6.9"
+  },
+  "geiser": {
+    "author": "Jose Antonio Ortega Ruiz (jao@gnu.org)",
+    "meta": {
+      "description": "GNU Emacs and Scheme talk to each other",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "BSD 3-clause \"New\" or \"Revised\" License",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "bsd3",
+        "spdxId": "BSD-3-Clause",
+        "url": "https://spdx.org/licenses/BSD-3-Clause.html"
+      },
+      "maintainers": [
+        "Jose Antonio Ortega Ruiz (jao@gnu.org)"
+      ]
+    },
+    "narHash": "sha256-IlduFsoYpqLQkcdEf6yGbnua0T5e9ki0XCmgqDw67/s=",
+    "packageRequires": {
+      "emacs": "27.1",
+      "project": "0.8.1"
+    },
+    "version": "0.33.2"
+  },
+  "geiser-guile": {
+    "author": "Jose Antonio Ortega Ruiz (jao@gnu.org)",
+    "meta": {
+      "description": "Guile and Geiser talk to each other",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "BSD 3-clause \"New\" or \"Revised\" License",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "bsd3",
+        "spdxId": "BSD-3-Clause",
+        "url": "https://spdx.org/licenses/BSD-3-Clause.html"
+      },
+      "maintainers": [
+        "Jose Antonio Ortega Ruiz (jao@gnu.org)"
+      ]
+    },
+    "narHash": "sha256-ipwp4Kpnx1DoWf8/Yr96BW6RUVJEGwJul5w6yy5MJGw=",
+    "packageRequires": {
+      "emacs": "27.1",
+      "geiser": "0.33",
+      "transient": "0.3"
+    },
+    "version": "0.28.5"
+  },
+  "geiser-overlay": {
+    "author": "port19 <port19@port19.xyz>",
+    "meta": {
+      "description": "Overlay Scheme evaluation results",
+      "homepage": "https://github.com/port19x/geiser-overlay",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU Lesser General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "lgpl3Plus",
+        "spdxId": "LGPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/LGPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-AMPydWERk8e/d39y9XqQu92jLrEnum3jz4mFxYT9zyE=",
+    "packageRequires": {
+      "emacs": "24.4",
+      "geiser": "0.31"
+    },
+    "version": "1.1.0"
+  },
+  "ghub": {
+    "author": "Jonas Bernoulli <emacs.ghub@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Client libraries for Git forge APIs",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-iaFhILA2LVGkWHOeigR0bIaY8sOgle1QO8SUx5W4+H0=",
+    "packageRequires": {
+      "compat": "31.1",
+      "cond-let": "1.1",
+      "emacs": "29.1",
+      "llama": "1.0",
+      "treepy": "0.1.3"
+    },
+    "version": "5.4.0"
+  },
+  "git-gutter": {
+    "author": "Syohei YOSHIDA <syohex@gmail.com>",
+    "meta": {
+      "description": "Port of Sublime Text plugin GitGutter",
+      "homepage": "https://github.com/emacsorphanage/git-gutter",
+      "maintainers": [
+        "Neil Okamoto <neil.okamoto+melpa@gmail.com>",
+        "Shen, Jen-Chieh <jcs090218@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-yRiJyQqTZkvCkjRpFftvn7EapCEjMhe6+d5500qAupY=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "0.94"
+  },
+  "git-modes": {
+    "author": [
+      "Sebastian Wiesner <lunaryorn@gmail.com>",
+      "Rüdiger Sonderfeld <ruediger@c-plusplus.net>",
+      "Jonas Bernoulli <emacs.git-modes@jonas.bernoulli.dev>"
+    ],
+    "meta": {
+      "description": "Major modes for editing Git configuration files",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      },
+      "maintainers": [
+        "Jonas Bernoulli <emacs.git-modes@jonas.bernoulli.dev>"
+      ]
+    },
+    "narHash": "sha256-hIOksn6XFDpWSPGBJWErhn1NQFTJby2HCOSmGDDqn0E=",
+    "packageRequires": {
+      "compat": "31.1",
+      "emacs": "28.1"
+    },
+    "version": "1.5.1"
+  },
+  "gptel": {
+    "author": "Karthik Chikmagalur <karthik.chikmagalur@gmail.com>",
+    "meta": {
+      "description": "Interact with ChatGPT or other LLMs",
+      "homepage": "https://github.com/karthink/gptel",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-7IN0IJFAa+rgfe+iW17S1NLCdECSHnPMohPqNQIbf5M=",
+    "packageRequires": {
+      "compat": "30.1.0.0",
+      "emacs": "27.1",
+      "transient": "0.7.8"
+    },
+    "version": "0.9.9.6"
+  },
+  "gptel-aibo": {
+    "author": "Sun Yi Ming <dolmens@gmail.com>",
+    "meta": {
+      "description": "An AI Writing Assistant",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      },
+      "maintainers": [
+        "Sun Yi Ming <dolmens@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-1AdKT6l32cfiYsdTJlzuxgd+lPgT8Pe/Re48au+15kA=",
+    "packageRequires": {
+      "emacs": "27.1",
+      "gptel": "0.9.7"
+    },
+    "version": "0.0.1"
+  },
+  "gptel-quick": {
+    "author": "Karthik Chikmagalur <karthikchikmagalur@gmail.com>",
+    "meta": {
+      "description": "Fast look-up using gptel",
+      "homepage": "https://github.com/karthink/gptel-quick",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-W2cEtjhoXxAhMxycLAg0qe2Ehpgn1L/m1VcpZu/Trsw=",
+    "packageRequires": {
+      "compat": "29.1.4.1",
+      "emacs": "28.1",
+      "gptel": "0.8.0"
+    },
+    "version": "0.0.5"
+  },
+  "guix": {
+    "author": "Alex Kost <alezost@gmail.com>",
+    "meta": {
+      "description": "Interface for GNU Guix",
+      "homepage": "https://codeberg.org/guix/emacs-guix"
+    },
+    "narHash": "sha256-97KWxLqZMCu/jZeZLodQ4+1uS/ZFm+jmsusW5Jamrp0=",
+    "packageRequires": {
+      "bui": "1.2.0",
+      "consult": "3.5",
+      "dash": "2.11.0",
+      "edit-indirect": "0.1.4",
+      "emacs": "24.3",
+      "geiser": "0.8",
+      "geiser-guile": "0",
+      "magit-popup": "2.13.3",
+      "transient": "0.3.0"
+    },
+    "version": "0.8.0"
+  },
+  "hl-todo": {
+    "author": "Jonas Bernoulli <emacs.hl-todo@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Highlight TODO and similar keywords",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-p+hHgcAYMC7J/M9/d8eJCUJrGoalUea4dxShQ8sn3xc=",
+    "packageRequires": {
+      "compat": "31.1",
+      "cond-let": "1.1",
+      "emacs": "28.1"
+    },
+    "version": "3.9.5"
+  },
+  "howm": {
+    "author": null,
+    "meta": {},
+    "narHash": "sha256-XtJvckG17D4ob0+ENtEkKmRrGa6vLwTfXxZHjScD0MU=",
+    "packageRequires": {},
+    "version": "0"
+  },
+  "htmlize": {
+    "author": "Hrvoje Niksic <hniksic@gmail.com>",
+    "meta": {
+      "description": "Convert buffer text and decorations to HTML",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-TUJy4ZkbUjUMC/FTHY+92S4OCygh6/B38+r1u7AzFfY=",
+    "packageRequires": {
+      "emacs": "26.1"
+    },
+    "version": "1.59"
+  },
+  "inheritenv": {
+    "author": "Steve Purcell <steve@sanityinc.com>",
+    "meta": {
+      "description": "Make temp buffers inherit buffer-local environment variables",
+      "homepage": "https://github.com/purcell/inheritenv"
+    },
+    "narHash": "sha256-qzM7uepVOTQyxJmngiePHVXFdeOw59wGvwiKl3xEDT4=",
+    "packageRequires": {
+      "emacs": "24.4"
+    },
+    "version": "0.2"
+  },
+  "jinx": {
+    "author": "Daniel Mendler <mail@daniel-mendler.de>",
+    "meta": {
+      "description": "Enchanted Spell Checker",
+      "homepage": "https://github.com/minad/jinx",
+      "maintainers": [
+        "Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-yBSF/yLxmiaVKqXP+xrvniJopPM4R8edbg1GD6p6B+s=",
+    "packageRequires": {
+      "compat": "31",
+      "emacs": "29.1"
+    },
+    "version": "2.11"
+  },
+  "keymap-popup": {
+    "author": "Thanos Apollo <public@thanosapollo.org>",
+    "meta": {
+      "description": "Described keymaps with popup help",
+      "homepage": "https://git.thanosapollo.org/emacs-keymap-popup/"
+    },
+    "narHash": "sha256-cIMN9JPd41soNduU2ObIMZhLq0J9X3nPXdMtykXNj9A=",
+    "packageRequires": {
+      "emacs": "29.1"
+    },
+    "version": "0.4.5"
+  },
+  "license-templates": {
+    "author": "Shen, Jen-Chieh <jcs090218@gmail.com>",
+    "meta": {
+      "description": "Create LICENSE using GitHub API",
+      "homepage": "https://github.com/jcs-elpa/license-templates"
+    },
+    "narHash": "sha256-KrQeDRm6ajnTU//06ozYl7VvlEUcEHgJDoPH5+y6LVA=",
+    "packageRequires": {
+      "emacs": "24.3",
+      "request": "0.3.0"
+    },
+    "version": "0.1.3"
+  },
+  "lin": {
+    "author": "Protesilaos Stavrou <info@protesilaos.com>",
+    "meta": {
+      "description": "Make `hl-line-mode' more suitable for selection interfaces",
+      "homepage": "https://github.com/protesilaos/lin",
+      "maintainers": [
+        "Protesilaos Stavrou <info@protesilaos.com>"
+      ]
+    },
+    "narHash": "sha256-EmkZD3uqmXknSqAE2i3k4ByBeZFHGHILD9wdfkWvaZ0=",
+    "packageRequires": {
+      "emacs": "27.1"
+    },
+    "version": "2.0.0"
+  },
+  "llama": {
+    "author": "Jonas Bernoulli <emacs.llama@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Compact syntax for short lambda",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-QZRnjpPqyN80JOjwu3g3isj1jgQy8GJmrvNCQMwiPIY=",
+    "packageRequires": {
+      "compat": "31.1",
+      "emacs": "28.1"
+    },
+    "version": "1.0.6"
+  },
+  "llm": {
+    "author": "Andrew Hyatt <ahyatt@gmail.com>",
+    "meta": {
+      "description": "Interface to pluggable llm backends",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-rGM3KAK1/t6Vg/ZLIC7bfuYVD1V/hkpB2vnK+Nb1vUo=",
+    "packageRequires": {
+      "compat": "29.1",
+      "emacs": "28.1",
+      "plz": "0.8",
+      "plz-event-source": "0.1.1",
+      "plz-media-type": "0.2.1"
+    },
+    "version": "0.34.0"
+  },
+  "lsp-bridge": {
+    "author": "Andy Stewart <lazycat.manatee@gmail.com>",
+    "meta": {
+      "description": "LSP bridge",
+      "homepage": "https://github.com/manateelazycat/lsp-bridge",
+      "maintainers": [
+        "Andy Stewart <lazycat.manatee@gmail.com>",
+        "Copyright (C) 2018, Andy Stewart, all rights reserved."
+      ]
+    },
+    "narHash": "sha256-0U+JzFYeQGcaM30RtlJKbM4TkeQ3K1wxlHkNzBWGxEU=",
+    "packageRequires": {
+      "acm": "0",
+      "emacs": "28",
+      "markdown-mode": "2.6"
+    },
+    "version": "0.5"
+  },
+  "macrostep": {
+    "author": "Jon Oddie <j.j.oddie@gmail.com>",
+    "meta": {
+      "description": "Interactive macro expander",
+      "homepage": "https://github.com/emacsorphanage/macrostep",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      },
+      "maintainers": [
+        "Jeremy Bryant <jb@jeremybryant.net>"
+      ]
+    },
+    "narHash": "sha256-DYuq1KPDXIKdljuTJpakv7pRxxyFJx/kuRgWyc7ThiI=",
+    "packageRequires": {
+      "cl-lib": "0.5",
+      "compat": "29"
+    },
+    "version": "0.9.5"
+  },
+  "macrostep-geiser": {
+    "author": "Nikita Bloshchanevich",
+    "meta": {
+      "description": "Macrostep for `geiser'",
+      "homepage": "https://github.com/nbfalcon/macrostep-geiser"
+    },
+    "narHash": "sha256-h7nwFbg8PY331g/Izohi9cMa6NjZ9OnGJ8Kitxnf0zc=",
+    "packageRequires": {
+      "emacs": "24.4",
+      "geiser": "0.12",
+      "macrostep": "0.9"
+    },
+    "version": "0.2.0"
+  },
+  "magit": {
+    "author": [
+      "Marius Vollmer <marius.vollmer@gmail.com>",
+      "Jonas Bernoulli <emacs.magit@jonas.bernoulli.dev>"
+    ],
+    "meta": {
+      "description": "A Git porcelain inside Emacs",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      },
+      "maintainers": [
+        "Jonas Bernoulli <emacs.magit@jonas.bernoulli.dev>",
+        "Kyle Meyer <kyle@kyleam.com>"
+      ]
+    },
+    "narHash": "sha256-KAIDBR7hX2OwfLuIXg5F0GARcn2U7Najwx5QVh2Dv+o=",
+    "packageRequires": {
+      "compat": "31.0",
+      "cond-let": "1.1",
+      "emacs": "28.1",
+      "llama": "1.0",
+      "magit-section": "4.7",
+      "seq": "2.24",
+      "transient": "0.13",
+      "with-editor": "3.5"
+    },
+    "version": "4.7.1"
+  },
+  "magit-imerge": {
+    "author": "Kyle Meyer <kyle@kyleam.com>",
+    "meta": {
+      "description": "Magit extension for git-imerge",
+      "homepage": "https://github.com/magit/magit-imerge"
+    },
+    "narHash": "sha256-3G3GCwJV+CFzyGDEchSecIyAAmQkvGtm8UHLarphejs=",
+    "packageRequires": {
+      "emacs": "26.1",
+      "magit": "4.0.0"
+    },
+    "version": "1.3.0"
+  },
+  "magit-popup": {
+    "author": "Jonas Bernoulli <jonas@bernoul.li>",
+    "meta": {
+      "description": "Define prefix-infix-suffix command combos",
+      "maintainers": [
+        "Jonas Bernoulli <jonas@bernoul.li>"
+      ]
+    },
+    "narHash": "sha256-AZs4wlZWTYjF9SHON6bTZ/XXqgFLkXPe8prdbfoz134=",
+    "packageRequires": {
+      "dash": "2.13.0",
+      "emacs": "24.4"
+    },
+    "version": "0"
+  },
+  "magit-section": {
+    "author": "Jonas Bernoulli <emacs.magit@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Sections for read-only buffers",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      },
+      "maintainers": [
+        "Jonas Bernoulli <emacs.magit@jonas.bernoulli.dev>"
+      ]
+    },
+    "narHash": "sha256-KAIDBR7hX2OwfLuIXg5F0GARcn2U7Najwx5QVh2Dv+o=",
+    "packageRequires": {
+      "compat": "31.0",
+      "cond-let": "1.1",
+      "emacs": "28.1",
+      "llama": "1.0",
+      "seq": "2.24"
+    },
+    "version": "4.7.1"
+  },
+  "magit-stgit": {
+    "author": "Lluís Vilanova <vilanova@ac.upc.edu>",
+    "meta": {
+      "description": "StGit extension for Magit",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      },
+      "maintainers": [
+        "Peter Grayson <pete@jpgrayson.net>"
+      ]
+    },
+    "narHash": "sha256-TnkquKVPucs+nAfBB3EnhGRb+EJQc6PbLoYbVOI7FIM=",
+    "packageRequires": {
+      "emacs": "27.1",
+      "llama": "0.6.0",
+      "magit": "4.3.0",
+      "transient": "0.8.4"
+    },
+    "version": "0"
+  },
+  "magit-todos": {
+    "author": "Adam Porter <adam@alphapapa.net>",
+    "meta": {
+      "description": "Show source file TODOs in Magit",
+      "homepage": "http://github.com/alphapapa/magit-todos"
+    },
+    "narHash": "sha256-/YhvKLarMkUGwvb6kcZZxCpg9oyaPqF3hTX+PN7Dbpo=",
+    "packageRequires": {
+      "async": "1.9.2",
+      "dash": "2.13.0",
+      "emacs": "26.1",
+      "f": "0.17.2",
+      "hl-todo": "1.9.0",
+      "magit": "2.13.0",
+      "pcre2el": "1.8",
+      "s": "1.12.0",
+      "transient": "0.2.0"
+    },
+    "version": "1.9-pre"
+  },
+  "marginalia": {
+    "author": "Omar Antolín Camarena <omar@matem.unam.mx>, Daniel Mendler <mail@daniel-mendler.de>",
+    "meta": {
+      "description": "Enrich existing commands with completion annotations",
+      "homepage": "https://github.com/minad/marginalia",
+      "maintainers": [
+        "Omar Antolín Camarena <omar@matem.unam.mx>, Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-SLAAHWsXjUOJsdYVHJi9ZB7yrNkvAjIfibBWQu+WbjA=",
+    "packageRequires": {
+      "compat": "31",
+      "emacs": "29.1"
+    },
+    "version": "2.13"
+  },
+  "markdown-mode": {
+    "author": "Jason R. Blevins <jblevins@xbeta.org>",
+    "meta": {
+      "description": "Major mode for Markdown-formatted text",
+      "homepage": "https://jblevins.org/projects/markdown-mode/",
+      "maintainers": [
+        "Jason R. Blevins <jblevins@xbeta.org>"
+      ]
+    },
+    "narHash": "sha256-HQgBlx8seRHv4nxc4TdxtsQxrY3IMRVVmEjqKJrHIo0=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "2.9-alpha"
+  },
+  "modus-themes": {
+    "author": "Protesilaos <info@protesilaos.com>",
+    "meta": {
+      "description": "Elegant, highly legible and customizable themes",
+      "homepage": "https://github.com/protesilaos/modus-themes",
+      "maintainers": [
+        "Protesilaos <info@protesilaos.com>"
+      ]
+    },
+    "narHash": "sha256-j+zZB65H7pwLl+M+rRnwklOcaPVz0OgwlFuXJ/kWpAg=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "5.3.0"
+  },
+  "mpv": {
+    "author": "Johann Klähn <johann@jklaehn.de>",
+    "meta": {
+      "description": "control mpv for easy note-taking",
+      "homepage": "https://github.com/kljohann/mpv.el"
+    },
+    "narHash": "sha256-Xl34+ZbNTPwaHnuH51iBXAmXSoFS0vIE+nLV9GFNf+Q=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "0.2.0"
+  },
+  "mwim": {
+    "author": "Alex Kost <alezost@gmail.com>",
+    "meta": {
+      "description": "Switch between the beginning/end of line or code",
+      "homepage": "https://github.com/alezost/mwim.el"
+    },
+    "narHash": "sha256-L6k8709xR2PXrhn0FwkzibtlRkm5/a2KVpf6H3KHoSc=",
+    "packageRequires": {
+      "seq": "2.24"
+    },
+    "version": "0.4"
+  },
+  "nix-mode": {
+    "author": null,
+    "meta": {
+      "description": "Major mode for editing .nix files",
+      "maintainers": [
+        "Matthew Bauer <mjbauer95@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-nn2p22JCvKv1nC1Qqgl2Jxu+808zmho38vJFoW17zaQ=",
+    "packageRequires": {
+      "emacs": "27.1",
+      "magit-section": null,
+      "reformatter": null,
+      "transient": "0.3"
+    },
+    "version": "1.5.0"
+  },
+  "no-littering": {
+    "author": "Jonas Bernoulli <emacs.no-littering@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Help keeping ~/.config/emacs clean",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-yrTrwVK5c9xg/NqWOcY2B2gNItSea+6+Bu0CdeYX4sQ=",
+    "packageRequires": {
+      "compat": "31.1",
+      "emacs": "28.1"
+    },
+    "version": "1.9.3"
+  },
+  "notmuch": {
+    "author": null,
+    "meta": {
+      "description": "run notmuch within emacs"
+    },
+    "narHash": "sha256-UcbEoO426Arm1O11X2P6dxqGoJK4fLVGrCjz2qpSDQE=",
+    "packageRequires": {},
+    "version": "0"
+  },
+  "orderless": {
+    "author": "Omar Antolín Camarena <omar@matem.unam.mx>",
+    "meta": {
+      "description": "Completion style for matching regexps in any order",
+      "homepage": "https://github.com/oantolin/orderless",
+      "maintainers": [
+        "Omar Antolín Camarena <omar@matem.unam.mx>, Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-sc0IH8rwLuriqkK7SKi3js+qSnrzeNNWUcoffL71ObE=",
+    "packageRequires": {
+      "compat": "31",
+      "emacs": "27.1"
+    },
+    "version": "1.8"
+  },
+  "org-mem": {
+    "author": "Martin Edström <meedstrom@runbox.eu>",
+    "meta": {
+      "description": "Fast info from a large number of Org file contents",
+      "homepage": "https://github.com/meedstrom/org-mem"
+    },
+    "narHash": "sha256-TGuuoaCABgLTHDPfx0/MmHN7JoS4c2M+eAiJ8X3SgiU=",
+    "packageRequires": {
+      "el-job": "2.7.3",
+      "emacs": "29.1",
+      "llama": "1.0",
+      "truename-cache": "0.3.2"
+    },
+    "version": "0.34.1"
+  },
+  "org-msg": {
+    "author": "Jérémy Compostella <jeremy.compostella@gmail.com>",
+    "meta": {
+      "description": "Org mode to send and reply to email in HTML."
+    },
+    "narHash": "sha256-SopC5G1KZdEaRqCMpmaFZ1rNqc4FHAbzsExlQg+7hMA=",
+    "packageRequires": {
+      "emacs": "24.4",
+      "htmlize": "1.54"
+    },
+    "version": "4.0"
+  },
+  "org-node": {
+    "author": "Martin Edström <meedstrom91@gmail.com>",
+    "meta": {
+      "description": "Fast org-roam replacement",
+      "homepage": "https://github.com/meedstrom/org-node",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-ZiBfqNT0+yswP/5HmrkVStoBHZ5Pls/27pcjwU62Pfc=",
+    "packageRequires": {
+      "cond-let": "0.2",
+      "emacs": "29.1",
+      "llama": "1.0",
+      "magit-section": "4.3.0",
+      "org-mem": "0.34.0"
+    },
+    "version": "0"
+  },
+  "package-lint": {
+    "author": [
+      "Steve Purcell <steve@sanityinc.com>",
+      "Fanael Linithien <fanael4@gmail.com>"
+    ],
+    "meta": {
+      "description": "A linting library for elisp package authors",
+      "homepage": "https://github.com/purcell/package-lint"
+    },
+    "narHash": "sha256-MKWXLoGChMWqzLUNECSrB5vCWVp0HUcKylbbXnNA/c4=",
+    "packageRequires": {
+      "emacs": "25.1",
+      "let-alist": "1.0.6"
+    },
+    "version": "0.26"
+  },
+  "paredit": {
+    "author": "Taylor R. Campbell <campbell@paredit.org>",
+    "meta": {
+      "description": "minor mode for editing parentheses",
+      "homepage": "https://paredit.org"
+    },
+    "narHash": "sha256-y5yZSraJCWoJPvcBER6aANYGjnqwUuU8Wnmv6ne52hE=",
+    "packageRequires": {},
+    "version": "27beta"
+  },
+  "parinfer-rust-mode": {
+    "author": "Justin Barclay <justinbarclay@gmail.com>",
+    "meta": {
+      "description": "An interface for the parinfer-rust library",
+      "homepage": "https://github.com/justinbarclay/parinfer-rust-mode"
+    },
+    "narHash": "sha256-8tVLwADjZ9OlWHT1cYtaJ0wWh4ocFs7jr8k0yy2KNl4=",
+    "packageRequires": {
+      "emacs": "29.2",
+      "track-changes": "1.1"
+    },
+    "version": "0.9.3"
+  },
+  "parsebib": {
+    "author": "Joost Kremers <joostkremers@fastmail.fm>",
+    "meta": {
+      "description": "A library for parsing bib files",
+      "homepage": "https://github.com/joostkremers/parsebib",
+      "maintainers": [
+        "Joost Kremers <joostkremers@fastmail.fm>"
+      ]
+    },
+    "narHash": "sha256-Bsn9zyY4PKeeFHj7IRbvZHcOX6cuYLhPZ2CKoZTpJr8=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "6.7"
+  },
+  "parseclj": {
+    "author": "Arne Brasseur <arne@arnebrasseur.net>",
+    "meta": {
+      "description": "Clojure/EDN parser"
+    },
+    "narHash": "sha256-/rSU4pZWyXIsTm5+5ItuEN8phnZKCsyjbwnwxkVH7iw=",
+    "packageRequires": {
+      "emacs": "26.1"
+    },
+    "version": "1.1.1"
+  },
+  "parseedn": {
+    "author": "Arne Brasseur <arne@arnebrasseur.net>",
+    "meta": {
+      "description": "Clojure/EDN parser",
+      "homepage": "http://www.github.com/clojure-emacs/parseedn"
+    },
+    "narHash": "sha256-jzXXBWwpn8ucD98UfOtlyeU7xMyDgQs15wRkWPupnE4=",
+    "packageRequires": {
+      "emacs": "26",
+      "map": "2",
+      "parseclj": "1.1.1"
+    },
+    "version": "1.2.1"
+  },
+  "pcre2el": {
+    "author": "joddie <jonxfield at gmail.com>",
+    "meta": {
+      "description": "regexp syntax converter",
+      "homepage": "https://github.com/joddie/pcre2el"
+    },
+    "narHash": "sha256-XXfmGrVdGAQnEKqdn8o6UeXyhCY4TpGj3OTIH1xq40A=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "1.12"
+  },
+  "pdf-tools": {
+    "author": "Andreas Politz <mail@andreas-politz.de>",
+    "meta": {
+      "description": "Support library for PDF documents",
+      "homepage": "http://github.com/vedang/pdf-tools/",
+      "maintainers": [
+        "Vedang Manerikar <vedang.manerikar@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-XOg2f8H9PAaa66YYfmQXmf/R4zzd6UlkQBotU0jDxLI=",
+    "packageRequires": {
+      "emacs": "26.3",
+      "let-alist": "1.0.4",
+      "tablist": "1.0"
+    },
+    "version": "1.3.0"
+  },
+  "persid": {
+    "author": null,
+    "meta": {
+      "description": "Persistent Identifier Library",
+      "homepage": "https://github.com/rougier/emacs-persid",
+      "maintainers": [
+        "Nicolas P. Rougier <Nicolas.Rougier@inria.fr>"
+      ]
+    },
+    "narHash": "sha256-nhyMYf8DEnF3QQV40dSC5W/Vedvkj39+X/e5sPWQ0Zo=",
+    "packageRequires": {
+      "emacs": "27.1"
+    },
+    "version": "0.1.1"
+  },
+  "plz": {
+    "author": "Adam Porter <adam@alphapapa.net>",
+    "meta": {
+      "description": "HTTP library",
+      "homepage": "https://github.com/alphapapa/plz.el",
+      "maintainers": [
+        "Adam Porter <adam@alphapapa.net>"
+      ]
+    },
+    "narHash": "sha256-kbT1QQqYeEYZvpkOZVCXA7sEs1Bb+m49FcfepPJUrmA=",
+    "packageRequires": {
+      "emacs": "27.1"
+    },
+    "version": "0.9.1"
+  },
+  "plz-event-source": {
+    "author": "r0man <roman@burningswell.com>",
+    "meta": {
+      "description": "Plz Event Source",
+      "homepage": "https://github.com/r0man/plz-event-source",
+      "maintainers": [
+        "r0man <roman@burningswell.com>"
+      ]
+    },
+    "narHash": "sha256-f8w8/MT2c/v4DEK8zPH7Ci4/Sfpp+OQ+mi8SM1cpc+8=",
+    "packageRequires": {
+      "emacs": "26.3",
+      "plz-media-type": "0.2.4"
+    },
+    "version": "0.1.3"
+  },
+  "plz-media-type": {
+    "author": "r0man <roman@burningswell.com>",
+    "meta": {
+      "description": "Plz Media Types",
+      "homepage": "https://github.com/r0man/plz-media-type",
+      "maintainers": [
+        "r0man <roman@burningswell.com>"
+      ]
+    },
+    "narHash": "sha256-6sdz8KEhmoXT6eqUzbMuwwg/S0exGikpoAOZtJNClxo=",
+    "packageRequires": {
+      "emacs": "26.3",
+      "plz": "0.9.1"
+    },
+    "version": "0.2.4"
+  },
+  "poet-theme": {
+    "author": "Kunal Bhalla <bhalla.kunal@gmail.com>",
+    "meta": {
+      "description": "A theme for prose",
+      "homepage": "https://github.com/kunalb/poet/"
+    },
+    "narHash": "sha256-ZefJm6prXMmGTvaczOVd8MlBujwHau2tPNK3FveSqH4=",
+    "packageRequires": {
+      "emacs": "24.1"
+    },
+    "version": "2.1"
+  },
+  "popup": {
+    "author": "Tomohiro Matsuyama <m2ym.pub@gmail.com>",
+    "meta": {
+      "description": "Visual Popup User Interface",
+      "homepage": "https://github.com/auto-complete/popup-el",
+      "maintainers": [
+        "Shen, Jen-Chieh <jcs090218@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-raNeRINWJn5prWErcnKicSgCJR8mayKuyBJ3xqZ1vGg=",
+    "packageRequires": {
+      "emacs": "24.3"
+    },
+    "version": "0.5.9"
+  },
+  "queue": {
+    "author": [
+      "Inge Wallin <inge@lysator.liu.se>",
+      "Toby Cubitt <toby-predictive@dr-qubit.org>"
+    ],
+    "meta": {
+      "description": "Queue data structure",
+      "homepage": "http://www.dr-qubit.org/emacs.php",
+      "maintainers": [
+        "Toby Cubitt <toby-predictive@dr-qubit.org>"
+      ]
+    },
+    "narHash": "sha256-l1a18KhqXRtir2NSDVEY4yWGoUl97Vo9CvD1T9Jpw/Q=",
+    "packageRequires": {},
+    "version": "0.2"
+  },
+  "rainbow-csv": {
+    "author": "Shen, Jen-Chieh <jcs090218@gmail.com>",
+    "meta": {
+      "description": "Highlight CSV and TSV files in different rainbow colors",
+      "homepage": "https://github.com/emacs-vs/rainbow-csv",
+      "maintainers": [
+        "Shen, Jen-Chieh <jcs090218@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-NcFI38TnPHWMUdwX3UBZVjiPj6uCl0+WnIMNdzQ73G8=",
+    "packageRequires": {
+      "csv-mode": "1.22",
+      "emacs": "27.1"
+    },
+    "version": "0.1.0"
+  },
+  "reformatter": {
+    "author": "Steve Purcell <steve@sanityinc.com>",
+    "meta": {
+      "description": "Define commands which run reformatters on the current buffer"
+    },
+    "narHash": "sha256-UyjV9ODjPQ2IewC6OHfrANHU+FNvGhbZESUUmUfeSco=",
+    "packageRequires": {
+      "emacs": "24.3"
+    },
+    "version": "0.8"
+  },
+  "request": {
+    "author": "Takafumi Arakaki <aka.tkf at gmail.com>",
+    "meta": {
+      "description": "Compatible layer for URL request",
+      "homepage": "https://github.com/tkf/emacs-request"
+    },
+    "narHash": "sha256-BFxOsHTKHghIPFeUyaNXJGZbCD2mIMdRG2qby8p0TpU=",
+    "packageRequires": {
+      "emacs": "24.4"
+    },
+    "version": "0.3.3"
+  },
+  "s": {
+    "author": "Magnar Sveen <magnars@gmail.com>",
+    "meta": {
+      "description": "The long lost Emacs string manipulation library.",
+      "maintainers": [
+        "Jason Milkins <jasonm23@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-C6T1Fh0t0YvcoMbTQpa3iRIMM0MV0f5HaZDhvmi/YaA=",
+    "packageRequires": {},
+    "version": "1.13.1"
+  },
+  "sesman": {
+    "author": "Vitalie Spinu",
+    "meta": {
+      "description": "Generic Session Manager",
+      "homepage": "https://github.com/vspinu/sesman"
+    },
+    "narHash": "sha256-lxI3GpRBVrq1v+516jsB+cijaZ9YSWW9IyjiO75sgIE=",
+    "packageRequires": {
+      "emacs": "25"
+    },
+    "version": "0.3.3-DEV"
+  },
+  "show-font": {
+    "author": "Protesilaos Stavrou <info@protesilaos.com>",
+    "meta": {
+      "description": "Show font features in a buffer",
+      "homepage": "https://github.com/protesilaos/show-font",
+      "maintainers": [
+        "Protesilaos Stavrou <info@protesilaos.com>"
+      ]
+    },
+    "narHash": "sha256-Qm39R9yM40fptop5JrgWFNKgsFwPu/IJfzWYAqRWQ6Y=",
+    "packageRequires": {
+      "emacs": "29.1"
+    },
+    "version": "1.0.0"
+  },
+  "show-font-mode": {
+    "author": "Melissa Boiko <melissa@namakajiri.net>",
+    "meta": {
+      "description": "Show font at point on mode line"
+    },
+    "narHash": "sha256-0Ifak9iRYT3a0vfksHYhwLi6etz7XUZhA5ozFK8zDaE=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "0.1"
+  },
+  "sly": {
+    "author": null,
+    "meta": {
+      "description": "Sylvester the Cat's Common Lisp IDE",
+      "homepage": "https://github.com/joaotavora/sly"
+    },
+    "narHash": "sha256-IZVLx3iK9UgT0nqy1SAqN56BOFKDtgyUw1+Dt4FFvJA=",
+    "packageRequires": {
+      "emacs": "24.5"
+    },
+    "version": "1.0.43"
+  },
+  "sly-asdf": {
+    "author": null,
+    "meta": {
+      "description": "ASDF system support for SLY",
+      "homepage": "https://github.com/mmgeorge/sly-asdf",
+      "maintainers": [
+        "Matt George <mmge93@gmail.com>",
+        ";",
+        "This file is free software; you can redistribute it and/or modify",
+        "it under the terms of the GNU General Public License as published by",
+        "the Free Software Foundation, either version 3 of the License, or",
+        "(at your option) any later version.",
+        ";",
+        "This program is distributed in the hope that it will be useful,",
+        "but WITHOUT ANY WARRANTY; without even the implied warranty of",
+        "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the",
+        "GNU General Public License for more details.",
+        ";",
+        "You should have received a copy of the GNU General Public License"
+      ]
+    },
+    "narHash": "sha256-4I0kLVuIgP1w7zU3Zltdea82v3WLaR5zNzNDkUJVDCQ=",
+    "packageRequires": {
+      "emacs": "24.3",
+      "popup": "0.5.3",
+      "sly": "1.0.0-beta2"
+    },
+    "version": "0.1"
+  },
+  "sly-macrostep": {
+    "author": null,
+    "meta": {
+      "description": "fancy macro-expansion via macrostep.el",
+      "homepage": "https://github.com/capitaomorte/sly-macrostep"
+    },
+    "narHash": "sha256-GVDlwWUIT/IiTPqDQ3w54Tsz6NNl2bMtB3Y4Yh8Srts=",
+    "packageRequires": {
+      "macrostep": "0.9",
+      "sly": "1.0.0-beta2"
+    },
+    "version": "0.1"
+  },
+  "sly-quicklisp": {
+    "author": [
+      "João Távora <joaotavora@gmail.com>",
+      "Copyright (C) 2015 João Távora",
+      ";",
+      "This file is free software; you can redistribute it and/or modify",
+      "it under the terms of the GNU General Public License as published by",
+      "the Free Software Foundation, either version 3 of the License, or",
+      "(at your option) any later version.",
+      ";",
+      "This program is distributed in the hope that it will be useful,",
+      "but WITHOUT ANY WARRANTY; without even the implied warranty of",
+      "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the",
+      "GNU General Public License for more details.",
+      ";",
+      "You should have received a copy of the GNU General Public License"
+    ],
+    "meta": {
+      "description": "Quicklisp support for SLY",
+      "homepage": "https://github.com/capitaomorte/sly-quicklisp"
+    },
+    "narHash": "sha256-YIP4yIuYFPXTs3GODcJuf9txDen0LX/3Ouvf9TTTEo8=",
+    "packageRequires": {
+      "sly": "1.0.0-beta2"
+    },
+    "version": "0.1"
+  },
+  "sly-stepper": {
+    "author": [
+      "João Távora <joaotavora@gmail.com>",
+      ";",
+      "Copyright (C) 2015 João Távora",
+      ";",
+      "This file is free software; you can redistribute it and/or modify",
+      "it under the terms of the GNU General Public License as published by",
+      "the Free Software Foundation, either version 3 of the License, or",
+      "(at your option) any later version.",
+      ";",
+      "This program is distributed in the hope that it will be useful,",
+      "but WITHOUT ANY WARRANTY; without even the implied warranty of",
+      "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the",
+      "GNU General Public License for more details.",
+      ";",
+      "You should have received a copy of the GNU General Public License"
+    ],
+    "meta": {
+      "description": "A template SLY contrib",
+      "homepage": "https://github.com/capitaomorte/sly-stepper"
+    },
+    "narHash": "sha256-gMbmG42gxaQrgDUVySbGGpayxDM3pKAgDvYpd9KZ4B4=",
+    "packageRequires": {
+      "sly": "1.0.0-beta2"
+    },
+    "version": "0.1"
+  },
+  "spacious-padding": {
+    "author": "Protesilaos <info@protesilaos.com>",
+    "meta": {
+      "description": "Increase the padding/spacing of frames and windows",
+      "homepage": "https://github.com/protesilaos/spacious-padding",
+      "maintainers": [
+        "Protesilaos <info@protesilaos.com>"
+      ]
+    },
+    "narHash": "sha256-kaiU59rz+1wMx3zGQC42ZPEKCAYGDPti5xxf18x3EL0=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "0.9.1"
+  },
+  "spinner": {
+    "author": "Artur Malabarba <emacs@endlessparentheses.com>",
+    "meta": {
+      "description": "Add spinners and progress-bars to the mode-line for ongoing operations",
+      "homepage": "https://github.com/Malabarba/spinner.el"
+    },
+    "narHash": "sha256-GTmbEa/9nVwCCwHCafJglIeNXVt0MeONviguMo3jy/Y=",
+    "packageRequires": {
+      "emacs": "24.3"
+    },
+    "version": "1.7.4"
+  },
+  "string-inflection": {
+    "author": "akicho8 <akicho8@gmail.com>",
+    "meta": {
+      "description": "foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar conversion of names"
+    },
+    "narHash": "sha256-kSvDB+IgdAZpmqd3SfdyFz8anqe6KOahQa/t9F1POGY=",
+    "packageRequires": {},
+    "version": "1.2.1"
+  },
+  "tablist": {
+    "author": "Andreas Politz <politza@fh-trier.de>",
+    "meta": {
+      "description": "Extended tabulated-list-mode"
+    },
+    "narHash": "sha256-a7vhhAkmAwmv56PbdspIOFUdBnUgLm7YcBMIchNvhlk=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "1.3"
+  },
+  "tabspaces": {
+    "author": "Colin McLear <mclear@fastmail.com>",
+    "meta": {
+      "description": "Leverage tab-bar and project for buffer-isolated workspaces",
+      "maintainers": [
+        "Colin McLear"
+      ]
+    },
+    "narHash": "sha256-LVQtfXhrDMjLS/GAXIL7M+arVT8ytkb44c3bbMR2GnE=",
+    "packageRequires": {
+      "emacs": "27.1",
+      "project": "0.8.1"
+    },
+    "version": "1.11.0"
+  },
+  "tempel": {
+    "author": "Daniel Mendler <mail@daniel-mendler.de>",
+    "meta": {
+      "description": "Tempo templates/snippets with in-buffer field editing",
+      "homepage": "https://github.com/minad/tempel",
+      "maintainers": [
+        "Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-VSOpxchSuOAUySHmTGxXXksXuUE7aiJjusphxW/R9To=",
+    "packageRequires": {
+      "compat": "31",
+      "emacs": "29.1"
+    },
+    "version": "1.14"
+  },
+  "tempel-collection": {
+    "author": [
+      "Vitalii Drevenchuk <cradlemann@gmail.com>,",
+      "Max Penet <mpenetr@s-exp.com>,",
+      "Daniel Mendler <mail@daniel-mendler.de>"
+    ],
+    "meta": {
+      "description": "Collection of templates for Tempel",
+      "maintainers": [
+        "Vitalii Drevenchuk <cradlemann@gmail.com>,",
+        "Max Penet <mpenetr@s-exp.com>,",
+        "Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-jit2s7AHXBeNNYGA5N7CqbRWKSTsKE8kft2WREjfoG0=",
+    "packageRequires": {
+      "emacs": "31.1",
+      "tempel": "0.5"
+    },
+    "version": "0.3"
+  },
+  "titlecase": {
+    "author": "Case Duckworth <acdw@acdw.net>",
+    "meta": {
+      "description": "Title-case phrases",
+      "homepage": "https://codeberg.org/acdw/titlecase.el",
+      "maintainers": [
+        "Case Duckworth <acdw@acdw.net>"
+      ]
+    },
+    "narHash": "sha256-Umq1OKItS67BCrf7YeMfAxBh1UDWHcg2dMWva7mqTRM=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "0.3.0"
+  },
+  "transient": {
+    "author": "Jonas Bernoulli <emacs.transient@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Transient commands",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-8ZXBJ4DHSoB1SQR+apnPQmtfwA3/9142G2XuQM1CtzA=",
+    "packageRequires": {
+      "compat": "31.1",
+      "cond-let": "1.1",
+      "emacs": "28.1",
+      "llama": "1.0",
+      "seq": "2.24"
+    },
+    "version": "0.13.9"
+  },
+  "treepy": {
+    "author": "Daniel Barreto <daniel.barreto.n@gmail.com>",
+    "meta": {
+      "description": "Generic tree traversal tools",
+      "homepage": "https://github.com/volrath/treepy.el"
+    },
+    "narHash": "sha256-rAoAGROlMSqxk9eJpATw194W5VmM3MMLLs3IITbIJxo=",
+    "packageRequires": {
+      "emacs": "27.1"
+    },
+    "version": "0.1.3"
+  },
+  "truename-cache": {
+    "author": "Martin Edström <meedstrom91@gmail.com>",
+    "meta": {
+      "description": "Efficiently de-dup file-names",
+      "homepage": "https://github.com/meedstrom/truename-cache"
+    },
+    "narHash": "sha256-lsDGxdtLOHviMzSe2kKJntM959E0UtWAsd51kF4aXiw=",
+    "packageRequires": {
+      "compat": "30.1",
+      "emacs": "27.1"
+    },
+    "version": "0.3.7"
+  },
+  "vertico": {
+    "author": "Daniel Mendler <mail@daniel-mendler.de>",
+    "meta": {
+      "description": "VERTical Interactive COmpletion",
+      "homepage": "https://github.com/minad/vertico",
+      "maintainers": [
+        "Daniel Mendler <mail@daniel-mendler.de>"
+      ]
+    },
+    "narHash": "sha256-3m/Jc/mM8b8+3dsILzAiBm/eGqRqLUFQDfU4MEEm1a0=",
+    "packageRequires": {
+      "compat": "31",
+      "emacs": "29.1"
+    },
+    "version": "2.15"
+  },
+  "visual-fill-column": {
+    "author": "Joost Kremers <joostkremers@fastmail.fm>",
+    "meta": {
+      "description": "fill-column for visual-line-mode",
+      "homepage": "https://codeberg.org/joostkremers/visual-fill-column",
+      "maintainers": [
+        "Joost Kremers <joostkremers@fastmail.fm>"
+      ]
+    },
+    "narHash": "sha256-b2iHi5A/1CVdwnbvbSpFyi8oJgpSiezPIfZLAzYQYuQ=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "2.7.1"
+  },
+  "vterm": {
+    "author": "Lukas Fürmetz <fuermetz@mailbox.org>",
+    "meta": {
+      "description": "Fully-featured terminal emulator",
+      "homepage": "https://github.com/akermu/emacs-libvterm"
+    },
+    "narHash": "sha256-fL2UPEyov4wKjfe1F27y/uohJZZiFNpxHfQ+TCTLqtc=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "0.0.2"
+  },
+  "vundo": {
+    "author": "Yuan Fu <casouri@gmail.com>",
+    "meta": {
+      "description": "Visual undo tree",
+      "homepage": "https://github.com/casouri/vundo",
+      "maintainers": [
+        "Yuan Fu <casouri@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-OYVpIL8KO7gDqvBUaxGGA/4n9cWANNAG/TwrOrNQcFA=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "2.4.0"
+  },
+  "with-editor": {
+    "author": "Jonas Bernoulli <emacs.with-editor@jonas.bernoulli.dev>",
+    "meta": {
+      "description": "Use the Emacsclient as $EDITOR",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-4XOY61t9j91tQjQxUkPI/GHv7VVcjg9XleTRczZvel0=",
+    "packageRequires": {
+      "compat": "31.1",
+      "cond-let": "1.1",
+      "emacs": "28.1",
+      "llama": "1.0"
+    },
+    "version": "3.6.0"
+  },
+  "writeroom-mode": {
+    "author": "Joost Kremers <joostkremers@fastmail.fm>",
+    "meta": {
+      "description": "Minor mode for distraction-free writing",
+      "homepage": "https://github.com/joostkremers/writeroom-mode",
+      "maintainers": [
+        "Joost Kremers <joostkremers@fastmail.fm>"
+      ]
+    },
+    "narHash": "sha256-tj3jMvOyEzdND39PK2uogy/PxCndlNjfLvscxKNYMv8=",
+    "packageRequires": {
+      "emacs": "25.1",
+      "visual-fill-column": "2.2"
+    },
+    "version": "3.12"
+  },
+  "ws-butler": {
+    "author": "Le Wang <l26wang@gmail.com>",
+    "meta": {
+      "description": "Unobtrusively remove trailing whitespace",
+      "homepage": "https://elpa.nongnu.org/nongnu/ws-butler.html",
+      "maintainers": [
+        "Sean Whitton <spwhitton@spwhitton.name>"
+      ]
+    },
+    "narHash": "sha256-maOhnDkG3GibrbI1EuPRY+Ej4AZJgbFheu6lC72vZ4w=",
+    "packageRequires": {
+      "emacs": "24.1"
+    },
+    "version": "1.3"
+  },
+  "yaml": {
+    "author": "Zachary Romero <zkry@posteo.org>",
+    "meta": {
+      "description": "YAML parser for Elisp"
+    },
+    "narHash": "sha256-pUmUPrMC+LOzo66ET+mu+cZQ4qBV5bebPxkg+xCFRxs=",
+    "packageRequires": {
+      "emacs": "25.1"
+    },
+    "version": "1.2.4"
+  },
+  "yaml-mode": {
+    "author": [
+      "Yoshiki Kurihara <clouder@gmail.com>",
+      "Marshall T. Vandegrift <llasram@gmail.com>"
+    ],
+    "meta": {
+      "description": "Major mode for editing YAML files",
+      "homepage": "https://github.com/yoshiki/yaml-mode",
+      "maintainers": [
+        "Vasilij Schneidermann <mail@vasilij.de>"
+      ]
+    },
+    "narHash": "sha256-AhXDqJIJ68i1c1D4agOD72WTC7Mw+N8ooeb+9MsYBZk=",
+    "packageRequires": {
+      "emacs": "24.3"
+    },
+    "version": "0.0.16"
+  },
+  "yasnippet": {
+    "author": null,
+    "meta": {
+      "description": "Yet another snippet extension for Emacs",
+      "homepage": "http://github.com/joaotavora/yasnippet",
+      "maintainers": [
+        "Noam Postavsky <npostavs@gmail.com>"
+      ]
+    },
+    "narHash": "sha256-GXgZuIXm1btNkZLYFRq4MIuTczLpkmLGUTDft5mFdSI=",
+    "packageRequires": {
+      "cl-lib": "0.5",
+      "emacs": "24.4"
+    },
+    "version": "0.14.3"
+  },
+  "yasnippet-snippets": {
+    "author": "Andrea Crotti <andrea.crotti.0@gmail.com>",
+    "meta": {
+      "description": "Collection of yasnippet snippets"
+    },
+    "narHash": "sha256-nwg8Y0crlC/hRxIkd3fikYheFBEeC5tZwpg/nltHaBE=",
+    "packageRequires": {
+      "yasnippet": "0.8.0"
+    },
+    "version": "1.0"
+  },
+  "yeetube": {
+    "author": "Thanos Apollo <public@thanosapollo.org>",
+    "meta": {
+      "description": "Scrape YouTube, Play with mpv & Download with yt-dlp",
+      "homepage": "https://thanosapollo.org/projects/yeetube/"
+    },
+    "narHash": "sha256-Pf3paqD5PYAKanH/XKyK4X6R0ft+wIK1UWMEPgQshDc=",
+    "packageRequires": {
+      "compat": "29.1.4.2",
+      "emacs": "29.1",
+      "keymap-popup": "0.2.0"
+    },
+    "version": "2.4.0"
+  },
+  "zk": {
+    "author": "Grant Rosson <https://github.com/localauthor>",
+    "meta": {
+      "description": "Functions for working with Zettelkasten-style linked notes",
+      "homepage": "https://github.com/localauthor/zk"
+    },
+    "narHash": "sha256-TdjHLqXyLB4WtvtxQGOTYk+DNqaAMosEMFJVh4G4VFk=",
+    "packageRequires": {
+      "emacs": "28.1"
+    },
+    "version": "1.0"
+  }
+}
