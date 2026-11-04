@@ -1,8 +1,9 @@
-# Installs emx once: the `emx` CLI; `emacs` and `emacsclient` launchers that
-# run Emacs from emx's profile; the tools emx's modules call; and the init
-# shims in ~/.config/emx that load the Elisp from the emx repo. `emx sync`
-# builds Emacs and its packages into the profile, so home-manager never builds
-# them and a package update needs no switch.
+# Installs emx once: one `emx` package holding the CLI, `emacs` and
+# `emacsclient` launchers that run Emacs from emx's profile, and Emacs's icons;
+# the tools emx's modules call; and the init shims in ~/.config/emx that load
+# the Elisp from the emx repo. `emx sync` builds Emacs and its packages into the
+# profile, so home-manager never builds them and a package update needs no
+# switch.
 { self }:
 { config
 , lib
@@ -20,19 +21,10 @@ let
 
   elispString = s: "\"" + lib.replaceStrings [ "\\" "\"" ] [ "\\\\" "\\\"" ] s + "\"";
 
-  emx = pkgs.runCommandLocal "emx"
-    {
-      nativeBuildInputs = [ pkgs.makeWrapper ];
-      meta.mainProgram = "emx";
-    } ''
-    makeWrapper ${lib.getExe self.packages.${system}.emx} $out/bin/emx \
-      --set-default EMX_SRC ${lib.escapeShellArg src}
-  '';
-
   # Runs NAME from emx's profile, which cli/src/profile.rs locates by the same
   # rule: $XDG_STATE_HOME when it is absolute, else ~/.local/state.
   launcher = name: args:
-    pkgs.writeShellApplication {
+    lib.getExe (pkgs.writeShellApplication {
       inherit name;
       text = ''
         case "''${XDG_STATE_HOME:-}" in
@@ -46,29 +38,28 @@ let
         fi
         exec "$program" ${args} "$@"
       '';
-    };
+    });
 
   emacs = self.packages.${system}.emacs.emacs;
 
-  # Emacs's application icons for the desktop entry, copied so the launchers'
-  # closure holds no Emacs.
-  icons = pkgs.runCommandLocal "emx-icons" { } ''
+  # The launchers and Emacs's application icons are copied in, so the closure
+  # holds no separate launcher paths and no Emacs. `version` is Emacs's:
+  # home-manager's Emacs service reads it to choose the socket and window class.
+  emx = pkgs.runCommandLocal "emx"
+    {
+      inherit (emacs) version;
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      meta.mainProgram = "emx";
+    } ''
+    makeWrapper ${lib.getExe self.packages.${system}.emx} $out/bin/emx \
+      --set-default EMX_SRC ${lib.escapeShellArg src}
+    install -m555 ${launcher "emacs" "--init-directory ${lib.escapeShellArg initDirectory}"} $out/bin/emacs
+    install -m555 ${launcher "emacsclient" ""} $out/bin/emacsclient
+
     cd ${emacs}/share/icons
     find hicolor -path '*/apps/emacs.png' -o -path '*/apps/emacs.svg' |
       while read -r icon; do install -Dm444 "$icon" "$out/share/icons/$icon"; done
   '';
-
-  # Carries the Emacs version in its name: home-manager's Emacs service reads
-  # it to choose the socket and window class.
-  launchers = pkgs.symlinkJoin {
-    name = "emx-launchers-${emacs.version}";
-    paths = [
-      (launcher "emacs" "--init-directory ${lib.escapeShellArg initDirectory}")
-      (launcher "emacsclient" "")
-      icons
-    ];
-    meta.mainProgram = "emacs";
-  };
 in
 {
   options.programs.emx = {
@@ -90,7 +81,6 @@ in
   config = lib.mkIf cfg.enable {
     home.packages = [
       emx
-      launchers
 
       pkgs.ripgrep
       pkgs.fd
@@ -107,13 +97,13 @@ in
     ];
 
     # services.emacs.enable runs the daemon from emx's profile.
-    services.emacs.package = lib.mkDefault launchers;
+    services.emacs.package = lib.mkDefault emx;
 
     xdg.desktopEntries.emx = {
       name = "EMX";
       genericName = "Text Editor";
       comment = "Edit text";
-      exec = "${lib.getExe launchers} %F";
+      exec = "${emx}/bin/emacs %F";
       terminal = false;
       type = "Application";
       icon = "emacs";
