@@ -49,9 +49,11 @@
 ;;
 ;; Has a number of python deps
 (use-package lsp-bridge
-  :ensure nil                           ; provided by Nix (native/Python deps)
-  :if (locate-library "lsp-bridge")     ; don't break prog-mode when absent
   :hook (prog-mode . lsp-bridge-mode)
+  :init
+  ;; Otherwise enabling the mode turns off backups, auto-save and lockfiles
+  ;; for every buffer.
+  (setq lsp-bridge-disable-backup nil)
   :config
   (global-lsp-bridge-mode)
   (setq lsp-bridge-python-lsp-server "basedpyright")
