@@ -1,9 +1,19 @@
 ;;; emx-completion.el --- Eagle Completion Configuration -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2025
-;; SPDX-License-Identifier: MIT
+;; Copyright (C) 2025  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil
+
+;; Adapted for emx in 2025-2026 from the following, all GPL-3.0-or-later:
+;; - The Vertico README, Copyright (C) 2021-2025 Free Software Foundation, Inc.
+;; - The Consult README, Copyright (C) 2021-2025 Free Software Foundation, Inc.
+;; - The Embark README, Copyright (C) 2021-2025  Free Software Foundation, Inc.
+;; - The Tempel README, Copyright (C) 2022-2025 Free Software Foundation, Inc.
+;; - The minimal-emacs.d README by James Cherti
+;;   https://github.com/jamescherti/minimal-emacs.d
+;; - lem-setup-completion.el in Lambda Emacs by Colin McLear
+;;   https://github.com/Lambda-Emacs/lambda-emacs
 
 ;;; Commentary:
 

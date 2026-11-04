@@ -1,9 +1,13 @@
 ;;; emx-language-machine.el --- Language machines              -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords:
+
+;; `gptel-rename-chat' comes from the gptel wiki, which states no licence:
+;; https://github.com/karthink/gptel/wiki/Defining-custom-gptel-commands
 
 ;;; Commentary:
 

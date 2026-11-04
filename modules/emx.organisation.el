@@ -1,9 +1,17 @@
 ;;; emx-organisation.el --- Org-mode and tools to stay organised  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords:
+
+;; Adapted for emx in 2025-2026 from the following, both GPL-3.0-or-later:
+;; - Bernt Hansen's "Org Mode - Organize Your Life In Plain Text!"
+;;   https://doc.norang.ca/org-mode.html
+;;   Copyright (C)  2013-2026  Bernt Hansen.
+;; - Prot's Emacs configuration, https://github.com/protesilaos/dotfiles
+;;   Copyright (C) 2020-2025  Protesilaos Stavrou
 
 ;; Calendar
 (use-package calendar

@@ -4,6 +4,13 @@
 ;;;
 ;;; https://protesilaos.com/codelog/2024-11-28-basic-emacs-configuration/
 
+;; Copyright (C) 2025-2026  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;; Adapted for emx in 2025-2026 from Prot's Emacs configuration,
+;; GPL-3.0-or-later: https://github.com/protesilaos/dotfiles
+;; Copyright (C) 2020-2025  Protesilaos Stavrou
+
 (require 'use-package)
 
 ;;; Editing

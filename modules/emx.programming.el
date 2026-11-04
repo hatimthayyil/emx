@@ -1,9 +1,14 @@
 ;;;; emx-programming.el --- EmX programming, software development, languages  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords: languages
+
+;; The `project' settings are adapted from Prot's Emacs configuration,
+;; GPL-3.0-or-later: https://github.com/protesilaos/dotfiles
+;; Copyright (C) 2020-2025  Protesilaos Stavrou
 
 ;;; Commentary:
 ;;

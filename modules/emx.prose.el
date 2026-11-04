@@ -1,9 +1,13 @@
 ;;; emx-prose.el --- EmX Prose, Writing, Reading     -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords:
+
+;; The `vale' checker comes from a post by Junji Zhi, which states no licence:
+;; https://emacstil.com/til/2022/03/05/setting-up-vale-prose-linter-on-emacs/
 
 ;;; Commentary:
 

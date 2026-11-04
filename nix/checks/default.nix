@@ -82,4 +82,13 @@ in
     fi
     touch $out
   '';
+
+  # Every file carries a licence, in REUSE.toml or in its own header.
+  licences = pkgs.runCommandLocal "emx-licences-check"
+    {
+      nativeBuildInputs = [ pkgs.reuse ];
+    } ''
+    reuse --root ${src} lint
+    touch $out
+  '';
 }

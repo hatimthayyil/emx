@@ -1,9 +1,14 @@
 ;;; emx-appearance.el --- UI enhancements and style  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords:
+
+;; Adapted for emx in 2025-2026 from Prot's Emacs configuration,
+;; GPL-3.0-or-later: https://github.com/protesilaos/dotfiles
+;; Copyright (C) 2020-2025  Protesilaos Stavrou
 
 ;;; Commentary:
 

@@ -31,5 +31,7 @@ rustPlatform.buildRustPackage {
   meta = {
     inherit (manifest) description;
     mainProgram = "emx";
+    # The source is CC0-1.0; linking dix makes the built package GPL-3.0-only.
+    license = lib.licenses.gpl3Only;
   };
 }

@@ -1,0 +1,33 @@
+# The licence of every file in the repo, checked by `reuse lint`. A new file
+# outside these paths fails the check until it is listed here.
+version = 1
+
+[[annotations]]
+path = ["init.el", "early-init.el", "lisp/**", "modules/**"]
+SPDX-FileCopyrightText = "2025-2026 Hatim Thayyil"
+SPDX-License-Identifier = "GPL-3.0-or-later"
+
+[[annotations]]
+path = [
+  ".gitignore",
+  ".ignore",
+  "CLAUDE.md",
+  "Cargo.lock",
+  "Cargo.toml",
+  "REUSE.toml",
+  "TODO.org",
+  "ai.toml",
+  "cli/**",
+  "devenv.lock",
+  "devenv.nix",
+  "devenv.yaml",
+  "example-usage.nix",
+  "flake.lock",
+  "flake.nix",
+  "lock/**",
+  "nix/**",
+  "packages.el",
+  "recipes/**",
+]
+SPDX-FileCopyrightText = "2025-2026 Hatim Thayyil"
+SPDX-License-Identifier = "CC0-1.0"

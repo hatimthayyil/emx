@@ -1,5 +1,14 @@
 ;;; init.el --- Init -*- no-byte-compile: t; lexical-binding: t; -*-
 
+;; Copyright (C) 2025-2026  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;; Adapted for emx in 2025-2026 from:
+;; - minimal-emacs.d by James Cherti, GPL-3.0-or-later
+;;   https://github.com/jamescherti/minimal-emacs.d
+;; - emacs-kick by Rahul Martim Juliato, GPL-2.0-or-later
+;;   https://github.com/LionyxML/emacs-kick
+
 ;;; Networking
 
 ;; Don't ping things that look like domain names.

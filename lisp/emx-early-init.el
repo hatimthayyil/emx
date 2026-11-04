@@ -1,5 +1,11 @@
 ;;; early-init.el --- Early Init -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2025-2026  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;; Adapted for emx in 2025-2026 from minimal-emacs.d by James Cherti,
+;; GPL-3.0-or-later: https://github.com/jamescherti/minimal-emacs.d
+
 ;;; Variables
 
 (defvar emx-ui-features '()

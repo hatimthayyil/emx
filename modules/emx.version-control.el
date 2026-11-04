@@ -1,9 +1,16 @@
 ;;; emx-version-control.el --- EmX version-control, magit, diff  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords: vc
+
+;; Adapted for emx in 2025-2026 from the following, both GPL-3.0-or-later:
+;; - Prot's Emacs configuration, https://github.com/protesilaos/dotfiles
+;;   Copyright (C) 2020-2025  Protesilaos Stavrou
+;; - lem-setup-vc.el in Lambda Emacs by Colin McLear
+;;   https://github.com/Lambda-Emacs/lambda-emacs
 
 ;;; Commentary:
 

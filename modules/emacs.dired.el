@@ -1,9 +1,16 @@
 ;;; emacs.dired.el --- Filesystem navigation and manipulation  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords:
+
+;; Adapted for emx in 2025-2026 from the following, both GPL-3.0-or-later:
+;; - Prot's Emacs configuration, https://github.com/protesilaos/dotfiles
+;;   Copyright (C) 2020-2025  Protesilaos Stavrou
+;; - The Dirvish documentation, https://github.com/alexluigit/dirvish
+;;   Copyright (C) 2021-2025 Alex Lu
 
 ;;; Code:
 
