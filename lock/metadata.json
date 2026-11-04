@@ -6,7 +6,7 @@
     "packageRequires": {
       "yasnippet": "0"
     },
-    "version": "0"
+    "version": null
   },
   "aidermacs": {
     "author": "Mingde (Matthew) Zeng <matthewzmd@posteo.net>",
@@ -1097,7 +1097,7 @@
     "meta": {},
     "narHash": "sha256-XtJvckG17D4ob0+ENtEkKmRrGa6vLwTfXxZHjScD0MU=",
     "packageRequires": {},
-    "version": "0"
+    "version": null
   },
   "htmlize": {
     "author": "Hrvoje Niksic <hniksic@gmail.com>",
@@ -1354,7 +1354,7 @@
       "dash": "2.13.0",
       "emacs": "24.4"
     },
-    "version": "0"
+    "version": null
   },
   "magit-section": {
     "author": "Jonas Bernoulli <emacs.magit@jonas.bernoulli.dev>",
@@ -1409,7 +1409,7 @@
       "magit": "4.3.0",
       "transient": "0.8.4"
     },
-    "version": "0"
+    "version": null
   },
   "magit-todos": {
     "author": "Adam Porter <adam@alphapapa.net>",
@@ -1547,7 +1547,7 @@
     },
     "narHash": "sha256-UcbEoO426Arm1O11X2P6dxqGoJK4fLVGrCjz2qpSDQE=",
     "packageRequires": {},
-    "version": "0"
+    "version": null
   },
   "orderless": {
     "author": "Omar Antolín Camarena <omar@matem.unam.mx>",
@@ -1616,7 +1616,7 @@
       "magit-section": "4.3.0",
       "org-mem": "0.34.0"
     },
-    "version": "0"
+    "version": null
   },
   "package-lint": {
     "author": [

@@ -1,7 +1,6 @@
 # Dependencies that packages use without declaring them in Package-Requires.
 {
   acm = _: prev: {
-    version = "0";
     packageRequires = prev.packageRequires // {
       yasnippet = "0";
     };
@@ -24,11 +23,4 @@
       acm = "0";
     };
   };
-
-  # persistMetadata needs a version, and these packages have no Version header.
-  howm = _: _: { version = "0"; };
-  magit-popup = _: _: { version = "0"; };
-  magit-stgit = _: _: { version = "0"; };
-  notmuch = _: _: { version = "0"; };
-  org-node = _: _: { version = "0"; };
 }

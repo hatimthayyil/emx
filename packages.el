@@ -1,16 +1,35 @@
-;;; init.el --- Package set of the twist trial  -*- lexical-binding: t -*-
+;;; packages.el --- Packages emx provides  -*- lexical-binding: t -*-
 
-;; Every package emx declares in elpaca.el and nix/home-module.nix, read
-;; by both trial builds.
+;;; Commentary:
+
+;; The packages emx builds, one `use-package' form with `:ensure t' each.
+;; Nix (twist) reads this file to build the package set; Emacs never loads
+;; it.  Configuration lives in modules/.
+;;
+;; A package comes from the first registry that has it: recipes/, MELPA,
+;; GNU ELPA, then NonGNU ELPA (see nix/emacs/default.nix).  Its version is
+;; pinned in lock/.
+
+;;; Code:
 
 (use-package benchmark-init :ensure t)
 (use-package compat :ensure t)
 (use-package no-littering :ensure t)
 (use-package vundo :ensure t)
 (use-package ws-butler :ensure t)
+
+;; terminal.command-line-interface
 (use-package eat :ensure t)
+(use-package vterm :ensure t)
+
+;; emx.navigation
 (use-package beginend :ensure t)
 (use-package mwim :ensure t)
+
+;; emacs.dired
+(use-package dirvish :ensure t)
+
+;; emx.appearance
 (use-package modus-themes :ensure t)
 (use-package ef-themes :ensure t)
 (use-package doom-themes :ensure t)
@@ -21,6 +40,8 @@
 (use-package show-font :ensure t)
 (use-package show-font-mode :ensure t)
 (use-package rainbow-csv :ensure t)
+
+;; completion.vertico
 (use-package vertico :ensure t)
 (use-package orderless :ensure t)
 (use-package marginalia :ensure t)
@@ -28,6 +49,8 @@
 (use-package consult :ensure t)
 (use-package embark-consult :ensure t)
 (use-package tabspaces :ensure t)
+
+;; emx.version-control
 (use-package diff-hl :ensure t)
 (use-package git-gutter :ensure t)
 (use-package transient :ensure t)
@@ -38,6 +61,9 @@
 (use-package forge :ensure t)
 (use-package git-modes :ensure t)
 (use-package with-editor :ensure t)
+
+;; emx.programming
+(use-package lsp-bridge :ensure t)
 (use-package parinfer-rust-mode :ensure t)
 (use-package paredit :ensure t)
 (use-package nix-mode :ensure t)
@@ -63,6 +89,8 @@
 (use-package flycheck :ensure t)
 (use-package erk :ensure t)
 (use-package guix :ensure t)
+
+;; emx.research
 (use-package consult-notes :ensure t)
 (use-package denote :ensure t)
 (use-package howm :ensure t)
@@ -76,24 +104,35 @@
 (use-package ebib :ensure t)
 (use-package biblio :ensure t)
 (use-package persid :ensure t)
+(use-package pdf-tools :ensure t)
+
+;; emx.prose
 (use-package writeroom-mode :ensure t)
 (use-package titlecase :ensure t)
 (use-package jinx :ensure t)
+
+;; emx.communications
 (use-package notmuch :ensure t)
 (use-package consult-notmuch :ensure t)
 (use-package elfeed :ensure t)
 (use-package org-msg :ensure t)
+
+;; emx.multimedia
+(use-package yeetube :ensure t)
+(use-package mpv :ensure t)
+(use-package empv :ensure t)
+
+;; emx.finance
 (use-package beancount :ensure t)
+
+;; emx.language-machine
 (use-package gptel :ensure t)
 (use-package gptel-quick :ensure t)
 (use-package gptel-aibo :ensure t)
 (use-package aidermacs :ensure t)
 (use-package ellama :ensure t)
+
+;; emx.footer
 (use-package envrc :ensure t)
-(use-package dirvish :ensure t)
-(use-package vterm :ensure t)
-(use-package yeetube :ensure t)
-(use-package mpv :ensure t)
-(use-package empv :ensure t)
-(use-package lsp-bridge :ensure t)
-(use-package pdf-tools :ensure t)
+
+;;; packages.el ends here

@@ -1,3 +1,6 @@
+# Installs emx: its Emacs, the tools its modules call, the `emx` launcher and
+# the init shims in ~/.config/emx.
+{ self }:
 {
   config,
   lib,
@@ -6,81 +9,17 @@
 }:
 let
   cfg = config.programs.emacs-emx;
-  
-  # Get the Emacs package set for the selected Emacs package
-  emacsPackages = pkgs.emacsPackagesFor cfg.package;
-  
-  # Process tree-sitter grammar selections based on user-provided grammar names
-  treesitGrammars =
-    if builtins.elem "all" cfg.treesitGrammars then
-      # Include all available grammars when the special "all" name is specified
-      emacsPackages.treesit-grammars.with-all-grammars
-    else if cfg.treesitGrammars != [] then
-      # For specific grammar selections, map our simple names to package references
-      emacsPackages.treesit-grammars.with-grammars (grammars:
-        map (name:
-          grammars."tree-sitter-${name}" or
-            (throw "Unknown treesit grammar: ${name}")
-        ) cfg.treesitGrammars
-      )
-    else null;
 
-  # Define grammar packages for inclusion in the final Emacs package
-  grammarPackages = if treesitGrammars != null then [ treesitGrammars ] else [];
-  
-  # Define core Emacs packages to be managed by Nix
-  # These should be stable packages or those with C dependencies
-  coreEmacsPackages = epkgs: with epkgs; [
-    use-package
+  emacs = self.packages.${pkgs.stdenv.hostPlatform.system}.emacs;
 
-    # emx-navigation
-    dirvish
-
-    vterm
-
-    # emx-multimedia
-    yeetube
-    mpv
-    empv
-
-    # emx-programming
-    # lsp-bridge: self-contained in nixpkgs (Python sidecar deps are baked in
-    # via a hardcoded interpreter); language servers come from home.packages
-    # (e.g. basedpyright below).
-    lsp-bridge
-
-    # emx-research
-    pdf-tools
-  ];
-
-  # Create the final Emacs package with grammars and core packages included
-  finalEmacsPackage = emacsPackages.emacsWithPackages (epkgs:
-    grammarPackages ++ (coreEmacsPackages epkgs));
-
-  # Config source location in Nix store (always points to the immutable copy)
-  src = "${../.}";  # This is the path to the EMX source in the Nix store
+  # The emx source in the Nix store, loaded unless the launcher runs in
+  # development mode.
+  src = "${self}";
 in
 {
   options.programs.emacs-emx = {
     enable = lib.mkEnableOption "Emacs EmX configuration";
 
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.emacs-pgtk;
-      description = "The default Emacs derivation to use.";
-    };
-    
-    treesitGrammars = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [];
-      example = [ "rust" "python" "nix" ];
-      description = ''
-        List of tree-sitter grammar languages to include.
-        Use "all" to include all available grammars.
-        Example: [ "rust" "python" "nix" ]
-        For all grammars: [ "all" ]
-      '';
-    };
     localPath = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
@@ -104,7 +43,7 @@ in
 
   config = lib.mkIf cfg.enable {
     # Install the Emacs package and EMX launcher script
-    home.packages = [ finalEmacsPackage ] ++ [
+    home.packages = [ emacs ] ++ [
         pkgs.ripgrep
         pkgs.fd
         pkgs.yt-dlp
@@ -148,13 +87,13 @@ in
         fi
         
         # Launch Emacs with proper init directory
-        ${finalEmacsPackage}/bin/emacs --init-directory "$HOME/.config/emx" "''${args[@]}"
+        ${emacs}/bin/emacs --init-directory "$HOME/.config/emx" "''${args[@]}"
       '')
       ];
 
     home.sessionVariables = lib.mkIf cfg.defaultEditor {
       EDITOR = lib.getBin (
-        pkgs.writeShellScript "editor" ''exec ${lib.getBin cfg.package}/bin/emacsclient "''${@:---create-frame}"''
+        pkgs.writeShellScript "editor" ''exec ${emacs}/bin/emacsclient "''${@:---create-frame}"''
       );
     };
     
@@ -207,26 +146,12 @@ in
 
       # Main init.el shim
       "emx/init.el" = {
-        text = let
-          # Extract date from Emacs package path for elpaca-core-date
-          # See: https://github.com/progfolio/elpaca/wiki/Warnings-and-Errors
-          emacsBuildDate =
-            let
-              packagePath = toString cfg.package;
-              dateMatch = builtins.match ".*-([0-9]{8}).*" packagePath;
-            in
-              if dateMatch != null
-              then builtins.head dateMatch
-              else null;
-        in ''
+        text = ''
           ;; EMX initialization shim -*- lexical-binding: t -*-
 
           ;; Directory variables already set by early-init.el
           ;; Just ensure user-emacs-directory is set to our config dir
           (setq user-emacs-directory emx-config-dir)
-
-          ;; Set Elpaca core date based on Emacs build date from Nix
-          ${if emacsBuildDate != null then "(setq elpaca-core-date '(${emacsBuildDate}))" else ";; No build date found in package name"}
 
           ;; Load the actual init.el from source
           (load (expand-file-name "init.el" emx-source-dir))

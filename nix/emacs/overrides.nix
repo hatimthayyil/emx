@@ -1,16 +1,9 @@
 # Build fixes and native parts that twist leaves to the user.
-{ pkgs, emacsPackage }:
+{ pkgs }:
 _: prev: {
-  # Its byte-compilation changes into HOME, and twist runs makeinfo on each of
-  # its .texi fragments, which fail alone.
+  # Its byte-compilation changes into HOME.
   auctex = prev.auctex.overrideAttrs (old: {
-    outputs = [ "out" ];
     preBuild = "export HOME=$TMPDIR\n" + (old.preBuild or "");
-  });
-
-  # twist runs makeinfo on each .texi file; cheat.texi is a fragment that fails alone.
-  geiser = prev.geiser.overrideAttrs (_: {
-    outputs = [ "out" ];
   });
 
   jinx = prev.jinx.overrideAttrs (old: {

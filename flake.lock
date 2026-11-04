@@ -18,22 +18,6 @@
         "type": "github"
       }
     },
-    "emacs-overlay": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1793373858,
-        "narHash": "sha256-G6v/PXcvnGlh3QKBguf/HYVPv+rFYyom+4ppmRSzFvQ=",
-        "owner": "nix-community",
-        "repo": "emacs-overlay",
-        "rev": "cb4a7f35306c7b041ff2c996a5e0c3e0d93da7b3",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "emacs-overlay",
-        "type": "github"
-      }
-    },
     "fromElisp": {
       "flake": false,
       "locked": {
@@ -84,7 +68,6 @@
     },
     "root": {
       "inputs": {
-        "emacs-overlay": "emacs-overlay",
         "melpa": "melpa",
         "nixpkgs": "nixpkgs",
         "twist": "twist"

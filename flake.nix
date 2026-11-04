@@ -1,34 +1,39 @@
 {
-  description = "Emacs configuration";
+  description = "emx, an Emacs distribution";
 
   inputs = {
-    emacs-overlay = {
-      url = "github:nix-community/emacs-overlay";
-      flake = false;
-    };
     melpa = {
       url = "github:melpa/melpa";
       flake = false;
     };
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    twist.url = "github:emacs-twist/twist.nix";
+    twist.url = "github:hatimbt/twist.nix";
   };
 
   outputs =
-    { nixpkgs, ... }@inputs:
+    { self, nixpkgs, ... }@inputs:
     let
       system = "x86_64-linux";
-      trial = import ./nix/trial {
-        inherit inputs;
-        pkgs = nixpkgs.legacyPackages.${system};
-      };
+      pkgs = nixpkgs.legacyPackages.${system};
+      emacs = import ./nix/emacs { inherit inputs pkgs; };
     in
     {
-      apps.${system} = trial.twistApps;
-      homeManagerModules.default = import ./nix/home-module.nix;
+      checks.${system} = import ./nix/checks {
+        inherit pkgs emacs;
+        src = self;
+      };
+
+      homeManagerModules.default = import ./nix/home-module.nix { inherit self; };
+
+      # `nix run --impure .#lock` regenerates lock/ from packages.el, and
+      # `nix run --impure .#update` moves the ELPA archive packages to their
+      # newest releases. Both read the archives live, so they need --impure;
+      # as apps, `nix flake check` would evaluate them and fail.
+      legacyPackages.${system} = emacs.makeApps { lockDirName = "lock"; };
+
       packages.${system} = {
-        emacs-nixpkgs = trial.nixpkgs;
-        emacs-twist = trial.twist;
+        default = emacs;
+        inherit emacs;
       };
     };
 }

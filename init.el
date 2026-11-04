@@ -37,22 +37,6 @@
 (unless (equal user-emacs-directory emx-config-dir)
   (setq user-emacs-directory emx-config-dir))
 
-;; Load EmX package management
-(load (expand-file-name "lisp/emx-package.el" emx-source-dir))
-
-;; Load Emacs Lisp from Elpaca
-(load (expand-file-name "elpaca.el" emx-source-dir))
-
-;; FIXME Does not work, need a way to have local overrides.
-;; Load local overrides if it exists.
-;; (let ((local (expand-file-name "elpaca.local.el" emx-source-dir)))
-;;   (when (file-readable-p local)
-;;     (message "Elpaca: loading local overrides from %s" local)
-;;     (load local nil 'nomessage)))
-
-(elpaca-process-queues)
-(elpaca-wait)
-
 ;; Benchmark
 (when init-file-debug
   (require 'benchmark-init)

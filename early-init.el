@@ -1,6 +1,6 @@
 ;;; early-init.el --- earliest birds               -*- lexical-binding: t -*-
 
-;; We use Nix and Elpaca for our package management
+;; Nix provides every package (packages.el); package.el must not activate any.
 (setq package-enable-at-startup nil)
 (setq package-archives nil)
 

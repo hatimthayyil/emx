@@ -3,14 +3,14 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## PROJECT PHILOSOPHY
-- Hybrid package management: Nix for binaries, Elpaca for Elisp
-- Nix provides stable foundation (Emacs binary, system dependencies)
-- Elpaca handles dynamic Elisp packages with its own locking mechanism
-- Focus on enabling fast iteration while maintaining reproducibility
-- Nix (flake.lock) and Elpaca (lockfiles) both provide dependency locking
+- Nix builds Emacs and every Elisp package with twist; there is no other package manager
+- `packages.el` lists the packages, `recipes/` adds sources missing from the archives, `lock/` pins every version
+- Nix stays underneath: it builds and pins, and Elisp work stays live
 
 ## BUILD/LINT/TEST COMMANDS
 - Build: `nix build`
+- Check (boots the real init and loads every package): `nix flake check`
+- Throttle local builds: `--max-jobs 2 --cores 4`
 - Dev environment: `nix develop`
 - Lint Nix files: `nixpkgs-fmt <filename>.nix`
 
@@ -22,9 +22,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Minimize use of with statements
 
 ### Emacs Lisp
-- Use elpaca for package management (not nix for Elisp packages)
 - Follow Emacs Lisp conventions (2 spaces, kebab-case)
-- Leverage elpaca's lockfile mechanism for reproducibility
+- Add a package to `packages.el`, then regenerate the lock with `nix run --impure .#lock`
 
 ### Module Design
 - Keep Nix as non-intrusive as possible to Emacs workflow

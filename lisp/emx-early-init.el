@@ -24,11 +24,6 @@ turned on.")
 (defvar emx-gc-cons-threshold (* 16 1024 1024)
   "The value of `gc-cons-threshold' after Emacs startup.")
 
-(defvar emx-package-initialize-and-refresh nil
-  "Whether to automatically initialize and refresh packages.
-When set to non-nil, Emacs will automatically call `package-initialize' and
-`package-refresh-contents' to set up and update the package system.")
-
 
 ;;;  ####################################################################
 
@@ -48,6 +43,7 @@ When set to non-nil, Emacs will automatically call `package-initialize' and
   (require 'use-package)
   (require 'use-package-ensure)
   (setopt use-package-always-ensure nil)
+  (setopt use-package-always-defer t)
 
   (when init-file-debug
     (setq use-package-verbose t
