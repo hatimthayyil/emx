@@ -41,6 +41,16 @@ A nil feature means the package is a theme: its file is only located.")
           ((not (locate-library (symbol-name package)))
            (error "Not on load-path")))))
 
+(defun emx-boot-check--parinfer ()
+  "Signal an error unless parinfer-rust-mode has a supported library."
+  (require 'parinfer-rust-mode)
+  (unless (file-exists-p parinfer-rust-library)
+    (error "%s is missing" parinfer-rust-library))
+  (require 'parinfer-rust parinfer-rust-library)
+  (let ((version (parinfer-rust-version)))
+    (unless (member version parinfer-rust-supported-versions)
+      (error "Library version %s is not supported" version))))
+
 ;; Fail instead of compiling the module when it is missing.
 (setq vterm-always-compile-module nil)
 
@@ -60,6 +70,9 @@ A nil feature means the package is a theme: its file is only located.")
   (let ((epdfinfo (expand-file-name "epdfinfo" (file-name-directory (locate-library "pdf-info")))))
     (unless (file-executable-p epdfinfo)
       (push "pdf-tools: epdfinfo missing" failures)))
+  (condition-case err
+      (emx-boot-check--parinfer)
+    (error (push (format "parinfer-rust: %s" (error-message-string err)) failures)))
   (dolist (tool emx-boot-check-tools)
     (unless (executable-find tool)
       (push (format "%s: not on exec-path" tool) failures)))

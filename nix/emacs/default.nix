@@ -45,6 +45,7 @@ in
   );
   extraSiteStartElisp = ''
     (add-to-list 'treesit-extra-load-path "${grammars}/lib/")
+    (defvar parinfer-rust-library "${pkgs.parinfer-rust-emacs}/lib/libparinfer_rust.so")
   '';
 }).overrideScope
   (

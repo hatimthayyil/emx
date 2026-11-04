@@ -77,8 +77,13 @@
 ;; parinfer - Makes writing Lisp relatively easy
 ;;
 ;; https://github.com/justinbarclay/parinfer-rust-mode
-;; FIXME This package hangs Emacs when loading elisp. The parinfer rust
-;; library needs to be sorted out. The lib is not being detected atm.
+;;
+;; `parinfer-rust-library' is set in nix/emacs/default.nix. Without a library
+;; the mode stops at a download prompt. On a buffer's first command it asks
+;; before reindenting the buffer, and it turns itself off in files with tabs.
+;;
+;; FIXME This package has hung Emacs when loading elisp. Try it in a live
+;; session before enabling it.
 ;; (use-package parinfer-rust-mode
 ;;   :hook emacs-lisp-mode)
 
