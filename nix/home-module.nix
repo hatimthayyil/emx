@@ -1,9 +1,8 @@
 # Installs emx once: one `emx` package holding the CLI, `emacs` and
 # `emacsclient` launchers that run Emacs from emx's profile, and Emacs's icons;
-# the tools emx's modules call; and the init shims in ~/.config/emx that load
-# the Elisp from the emx repo. `emx sync` builds Emacs and its packages into the
-# profile, so home-manager never builds them and a package update needs no
-# switch.
+# and the init shims in ~/.config/emx that load the Elisp from the emx repo.
+# `emx sync` builds Emacs, its packages and the tools its modules call into the
+# profile, so home-manager never builds them and an update needs no switch.
 { self }:
 { config
 , lib
@@ -79,22 +78,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [
-      emx
-
-      pkgs.ripgrep
-      pkgs.fd
-      pkgs.yt-dlp
-      pkgs.parinfer-rust-emacs
-
-      pkgs.vale # syntax aware prose linter
-      pkgs.vale-ls # LSP for vale
-      pkgs.valeStyles.write-good
-
-      pkgs.basedpyright # Python LSP
-      pkgs.ruff # Python linter and formatter
-      pkgs.beancount-language-server # TODO split off into a "personal"
-    ];
+    home.packages = [ emx ];
 
     # services.emacs.enable runs the daemon from emx's profile. The service
     # skips until the profile exists, and the `emx sync` creating it starts it.

@@ -4,8 +4,9 @@
 
 ;; Loaded after emx's init by nix/checks/default.nix.  Fails unless init
 ;; loaded without error, the main feature of every package named in the file
-;; $EMX_PACKAGES loads without an error from its configuration, and the
-;; native parts are in place.
+;; $EMX_PACKAGES loads without an error from its configuration, the native
+;; parts are in place, and Emacs finds the tools its modules call.  The build
+;; sandbox has none of them, so they can only come from Emacs's wrapper.
 
 ;;; Code:
 
@@ -15,6 +16,11 @@
     (poet-theme . nil))
   "Packages whose main feature is not named after them.
 A nil feature means the package is a theme: its file is only located.")
+
+(defconst emx-boot-check-tools
+  '("rg" "fd" "yt-dlp" "vale" "vale-ls" "basedpyright" "ruff"
+    "beancount-language-server")
+  "Programs that Emacs's wrapper puts on PATH.")
 
 (defun emx-boot-check--packages ()
   "Return the package names listed in the file $EMX_PACKAGES."
@@ -54,6 +60,9 @@ A nil feature means the package is a theme: its file is only located.")
   (let ((epdfinfo (expand-file-name "epdfinfo" (file-name-directory (locate-library "pdf-info")))))
     (unless (file-executable-p epdfinfo)
       (push "pdf-tools: epdfinfo missing" failures)))
+  (dolist (tool emx-boot-check-tools)
+    (unless (executable-find tool)
+      (push (format "%s: not on exec-path" tool) failures)))
   ;; use-package reports an error in a :config block as a warning.
   (when-let* ((warnings (get-buffer "*Warnings*")))
     (with-current-buffer warnings

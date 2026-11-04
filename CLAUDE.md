@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `packages.el` lists the packages, `recipes/` adds sources missing from the archives, `lock/` pins every version
 - Nix stays underneath: it builds and pins, and Elisp work stays live
 - `emx sync` (the Rust CLI in `cli/`) builds Emacs and its packages into emx's own Nix profile, `$XDG_STATE_HOME/emx/profile`; home-manager installs emx once and never builds the package set
+- The tools emx's modules call are `executablePackages` in `nix/emacs/default.nix`: they sit in emx's profile, on the `PATH` of Emacs and what it starts, and nothing outside Emacs sees them
 - Emacs loads its Elisp from the emx repo (`programs.emx.src`, `EMX_SRC` for the CLI), so edits need no build
 
 ## BUILD/LINT/TEST COMMANDS

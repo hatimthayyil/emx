@@ -1,5 +1,6 @@
 # emx's Emacs: emacs-pgtk with every package in ../../packages.el, built by
-# twist from upstream sources pinned in ../../lock.
+# twist from upstream sources pinned in ../../lock, and the tools its modules
+# call.
 { pkgs, inputs }:
 let
   emacsPackage = pkgs.emacs-pgtk;
@@ -49,5 +50,20 @@ in
   (
     _: prev: {
       elispPackages = prev.elispPackages.overrideScope (import ./overrides.nix { inherit pkgs; });
+
+      # Emacs's wrapper prefixes these to PATH, so Emacs and the processes it
+      # starts find them and the user's shell does not.
+      executablePackages = [
+        pkgs.ripgrep
+        pkgs.fd
+        pkgs.yt-dlp
+
+        (pkgs.vale.withStyles (styles: [ styles.write-good ])) # syntax aware prose linter
+        pkgs.vale-ls # LSP for vale
+
+        pkgs.basedpyright # Python LSP
+        pkgs.ruff # Python linter and formatter
+        pkgs.beancount-language-server # TODO split off into a "personal"
+      ];
     }
   )
