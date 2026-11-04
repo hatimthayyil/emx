@@ -1,30 +1,30 @@
-//! `emx sync`: builds the checkout's Emacs and packages, shows what the build
+//! `emx sync`: builds the emx repo's Emacs and packages, shows what the build
 //! changes, and after confirmation makes it a new generation of emx's
 //! profile.
 
 use std::path::PathBuf;
 
 use crate::build;
-use crate::checkout::Checkout;
 use crate::cli::SyncArgs;
 use crate::diff;
 use crate::error::Error;
 use crate::nix;
 use crate::profile::Profile;
 use crate::prompt;
+use crate::source::Source;
 
 /// The flake output holding Emacs with every package (nix/emacs).
 const EMACS_OUTPUT: &str = "emacs";
 
-pub fn run(checkout: Option<PathBuf>, args: &SyncArgs) -> Result<(), Error> {
-    let checkout = Checkout::open(checkout)?;
+pub fn run(src: Option<PathBuf>, args: &SyncArgs) -> Result<(), Error> {
+    let source = Source::open(src)?;
     let profile = Profile::from_env()?;
     prompt::ensure_answerable(args.yes)?;
     profile.create_parent()?;
     let current = profile.current()?;
 
     let build = build::build(
-        &checkout.installable(EMACS_OUTPUT),
+        &source.installable(EMACS_OUTPUT),
         &profile.pending_link(),
         &args.nix_args,
     )?;

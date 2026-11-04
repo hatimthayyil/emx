@@ -1,6 +1,6 @@
 # Installs emx once: the `emx` CLI; `emacs` and `emacsclient` launchers that
 # run Emacs from emx's profile; the tools emx's modules call; and the init
-# shims in ~/.config/emx that load the Elisp from the checkout. `emx sync`
+# shims in ~/.config/emx that load the Elisp from the emx repo. `emx sync`
 # builds Emacs and its packages into the profile, so home-manager never builds
 # them and a package update needs no switch.
 { self }:
@@ -10,11 +10,11 @@
 , ...
 }:
 let
-  cfg = config.programs.emacs-emx;
+  cfg = config.programs.emx;
 
   system = pkgs.stdenv.hostPlatform.system;
 
-  checkout = toString cfg.checkout;
+  src = toString cfg.src;
 
   initDirectory = "${config.xdg.configHome}/emx";
 
@@ -26,7 +26,7 @@ let
       meta.mainProgram = "emx";
     } ''
     makeWrapper ${lib.getExe self.packages.${system}.emx} $out/bin/emx \
-      --set-default EMX_CHECKOUT ${lib.escapeShellArg checkout}
+      --set-default EMX_SRC ${lib.escapeShellArg src}
   '';
 
   # Runs NAME from emx's profile, which cli/src/profile.rs locates by the same
@@ -71,17 +71,17 @@ let
   };
 in
 {
-  options.programs.emacs-emx = {
+  options.programs.emx = {
     enable = lib.mkEnableOption "emx, an Emacs distribution";
 
-    checkout = lib.mkOption {
+    src = lib.mkOption {
       type = lib.types.pathWith {
         absolute = true;
         inStore = false;
       };
       example = "/home/alice/code/emx";
       description = ''
-        The emx checkout. Emacs loads its configuration from it, and
+        The emx repo. Emacs loads its configuration from it, and
         {command}`emx sync` builds Emacs and its packages from it.
       '';
     };
@@ -140,13 +140,13 @@ in
 
     xdg.configFile = {
       "emx/early-init.el".text = ''
-        ;;; early-init.el --- Load emx's early-init.el from the checkout  -*- lexical-binding: t -*-
-        (defvar emx-source-dir (file-name-as-directory ${elispString checkout})
-          "The emx checkout that Emacs loads its configuration from.")
+        ;;; early-init.el --- Load emx's early-init.el from the emx repo  -*- lexical-binding: t -*-
+        (defvar emx-source-dir (file-name-as-directory ${elispString src})
+          "The emx repo that Emacs loads its configuration from.")
         (load (expand-file-name "early-init.el" emx-source-dir) nil t)
       '';
       "emx/init.el".text = ''
-        ;;; init.el --- Load emx's init.el from the checkout  -*- lexical-binding: t -*-
+        ;;; init.el --- Load emx's init.el from the emx repo  -*- lexical-binding: t -*-
         (load (expand-file-name "init.el" emx-source-dir) nil t)
       '';
     };

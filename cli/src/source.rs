@@ -1,30 +1,29 @@
-//! The emx checkout: the flake that emx's Emacs and packages are built from.
+//! The emx repo: the flake that emx's Emacs and packages are built from.
 
 use std::ffi::OsString;
 use std::path::PathBuf;
 
 use crate::error::Error;
 
-/// Files every emx checkout has at its root.
+/// Files every emx repo has at its root.
 const MARKERS: [&str; 2] = ["flake.nix", "packages.el"];
 
-/// An emx checkout, validated and with its path made absolute.
+/// The emx repo, validated and with its path made absolute.
 #[derive(Debug)]
-pub struct Checkout {
+pub struct Source {
     root: PathBuf,
 }
 
-impl Checkout {
-    /// Opens the checkout at `dir`, which comes from `--checkout` or
-    /// `EMX_CHECKOUT`.
+impl Source {
+    /// Opens the emx repo at `dir`, which comes from `--src` or `EMX_SRC`.
     pub fn open(dir: Option<PathBuf>) -> Result<Self, Error> {
-        let dir = dir.ok_or(Error::NoCheckout)?;
+        let dir = dir.ok_or(Error::NoSource)?;
         let root = dir
             .canonicalize()
-            .map_err(|source| Error::CheckoutUnreadable { path: dir, source })?;
+            .map_err(|source| Error::SourceUnreadable { path: dir, source })?;
         for marker in MARKERS {
             if !root.join(marker).is_file() {
-                return Err(Error::NotACheckout {
+                return Err(Error::NotASource {
                     path: root,
                     missing: marker,
                 });
@@ -33,7 +32,7 @@ impl Checkout {
         Ok(Self { root })
     }
 
-    /// The installable naming the flake output `output` of this checkout.
+    /// The installable naming the flake output `output` of this repo.
     /// Nix reads a plain path as a Git flake when it is a Git work tree, so
     /// ignored files such as `ai/` never reach the store.
     pub fn installable(&self, output: &str) -> OsString {
@@ -50,7 +49,7 @@ mod tests {
 
     use super::*;
 
-    fn checkout_dir() -> tempfile::TempDir {
+    fn source_dir() -> tempfile::TempDir {
         let dir = tempfile::tempdir().unwrap();
         for marker in MARKERS {
             fs::write(dir.path().join(marker), "").unwrap();
@@ -59,8 +58,8 @@ mod tests {
     }
 
     #[test]
-    fn requires_a_checkout() {
-        assert!(matches!(Checkout::open(None), Err(Error::NoCheckout)));
+    fn requires_a_source() {
+        assert!(matches!(Source::open(None), Err(Error::NoSource)));
     }
 
     #[test]
@@ -68,8 +67,8 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let missing = dir.path().join("missing");
         assert!(matches!(
-            Checkout::open(Some(missing)),
-            Err(Error::CheckoutUnreadable { .. })
+            Source::open(Some(missing)),
+            Err(Error::SourceUnreadable { .. })
         ));
     }
 
@@ -78,8 +77,8 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         fs::write(dir.path().join("flake.nix"), "").unwrap();
         assert!(matches!(
-            Checkout::open(Some(dir.path().to_owned())),
-            Err(Error::NotACheckout {
+            Source::open(Some(dir.path().to_owned())),
+            Err(Error::NotASource {
                 missing: "packages.el",
                 ..
             })
@@ -87,13 +86,13 @@ mod tests {
     }
 
     #[test]
-    fn names_an_output_of_the_absolute_checkout() {
-        let dir = checkout_dir();
+    fn names_an_output_of_the_absolute_source() {
+        let dir = source_dir();
         let relative = dir.path().join("..").join(dir.path().file_name().unwrap());
-        let checkout = Checkout::open(Some(relative)).unwrap();
+        let source = Source::open(Some(relative)).unwrap();
         let root = dir.path().canonicalize().unwrap();
         assert_eq!(
-            checkout.installable("emacs"),
+            source.installable("emacs"),
             OsString::from(format!("{}#emacs", root.display()))
         );
     }

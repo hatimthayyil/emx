@@ -9,9 +9,9 @@ use clap::{Args, Parser, Subcommand};
 #[derive(Debug, Parser)]
 #[command(name = "emx", version)]
 pub struct Cli {
-    /// The emx checkout to build from.
-    #[arg(long, global = true, env = "EMX_CHECKOUT", value_name = "DIR")]
-    pub checkout: Option<PathBuf>,
+    /// The emx repo to build from.
+    #[arg(long, global = true, env = "EMX_SRC", value_name = "DIR")]
+    pub src: Option<PathBuf>,
 
     #[command(subcommand)]
     pub command: Command,
@@ -19,7 +19,7 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Build the checkout's Emacs and packages, as its lock pins them, and make
+    /// Build the emx repo's Emacs and packages, as its lock pins them, and make
     /// the result the current generation of emx's profile.
     Sync(SyncArgs),
 }

@@ -6,14 +6,14 @@ use std::process::ExitStatus;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("no emx checkout given: pass --checkout DIR or set EMX_CHECKOUT")]
-    NoCheckout,
+    #[error("no emx repo given: pass --src DIR or set EMX_SRC")]
+    NoSource,
 
-    #[error("cannot open the emx checkout {path}: {source}")]
-    CheckoutUnreadable { path: PathBuf, source: io::Error },
+    #[error("cannot open the emx repo {path}: {source}")]
+    SourceUnreadable { path: PathBuf, source: io::Error },
 
-    #[error("{path} is not an emx checkout: it has no {missing}")]
-    NotACheckout {
+    #[error("{path} is not an emx repo: it has no {missing}")]
+    NotASource {
         path: PathBuf,
         missing: &'static str,
     },

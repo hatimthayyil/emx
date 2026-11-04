@@ -20,9 +20,9 @@ let
           homeDirectory = "/home/emx";
           stateVersion = "26.05";
         };
-        programs.emacs-emx = {
+        programs.emx = {
           enable = true;
-          checkout = "/home/emx/code/emx";
+          src = "/home/emx/code/emx";
           defaultEditor = true;
         };
         services.emacs.enable = true;

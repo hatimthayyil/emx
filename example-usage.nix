@@ -3,13 +3,13 @@
 { config, inputs, ... }:
 
 {
-  imports = [ inputs.emx.homeManagerModules.default ];
+  imports = [ inputs.emx.homeModules.default ];
 
-  programs.emacs-emx = {
+  programs.emx = {
     enable = true;
-    # Emacs loads its configuration from this checkout, and `emx sync` builds
+    # The emx repo: Emacs loads its configuration from it, and `emx sync` builds
     # Emacs and its packages from it.
-    checkout = "${config.home.homeDirectory}/code/emx";
+    src = "${config.home.homeDirectory}/code/emx";
   };
 
   # Optional: run the Emacs daemon from emx's profile.

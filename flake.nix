@@ -27,11 +27,11 @@
       checks.${system} = import ./nix/checks {
         inherit pkgs emacs;
         homeManager = inputs.home-manager;
-        homeModule = self.homeManagerModules.default;
+        homeModule = self.homeModules.default;
         src = self;
       };
 
-      homeManagerModules.default = import ./nix/home-module.nix { inherit self; };
+      homeModules.default = import ./nix/home-module.nix { inherit self; };
 
       # `nix run --impure .#lock` regenerates lock/ from packages.el, and
       # `nix run --impure .#update` moves the ELPA archive packages to their

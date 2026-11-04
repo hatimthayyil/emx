@@ -41,10 +41,10 @@ struct Fixture {
 impl Fixture {
     fn new() -> Self {
         let root = tempfile::tempdir().unwrap();
-        let checkout = root.path().join("emx");
-        fs::create_dir(&checkout).unwrap();
-        fs::write(checkout.join("flake.nix"), "").unwrap();
-        fs::write(checkout.join("packages.el"), "").unwrap();
+        let src = root.path().join("emx");
+        fs::create_dir(&src).unwrap();
+        fs::write(src.join("flake.nix"), "").unwrap();
+        fs::write(src.join("packages.el"), "").unwrap();
         let bin = root.path().join("bin");
         fs::create_dir(&bin).unwrap();
         let nix = bin.join("nix");
@@ -71,7 +71,7 @@ impl Fixture {
         .unwrap();
         let mut command = Command::new(env!("CARGO_BIN_EXE_emx"));
         command
-            .env_remove("EMX_CHECKOUT")
+            .env_remove("EMX_SRC")
             .env("PATH", path)
             .env("HOME", self.path("home"))
             .env("XDG_STATE_HOME", self.path("state"))
@@ -82,7 +82,7 @@ impl Fixture {
 
     fn sync(&self) -> Command {
         let mut command = self.emx();
-        command.env("EMX_CHECKOUT", self.path("emx")).arg("sync");
+        command.env("EMX_SRC", self.path("emx")).arg("sync");
         command
     }
 
@@ -129,14 +129,14 @@ fn builds_into_a_root_then_switches_the_profile() {
     let calls = fixture.nix_calls();
     assert_eq!(calls.len(), 2, "{calls:?}");
     let (build, switch) = (&calls[0], &calls[1]);
-    let checkout = fixture.path("emx").canonicalize().unwrap();
+    let src = fixture.path("emx").canonicalize().unwrap();
     assert_eq!(build[0], "build");
     assert!(build.contains(&"--no-update-lock-file".to_owned()));
     assert_eq!(
         Path::new(after(build, "--out-link")),
         fixture.state("pending")
     );
-    assert!(build.contains(&format!("{}#emacs", checkout.display())));
+    assert!(build.contains(&format!("{}#emacs", src.display())));
     assert_eq!(build[build.len() - 2..], ["--max-jobs", "2"]);
     assert_eq!(
         Path::new(after(switch, "--profile")),
@@ -208,11 +208,11 @@ fn needs_yes_without_a_terminal_to_ask() {
 }
 
 #[test]
-fn takes_the_checkout_from_the_command_line() {
+fn takes_the_src_from_the_command_line() {
     let fixture = Fixture::new();
     let output = fixture
         .emx()
-        .arg("--checkout")
+        .arg("--src")
         .arg(fixture.path("emx"))
         .args(["sync", "--yes"])
         .output()
@@ -221,25 +221,25 @@ fn takes_the_checkout_from_the_command_line() {
 }
 
 #[test]
-fn fails_without_a_checkout() {
+fn fails_without_a_src() {
     let fixture = Fixture::new();
     let output = fixture.emx().args(["sync", "--yes"]).output().unwrap();
     assert_exit(&output, 1);
-    assert!(text(&output.stderr).contains("EMX_CHECKOUT"));
+    assert!(text(&output.stderr).contains("EMX_SRC"));
     assert!(fixture.nix_calls().is_empty());
 }
 
 #[test]
-fn fails_when_the_checkout_is_not_emx() {
+fn fails_when_the_src_is_not_emx() {
     let fixture = Fixture::new();
     let output = fixture
         .emx()
-        .env("EMX_CHECKOUT", fixture.path("state"))
+        .env("EMX_SRC", fixture.path("state"))
         .args(["sync", "--yes"])
         .output()
         .unwrap();
     assert_exit(&output, 1);
-    assert!(text(&output.stderr).contains("is not an emx checkout"));
+    assert!(text(&output.stderr).contains("is not an emx repo"));
 }
 
 #[test]
@@ -277,19 +277,19 @@ fn rejects_a_missing_subcommand() {
     assert_exit(&output, 2);
 }
 
-/// Builds this checkout's Emacs with the real Nix into a temporary profile and
+/// Builds this repo's Emacs with the real Nix into a temporary profile and
 /// boots it with the real init. Extra `nix build` arguments come from
 /// `EMX_TEST_NIX_ARGS`, split on whitespace.
 #[test]
 #[ignore = "builds emx's Emacs with Nix; run with `cargo test -- --ignored`"]
-fn syncs_and_boots_this_checkout() {
-    let checkout = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+fn syncs_and_boots_this_repo() {
+    let src = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let state = tempfile::tempdir().unwrap();
     let extra = std::env::var("EMX_TEST_NIX_ARGS").unwrap_or_default();
     let output = Command::new(env!("CARGO_BIN_EXE_emx"))
         .env("XDG_STATE_HOME", state.path())
-        .arg("--checkout")
-        .arg(checkout)
+        .arg("--src")
+        .arg(src)
         .args(["sync", "--yes", "--"])
         .args(extra.split_whitespace())
         .status()
@@ -305,7 +305,7 @@ fn syncs_and_boots_this_checkout() {
         .arg("--batch")
         .arg("-u")
         .arg("")
-        .arg(format!("--init-directory={}", checkout.display()))
+        .arg(format!("--init-directory={}", src.display()))
         .arg("--eval")
         .arg("(kill-emacs (if init-file-had-error 1 0))")
         .output()

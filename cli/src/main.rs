@@ -1,10 +1,9 @@
-//! `emx` builds emx's Emacs and its Elisp packages from an emx checkout into
+//! `emx` builds emx's Emacs and its Elisp packages from the emx repo into
 //! emx's own Nix profile, which the `emacs` and `emacsclient` launchers run.
 //!
 //! Exit status: 0 on success, 1 when a command fails, 2 on a usage error.
 
 mod build;
-mod checkout;
 mod cli;
 mod diff;
 mod error;
@@ -12,6 +11,7 @@ mod manifest;
 mod nix;
 mod profile;
 mod prompt;
+mod source;
 mod sync;
 
 use std::process::ExitCode;
@@ -34,6 +34,6 @@ fn main() -> ExitCode {
 
 fn run(cli: Cli) -> Result<(), Error> {
     match cli.command {
-        Command::Sync(args) => sync::run(cli.checkout, &args),
+        Command::Sync(args) => sync::run(cli.src, &args),
     }
 }
