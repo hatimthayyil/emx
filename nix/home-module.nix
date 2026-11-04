@@ -48,13 +48,24 @@ let
       '';
     };
 
+  emacs = self.packages.${system}.emacs.emacs;
+
+  # Emacs's application icons for the desktop entry, copied so the launchers'
+  # closure holds no Emacs.
+  icons = pkgs.runCommandLocal "emx-icons" { } ''
+    cd ${emacs}/share/icons
+    find hicolor -path '*/apps/emacs.png' -o -path '*/apps/emacs.svg' |
+      while read -r icon; do install -Dm444 "$icon" "$out/share/icons/$icon"; done
+  '';
+
   # Carries the Emacs version in its name: home-manager's Emacs service reads
   # it to choose the socket and window class.
   launchers = pkgs.symlinkJoin {
-    name = "emx-launchers-${self.packages.${system}.emacs.emacs.version}";
+    name = "emx-launchers-${emacs.version}";
     paths = [
       (launcher "emacs" "--init-directory ${lib.escapeShellArg initDirectory}")
       (launcher "emacsclient" "")
+      icons
     ];
     meta.mainProgram = "emacs";
   };

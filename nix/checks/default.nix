@@ -47,8 +47,9 @@ in
     touch $out
   '';
 
-  # Builds a home-manager configuration using the module, and fails if it
-  # would build emx's package set, which only `emx sync` builds.
+  # Builds a home-manager configuration using the module, and fails if its
+  # closure holds emx's package set or Emacs, which only `emx sync` builds, or
+  # if it lacks the desktop entry's icon.
   home-module =
     pkgs.runCommandLocal "emx-home-module-check"
       {
@@ -58,8 +59,15 @@ in
         ];
       }
       ''
-        if grep -qF ${builtins.unsafeDiscardStringContext emacs.outPath} closure; then
-          echo "the home-manager module depends on emx's package set"
+        for path in ${builtins.unsafeDiscardStringContext emacs.outPath} \
+                    ${builtins.unsafeDiscardStringContext emacs.emacs.outPath}; do
+          if grep -qF "$path" closure; then
+            echo "the home-manager module depends on $path"
+            exit 1
+          fi
+        done
+        if [ ! -e ${home.config.home.path}/share/icons/hicolor/scalable/apps/emacs.svg ]; then
+          echo "the home-manager generation lacks Emacs's icon"
           exit 1
         fi
         touch $out
