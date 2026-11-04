@@ -1,6 +1,7 @@
-//! `emx sync` run as a program. A fake `nix` on PATH records its arguments and
-//! creates the profile generation the real `nix build --profile` would, so
-//! these tests need neither Nix nor the user's state directory.
+//! `emx sync` run as a program. A fake `nix` on PATH records each call's
+//! arguments and does what the real one would to the build root and the
+//! profile, so these tests need neither Nix nor the user's state directory.
+//! Their stdin is not a terminal, so emx never asks and needs `--yes`.
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -10,15 +11,27 @@ use std::process::{Command, Output};
 use tempfile::TempDir;
 
 const FAKE_NIX: &str = r#"#!/bin/sh
-printf '%s\n' "$@" > "$FAKE_NIX_ARGS"
+printf '%s\n' "$@" -- >> "$FAKE_NIX_ARGS"
 [ "${FAKE_NIX_STATUS:-0}" = 0 ] || exit "$FAKE_NIX_STATUS"
+link= profile= target=
 while [ $# -gt 0 ]; do
-  [ "$1" = --profile ] && profile=$2
+  case "$1" in
+    --out-link) link=$2; shift ;;
+    --profile) profile=$2; shift ;;
+    /*) target=$1 ;;
+  esac
   shift
 done
-mkdir -p "$FAKE_NIX_OUT"
-ln -s "$FAKE_NIX_OUT" "$profile-1-link"
-ln -s "$(basename "$profile")-1-link" "$profile"
+if [ -n "$link" ]; then
+  mkdir -p "$FAKE_NIX_OUT"
+  ln -sfn "$FAKE_NIX_OUT" "$link"
+fi
+if [ -n "$profile" ]; then
+  n=1
+  while [ -L "$profile-$n-link" ]; do n=$((n + 1)); done
+  ln -s "$target" "$profile-$n-link"
+  ln -sfn "$(basename "$profile")-$n-link" "$profile"
+fi
 "#;
 
 struct Fixture {
@@ -45,7 +58,12 @@ impl Fixture {
         self.root.path().join(name)
     }
 
-    /// `emx` with an environment that reaches only the fixture's directories.
+    fn state(&self, name: &str) -> PathBuf {
+        self.path("state").join("emx").join(name)
+    }
+
+    /// `emx` with an environment that reaches only the fixture's directories,
+    /// building `store-emacs`.
     fn emx(&self) -> Command {
         let path = std::env::join_paths(std::iter::once(self.path("bin")).chain(
             std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()),
@@ -62,11 +80,19 @@ impl Fixture {
         command
     }
 
-    fn nix_args(&self) -> Vec<String> {
-        fs::read_to_string(self.path("nix-args"))
-            .unwrap()
-            .lines()
-            .map(str::to_owned)
+    fn sync(&self) -> Command {
+        let mut command = self.emx();
+        command.env("EMX_CHECKOUT", self.path("emx")).arg("sync");
+        command
+    }
+
+    /// The arguments of each `nix` call, in order.
+    fn nix_calls(&self) -> Vec<Vec<String>> {
+        let Ok(text) = fs::read_to_string(self.path("nix-args")) else {
+            return Vec::new();
+        };
+        text.split_terminator("--\n")
+            .map(|call| call.lines().map(str::to_owned).collect())
             .collect()
     }
 }
@@ -85,35 +111,100 @@ fn assert_exit(output: &Output, code: i32) {
     );
 }
 
+fn after<'a>(args: &'a [String], flag: &str) -> &'a str {
+    let at = args.iter().position(|a| a == flag).unwrap();
+    &args[at + 1]
+}
+
 #[test]
-fn builds_the_checkout_into_a_new_profile_generation() {
+fn builds_into_a_root_then_switches_the_profile() {
     let fixture = Fixture::new();
     let output = fixture
-        .emx()
-        .env("EMX_CHECKOUT", fixture.path("emx"))
-        .args(["sync", "--", "--max-jobs", "2"])
+        .sync()
+        .args(["--yes", "--", "--max-jobs", "2"])
         .output()
         .unwrap();
     assert_exit(&output, 0);
 
-    let profile = fixture.path("state").join("emx").join("profile");
+    let calls = fixture.nix_calls();
+    assert_eq!(calls.len(), 2, "{calls:?}");
+    let (build, switch) = (&calls[0], &calls[1]);
     let checkout = fixture.path("emx").canonicalize().unwrap();
-    let args = fixture.nix_args();
-    assert_eq!(args[0], "build");
-    assert!(args.contains(&"--no-update-lock-file".to_owned()));
-    let at = args.iter().position(|a| a == "--profile").unwrap();
-    assert_eq!(Path::new(&args[at + 1]), profile);
-    assert_eq!(args[at + 2], format!("{}#emacs", checkout.display()));
-    assert_eq!(args[args.len() - 2..], ["--max-jobs", "2"]);
+    assert_eq!(build[0], "build");
+    assert!(build.contains(&"--no-update-lock-file".to_owned()));
+    assert_eq!(
+        Path::new(after(build, "--out-link")),
+        fixture.state("pending")
+    );
+    assert!(build.contains(&format!("{}#emacs", checkout.display())));
+    assert_eq!(build[build.len() - 2..], ["--max-jobs", "2"]);
+    assert_eq!(
+        Path::new(after(switch, "--profile")),
+        fixture.state("profile")
+    );
+    assert_eq!(
+        switch.last().map(PathBuf::from),
+        Some(fixture.path("store-emacs"))
+    );
 
     assert_eq!(
         text(&output.stdout),
         format!(
             "emx: {} is now generation 1: {}\n",
-            profile.display(),
+            fixture.state("profile").display(),
             fixture.path("store-emacs").display()
         )
     );
+    // The fake build is no store path, so emx cannot diff it, says so, and
+    // still switches.
+    assert!(text(&output.stderr).contains("cannot show what the build changes"));
+    assert!(!fixture.state("pending").exists());
+}
+
+#[test]
+fn switches_to_a_changed_build_as_a_new_generation() {
+    let fixture = Fixture::new();
+    assert_exit(&fixture.sync().arg("--yes").output().unwrap(), 0);
+    let output = fixture
+        .sync()
+        .arg("--yes")
+        .env("FAKE_NIX_OUT", fixture.path("store-emacs-2"))
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+    assert!(text(&output.stdout).contains("is now generation 2"));
+    assert_eq!(
+        fs::read_link(fixture.state("profile")).unwrap(),
+        Path::new("profile-2-link")
+    );
+}
+
+#[test]
+fn keeps_the_profile_when_nothing_changed() {
+    let fixture = Fixture::new();
+    assert_exit(&fixture.sync().arg("--yes").output().unwrap(), 0);
+    let output = fixture.sync().arg("--yes").output().unwrap();
+    assert_exit(&output, 0);
+    assert_eq!(
+        text(&output.stdout),
+        format!(
+            "emx: nothing changed: generation 1 is already {}\n",
+            fixture.path("store-emacs").display()
+        )
+    );
+    // Two calls for the first sync, then only the build.
+    assert_eq!(fixture.nix_calls().len(), 3);
+    assert!(!fixture.state("profile-2-link").exists());
+    assert!(!fixture.state("pending").exists());
+}
+
+#[test]
+fn needs_yes_without_a_terminal_to_ask() {
+    let fixture = Fixture::new();
+    let output = fixture.sync().output().unwrap();
+    assert_exit(&output, 1);
+    assert!(text(&output.stderr).contains("pass --yes"));
+    assert!(fixture.nix_calls().is_empty());
 }
 
 #[test]
@@ -123,7 +214,7 @@ fn takes_the_checkout_from_the_command_line() {
         .emx()
         .arg("--checkout")
         .arg(fixture.path("emx"))
-        .arg("sync")
+        .args(["sync", "--yes"])
         .output()
         .unwrap();
     assert_exit(&output, 0);
@@ -132,10 +223,10 @@ fn takes_the_checkout_from_the_command_line() {
 #[test]
 fn fails_without_a_checkout() {
     let fixture = Fixture::new();
-    let output = fixture.emx().arg("sync").output().unwrap();
+    let output = fixture.emx().args(["sync", "--yes"]).output().unwrap();
     assert_exit(&output, 1);
     assert!(text(&output.stderr).contains("EMX_CHECKOUT"));
-    assert!(!fixture.path("nix-args").exists());
+    assert!(fixture.nix_calls().is_empty());
 }
 
 #[test]
@@ -144,7 +235,7 @@ fn fails_when_the_checkout_is_not_emx() {
     let output = fixture
         .emx()
         .env("EMX_CHECKOUT", fixture.path("state"))
-        .arg("sync")
+        .args(["sync", "--yes"])
         .output()
         .unwrap();
     assert_exit(&output, 1);
@@ -155,25 +246,24 @@ fn fails_when_the_checkout_is_not_emx() {
 fn reports_a_failed_build() {
     let fixture = Fixture::new();
     let output = fixture
-        .emx()
-        .env("EMX_CHECKOUT", fixture.path("emx"))
+        .sync()
+        .arg("--yes")
         .env("FAKE_NIX_STATUS", "3")
-        .arg("sync")
         .output()
         .unwrap();
     assert_exit(&output, 1);
     assert!(text(&output.stderr).contains("nix build failed"));
-    assert!(!fixture.path("state").join("emx").join("profile").exists());
+    assert_eq!(fixture.nix_calls().len(), 1);
+    assert!(!fixture.state("profile").exists());
 }
 
 #[test]
 fn reports_missing_nix() {
     let fixture = Fixture::new();
     let output = fixture
-        .emx()
-        .env("EMX_CHECKOUT", fixture.path("emx"))
+        .sync()
+        .arg("--yes")
         .env("PATH", fixture.path("empty"))
-        .arg("sync")
         .output()
         .unwrap();
     assert_exit(&output, 1);
@@ -200,8 +290,7 @@ fn syncs_and_boots_this_checkout() {
         .env("XDG_STATE_HOME", state.path())
         .arg("--checkout")
         .arg(checkout)
-        .arg("sync")
-        .arg("--")
+        .args(["sync", "--yes", "--"])
         .args(extra.split_whitespace())
         .status()
         .unwrap();

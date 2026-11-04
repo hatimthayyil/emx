@@ -26,6 +26,10 @@ pub enum Command {
 
 #[derive(Debug, Args)]
 pub struct SyncArgs {
+    /// Switch to the new build without asking.
+    #[arg(long, short)]
+    pub yes: bool,
+
     /// Extra arguments for `nix build`, given after `--`
     /// (for example `-- --max-jobs 2 --cores 4`).
     #[arg(last = true, value_name = "NIX_ARGS")]

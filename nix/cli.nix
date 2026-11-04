@@ -1,5 +1,11 @@
 # The emx CLI (../cli), which builds emx's Emacs into emx's profile.
-{ lib, rustPlatform }:
+{ lib
+, makeWrapper
+, nix-output-monitor
+, pkg-config
+, rustPlatform
+, sqlite
+}:
 let
   manifest = (lib.importTOML ../cli/Cargo.toml).package;
 in
@@ -15,6 +21,13 @@ rustPlatform.buildRustPackage {
     ];
   };
   cargoLock.lockFile = ../Cargo.lock;
+  nativeBuildInputs = [ makeWrapper pkg-config ];
+  # dix reads the Nix store database through SQLite.
+  buildInputs = [ sqlite ];
+  # `emx sync` renders build logs with nom.
+  postInstall = ''
+    wrapProgram $out/bin/emx --prefix PATH : ${lib.makeBinPath [ nix-output-monitor ]}
+  '';
   meta = {
     inherit (manifest) description;
     mainProgram = "emx";

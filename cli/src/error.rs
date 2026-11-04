@@ -33,6 +33,9 @@ pub enum Error {
     #[error("nix build succeeded but did not create emx's profile {path}")]
     ProfileNotCreated { path: PathBuf },
 
+    #[error("nix build succeeded but did not link its result at {path}: {source}")]
+    BuildNotLinked { path: PathBuf, source: io::Error },
+
     #[error("cannot run nix: it is not on PATH")]
     NixMissing,
 
@@ -41,4 +44,22 @@ pub enum Error {
 
     #[error("nix build failed ({status}); its output is above")]
     NixFailed { status: ExitStatus },
+
+    #[error("cannot run nom (nix-output-monitor): it is not on PATH")]
+    NomMissing,
+
+    #[error("cannot run nom (nix-output-monitor): {source}")]
+    NomSpawn { source: io::Error },
+
+    #[error("stdin is not a terminal, so emx cannot ask before switching: pass --yes")]
+    NeedsYes,
+
+    #[error("cannot read the answer: {source}")]
+    Prompt { source: io::Error },
+
+    #[error("not switched: {}", match generation {
+        Some(number) => format!("emx's profile stays at generation {number}"),
+        None => "emx's profile stays empty".to_owned(),
+    })]
+    Declined { generation: Option<u64> },
 }

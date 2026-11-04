@@ -3,11 +3,15 @@
 //!
 //! Exit status: 0 on success, 1 when a command fails, 2 on a usage error.
 
+mod build;
 mod checkout;
 mod cli;
+mod diff;
 mod error;
+mod manifest;
 mod nix;
 mod profile;
+mod prompt;
 mod sync;
 
 use std::process::ExitCode;

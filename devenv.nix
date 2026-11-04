@@ -1,7 +1,11 @@
 # Development environment for emx: the Rust toolchain for the emx CLI (cli/),
 # formatters for Nix and Rust, and commit hooks.
-{ ... }:
+{ pkgs, ... }:
 {
+  # dix (cli/) reads the Nix store database through SQLite; `emx sync` renders
+  # build logs with nom.
+  packages = [ pkgs.nix-output-monitor pkgs.pkg-config pkgs.sqlite ];
+
   languages.rust = {
     enable = true;
     channel = "stable";

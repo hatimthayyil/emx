@@ -48,6 +48,12 @@ impl Profile {
         &self.link
     }
 
+    /// The temporary garbage collector root that holds a build while emx
+    /// decides whether to switch to it.
+    pub fn pending_link(&self) -> PathBuf {
+        self.parent().join("pending")
+    }
+
     /// Creates the directory that holds the profile and its generations.
     pub fn create_parent(&self) -> Result<(), Error> {
         let parent = self.parent();

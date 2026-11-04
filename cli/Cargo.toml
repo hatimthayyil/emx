@@ -7,7 +7,11 @@ publish = false
 
 [dependencies]
 clap = { version = "4", features = ["derive", "env", "wrap_help"] }
+dix = { version = "3", default-features = false, features = ["store"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 thiserror = "2"
+yansi = "1"
 
 [dev-dependencies]
 tempfile = "3"
