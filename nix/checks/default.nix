@@ -1,22 +1,44 @@
 # Checks that emx's Emacs is correct: `nix flake check`.
-{
-  pkgs,
-  emacs,
-  src,
+{ pkgs
+, emacs
+, homeManager
+, homeModule
+, src
 }:
 let
   packageList = pkgs.writeText "emx-packages" (
     pkgs.lib.concatLines (builtins.attrNames emacs.packageInputs)
   );
+
+  home = homeManager.lib.homeManagerConfiguration {
+    inherit pkgs;
+    modules = [
+      homeModule
+      {
+        home = {
+          username = "emx";
+          homeDirectory = "/home/emx";
+          stateVersion = "26.05";
+        };
+        programs.emacs-emx = {
+          enable = true;
+          checkout = "/home/emx/code/emx";
+          defaultEditor = true;
+        };
+        services.emacs.enable = true;
+      }
+    ];
+  };
 in
 {
   # Boots with emx's real init, then loads every package in the set, including
   # dependencies. Batch mode loads init files only when -u names a user.
   # magit computes the git version when it loads.
-  boot = pkgs.runCommandLocal "emx-boot-check" {
-    EMX_PACKAGES = packageList;
-    nativeBuildInputs = [ pkgs.git ];
-  } ''
+  boot = pkgs.runCommandLocal "emx-boot-check"
+    {
+      EMX_PACKAGES = packageList;
+      nativeBuildInputs = [ pkgs.git ];
+    } ''
     export HOME=$TMPDIR
     # org-directory (modules/emx.organisation.el); org-node's :config fails
     # when it is missing.
@@ -24,6 +46,24 @@ in
     ${emacs}/bin/emacs --batch -u "" --init-directory=${src} -l ${./boot.el}
     touch $out
   '';
+
+  # Builds a home-manager configuration using the module, and fails if it
+  # would build emx's package set, which only `emx sync` builds.
+  home-module =
+    pkgs.runCommandLocal "emx-home-module-check"
+      {
+        exportReferencesGraph = [
+          "closure"
+          home.activationPackage
+        ];
+      }
+      ''
+        if grep -qF ${builtins.unsafeDiscardStringContext emacs.outPath} closure; then
+          echo "the home-manager module depends on emx's package set"
+          exit 1
+        fi
+        touch $out
+      '';
 
   # initialLibraries must list the libraries of the Emacs being built.
   builtin-libraries = pkgs.runCommandLocal "emx-builtin-libraries-check" { } ''

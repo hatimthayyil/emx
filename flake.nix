@@ -2,6 +2,11 @@
   description = "emx, an Emacs distribution";
 
   inputs = {
+    # Only the home-manager module check uses it.
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     melpa = {
       url = "github:melpa/melpa";
       flake = false;
@@ -16,10 +21,13 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       emacs = import ./nix/emacs { inherit inputs pkgs; };
+      emx = pkgs.callPackage ./nix/cli.nix { };
     in
     {
       checks.${system} = import ./nix/checks {
         inherit pkgs emacs;
+        homeManager = inputs.home-manager;
+        homeModule = self.homeManagerModules.default;
         src = self;
       };
 
@@ -31,9 +39,10 @@
       # as apps, `nix flake check` would evaluate them and fail.
       legacyPackages.${system} = emacs.makeApps { lockDirName = "lock"; };
 
+      # `emx sync` builds `emacs` into emx's profile; home-manager installs `emx`.
       packages.${system} = {
         default = emacs;
-        inherit emacs;
+        inherit emacs emx;
       };
     };
 }

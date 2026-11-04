@@ -1,32 +1,77 @@
-# Installs emx: its Emacs, the tools its modules call, the `emx` launcher and
-# the init shims in ~/.config/emx.
+# Installs emx once: the `emx` CLI; `emacs` and `emacsclient` launchers that
+# run Emacs from emx's profile; the tools emx's modules call; and the init
+# shims in ~/.config/emx that load the Elisp from the checkout. `emx sync`
+# builds Emacs and its packages into the profile, so home-manager never builds
+# them and a package update needs no switch.
 { self }:
-{
-  config,
-  lib,
-  pkgs,
-  ...
+{ config
+, lib
+, pkgs
+, ...
 }:
 let
   cfg = config.programs.emacs-emx;
 
-  emacs = self.packages.${pkgs.stdenv.hostPlatform.system}.emacs;
+  system = pkgs.stdenv.hostPlatform.system;
 
-  # The emx source in the Nix store, loaded unless the launcher runs in
-  # development mode.
-  src = "${self}";
+  checkout = toString cfg.checkout;
+
+  initDirectory = "${config.xdg.configHome}/emx";
+
+  elispString = s: "\"" + lib.replaceStrings [ "\\" "\"" ] [ "\\\\" "\\\"" ] s + "\"";
+
+  emx = pkgs.runCommandLocal "emx"
+    {
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      meta.mainProgram = "emx";
+    } ''
+    makeWrapper ${lib.getExe self.packages.${system}.emx} $out/bin/emx \
+      --set-default EMX_CHECKOUT ${lib.escapeShellArg checkout}
+  '';
+
+  # Runs NAME from emx's profile, which cli/src/profile.rs locates by the same
+  # rule: $XDG_STATE_HOME when it is absolute, else ~/.local/state.
+  launcher = name: args:
+    pkgs.writeShellApplication {
+      inherit name;
+      text = ''
+        case "''${XDG_STATE_HOME:-}" in
+          /*) state=$XDG_STATE_HOME ;;
+          *) state=$HOME/.local/state ;;
+        esac
+        program=$state/emx/profile/bin/${name}
+        if [ ! -x "$program" ]; then
+          echo "${name}: emx's Emacs is not built yet; run 'emx sync'" >&2
+          exit 1
+        fi
+        exec "$program" ${args} "$@"
+      '';
+    };
+
+  # Carries the Emacs version in its name: home-manager's Emacs service reads
+  # it to choose the socket and window class.
+  launchers = pkgs.symlinkJoin {
+    name = "emx-launchers-${self.packages.${system}.emacs.emacs.version}";
+    paths = [
+      (launcher "emacs" "--init-directory ${lib.escapeShellArg initDirectory}")
+      (launcher "emacsclient" "")
+    ];
+    meta.mainProgram = "emacs";
+  };
 in
 {
   options.programs.emacs-emx = {
-    enable = lib.mkEnableOption "Emacs EmX configuration";
+    enable = lib.mkEnableOption "emx, an Emacs distribution";
 
-    localPath = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
+    checkout = lib.mkOption {
+      type = lib.types.pathWith {
+        absolute = true;
+        inStore = false;
+      };
+      example = "/home/alice/code/emx";
       description = ''
-        Local path to your flake checkout (containing the "emacs" folder).
-        If set, Emacs will load config from this directory at runtime,
-        bypassing the immutable store copy.
+        The emx checkout. Emacs loads its configuration from it, and
+        {command}`emx sync` builds Emacs and its packages from it.
       '';
     };
 
@@ -42,67 +87,38 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Install the Emacs package and EMX launcher script
-    home.packages = [ emacs ] ++ [
-        pkgs.ripgrep
-        pkgs.fd
-        pkgs.yt-dlp
-        pkgs.parinfer-rust-emacs
+    home.packages = [
+      emx
+      launchers
 
-        pkgs.vale # syntax aware prose linter
-        pkgs.vale-ls # LSP for vale
-        pkgs.valeStyles.write-good
+      pkgs.ripgrep
+      pkgs.fd
+      pkgs.yt-dlp
+      pkgs.parinfer-rust-emacs
 
-        pkgs.basedpyright # Python LSP
-        pkgs.ruff # Python linter and formatter
-        pkgs.beancount-language-server # TODO split off into a "personal"
-      ] ++ [
-      (pkgs.writeShellScriptBin "emx" ''
-        # Process arguments to detect --dev flag
-        args=()
-        dev_mode=1
-        
-        for arg in "$@"; do
-          if [ "$arg" = "--stable" ]; then
-            dev_mode=0
-          else
-            args+=("$arg")
-          fi
-        done
-        
-        # Check if dev mode is requested but localPath isn't configured
-        if [ $dev_mode -eq 1 ] && [ -z "${if cfg.localPath != null then cfg.localPath else ""}" ]; then
-          echo "Error: Cannot use --dev flag because localPath is not configured"
-          echo "Add this to your Home Manager configuration:"
-          echo "  programs.emacs-emx.localPath = \"/path/to/emx/source\";"
-          exit 1
-        fi
-        
-        # Set environment variable based on mode
-        if [ $dev_mode -eq 1 ]; then
-          export EMX_DEV_MODE=1
-          echo "Starting EMX in development mode (using localPath)"
-        else
-          unset EMX_DEV_MODE
-        fi
-        
-        # Launch Emacs with proper init directory
-        ${emacs}/bin/emacs --init-directory "$HOME/.config/emx" "''${args[@]}"
-      '')
-      ];
+      pkgs.vale # syntax aware prose linter
+      pkgs.vale-ls # LSP for vale
+      pkgs.valeStyles.write-good
+
+      pkgs.basedpyright # Python LSP
+      pkgs.ruff # Python linter and formatter
+      pkgs.beancount-language-server # TODO split off into a "personal"
+    ];
 
     home.sessionVariables = lib.mkIf cfg.defaultEditor {
       EDITOR = lib.getBin (
-        pkgs.writeShellScript "editor" ''exec ${emacs}/bin/emacsclient "''${@:---create-frame}"''
+        pkgs.writeShellScript "editor" ''exec ${launchers}/bin/emacsclient "''${@:---create-frame}"''
       );
     };
-    
-    # Set up desktop entry for EMX
+
+    # services.emacs.enable runs the daemon from emx's profile.
+    services.emacs.package = lib.mkDefault launchers;
+
     xdg.desktopEntries.emx = {
       name = "EMX";
       genericName = "Text Editor";
       comment = "Edit text";
-      exec = "emx %F";
+      exec = "${lib.getExe launchers} %F";
       terminal = false;
       type = "Application";
       icon = "emacs";
@@ -111,52 +127,17 @@ in
       startupNotify = true;
     };
 
-    # Create XDG-compliant configuration directory with shims
     xdg.configFile = {
-      # Early init shim
-      "emx/early-init.el" = {
-        text = ''
-          ;; EMX early initialization shim -*- lexical-binding: t -*-
-
-          ;; Determine source directory based on mode (development or stable)
-          (defvar emx-source-dir
-            (if (getenv "EMX_DEV_MODE")
-                ;; Development mode - load from localPath
-                (progn
-                  (message "EMX: Development mode active (using localPath)")
-                  "${cfg.localPath}")
-              ;; Stable mode - load from Nix store
-              "${src}")
-            "Source directory of EMX configuration.")
-
-          ;; Define config/data/cache directories for XDG compliance
-          (defvar emx-config-dir (expand-file-name "~/.config/emx/")
-            "Directory for EMX configuration files.")
-
-          (defvar emx-data-dir (expand-file-name "~/.local/share/emx/")
-            "Directory for EMX data files.")
-
-          (defvar emx-cache-dir (expand-file-name "~/.cache/emx/")
-            "Directory for EMX cache files.")
-
-          ;; Load the actual early-init.el from source
-          (load (expand-file-name "early-init.el" emx-source-dir))
-        '';
-      };
-
-      # Main init.el shim
-      "emx/init.el" = {
-        text = ''
-          ;; EMX initialization shim -*- lexical-binding: t -*-
-
-          ;; Directory variables already set by early-init.el
-          ;; Just ensure user-emacs-directory is set to our config dir
-          (setq user-emacs-directory emx-config-dir)
-
-          ;; Load the actual init.el from source
-          (load (expand-file-name "init.el" emx-source-dir))
-        '';
-      };
+      "emx/early-init.el".text = ''
+        ;;; early-init.el --- Load emx's early-init.el from the checkout  -*- lexical-binding: t -*-
+        (defvar emx-source-dir (file-name-as-directory ${elispString checkout})
+          "The emx checkout that Emacs loads its configuration from.")
+        (load (expand-file-name "early-init.el" emx-source-dir) nil t)
+      '';
+      "emx/init.el".text = ''
+        ;;; init.el --- Load emx's init.el from the checkout  -*- lexical-binding: t -*-
+        (load (expand-file-name "init.el" emx-source-dir) nil t)
+      '';
     };
   };
 }
