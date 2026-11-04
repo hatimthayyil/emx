@@ -57,6 +57,15 @@
 /result-*
 /.direnv/
 
+# devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+.pre-commit-config.yaml
+
+# Rust
+/target/
+
 # OS specific
 .DS_Store
 Thumbs.db

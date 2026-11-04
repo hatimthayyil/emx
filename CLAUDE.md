@@ -6,13 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Nix builds Emacs and every Elisp package with twist; there is no other package manager
 - `packages.el` lists the packages, `recipes/` adds sources missing from the archives, `lock/` pins every version
 - Nix stays underneath: it builds and pins, and Elisp work stays live
+- `emx sync` (the Rust CLI in `cli/`) builds Emacs and its packages into emx's own Nix profile, `$XDG_STATE_HOME/emx/profile`; home-manager installs emx once and never builds the package set
+- Emacs loads its Elisp from the checkout, so edits need no build
 
 ## BUILD/LINT/TEST COMMANDS
-- Build: `nix build`
-- Check (boots the real init and loads every package): `nix flake check`
+- Dev environment: `devenv shell` (Rust toolchain, treefmt, commit hooks)
+- CLI tests: `cargo test` (or `devenv test`); `cargo test -- --ignored` also builds emx's Emacs with Nix into a temporary profile and boots it (extra `nix build` arguments in `EMX_TEST_NIX_ARGS`)
+- Build Emacs into emx's profile: `emx sync` (extra `nix build` arguments after `--`)
+- Build: `nix build .#emacs`, `nix build .#emx`
+- Check (boots the real init and loads every package, checks the home-manager module): `nix flake check`
 - Throttle local builds: `--max-jobs 2 --cores 4`
-- Dev environment: `nix develop`
-- Lint Nix files: `nixpkgs-fmt <filename>.nix`
+- Format: `treefmt` (nixpkgs-fmt, rustfmt)
 
 ## CODE STYLE GUIDELINES
 ### Nix
@@ -25,16 +29,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Follow Emacs Lisp conventions (2 spaces, kebab-case)
 - Add a package to `packages.el`, then regenerate the lock with `nix run --impure .#lock`
 
+### Rust
+- The CLI drives Nix through its command line (`cli/src/nix.rs`)
+- Tests never touch the real state directory: point `XDG_STATE_HOME` at a temporary directory
+
 ### Module Design
 - Keep Nix as non-intrusive as possible to Emacs workflow
 - Provide sane defaults but allow easy customization
 - Document clearly where Nix ends and Elisp begins
-
-## AI ASSISTANT WORKSPACE
-- The `.ai-assistant/` directory serves as a dedicated workspace for AI assistance
-- `.ai-assistant/decisions/` contains Decision Records (DRs) documenting design choices
-- `.ai-assistant/journal/` tracks progress across work sessions
-- `.ai-assistant/notes/` stores implementation strategies and project understanding
-- `.ai-assistant/TODO.org` keeps track of pending and completed tasks
-- This workspace maintains continuity between sessions and documents project evolution
-- Reference these files when implementing features to understand context and rationale
