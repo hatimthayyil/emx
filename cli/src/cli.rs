@@ -20,7 +20,8 @@ pub struct Cli {
 #[derive(Debug, Subcommand)]
 pub enum Command {
     /// Build the emx repo's Emacs and packages, as its lock pins them, and make
-    /// the result the current generation of emx's profile.
+    /// the result the current generation of emx's profile. The sync that creates
+    /// the profile also starts the Emacs daemon, if its service is enabled.
     Sync(SyncArgs),
 }
 

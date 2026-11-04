@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## BUILD/LINT/TEST COMMANDS
 - Dev environment: `devenv shell` (Rust toolchain, treefmt, commit hooks)
 - CLI tests: `cargo test` (or `devenv test`); `cargo test -- --ignored` also builds emx's Emacs with Nix into a temporary profile and boots it (extra `nix build` arguments in `EMX_TEST_NIX_ARGS`)
-- Build Emacs into emx's profile: `emx sync` (extra `nix build` arguments after `--`). It shows what changes and asks before switching; without a terminal, such as from an agent, pass `--yes`
+- Build Emacs into emx's profile: `emx sync` (extra `nix build` arguments after `--`). It shows what changes and asks before switching; without a terminal, such as from an agent, pass `--yes`. The sync that creates the profile starts `emacs.service` if it is enabled; later syncs leave the daemon running
 - Build: `nix build .#emacs`, `nix build .#emx`
 - Check (boots the real init and loads every package, checks the home-manager module): `nix flake check`
 - Throttle local builds: `--max-jobs 2 --cores 4`
@@ -31,7 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Rust
 - The CLI drives Nix through its command line (`cli/src/nix.rs`)
-- Tests never touch the real state directory: point `XDG_STATE_HOME` at a temporary directory
+- Tests never touch the real state directory or daemon: point `XDG_STATE_HOME` at a temporary directory, and put a fake `systemctl` on `PATH`
 
 ### Module Design
 - Keep Nix as non-intrusive as possible to Emacs workflow

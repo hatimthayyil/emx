@@ -1,11 +1,13 @@
 //! `emx sync`: builds the emx repo's Emacs and packages, shows what the build
 //! changes, and after confirmation makes it a new generation of emx's
-//! profile.
+//! profile. The sync that creates the profile also starts the Emacs daemon;
+//! later ones leave it running, since a restart would close the user's buffers.
 
 use std::path::PathBuf;
 
 use crate::build;
 use crate::cli::SyncArgs;
+use crate::daemon;
 use crate::diff;
 use crate::error::Error;
 use crate::nix;
@@ -62,5 +64,12 @@ pub fn run(src: Option<PathBuf>, args: &SyncArgs) -> Result<(), Error> {
         generation.number,
         generation.store_path.display()
     );
+    if current.is_none() {
+        match daemon::start_if_enabled() {
+            Ok(true) => println!("emx: started the Emacs daemon"),
+            Ok(false) => {}
+            Err(err) => eprintln!("emx: cannot start the Emacs daemon: {err}"),
+        }
+    }
     Ok(())
 }

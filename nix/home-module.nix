@@ -96,8 +96,12 @@ in
       pkgs.beancount-language-server # TODO split off into a "personal"
     ];
 
-    # services.emacs.enable runs the daemon from emx's profile.
+    # services.emacs.enable runs the daemon from emx's profile. The service
+    # skips until the profile exists, and the `emx sync` creating it starts it.
     services.emacs.package = lib.mkDefault emx;
+    systemd.user.services.emacs = lib.mkIf config.services.emacs.enable {
+      Unit.ConditionPathExists = "${config.xdg.stateHome}/emx/profile/bin/emacs";
+    };
 
     xdg.desktopEntries.emx = {
       name = "EMX";

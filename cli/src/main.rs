@@ -5,6 +5,7 @@
 
 mod build;
 mod cli;
+mod daemon;
 mod diff;
 mod error;
 mod manifest;

@@ -1,10 +1,12 @@
 //! `emx sync` run as a program. A fake `nix` on PATH records each call's
 //! arguments and does what the real one would to the build root and the
-//! profile, so these tests need neither Nix nor the user's state directory.
+//! profile, and a fake `systemctl` records its calls and answers as told, so
+//! these tests need neither Nix nor the user's state directory or daemon.
 //! Their stdin is not a terminal, so emx never asks and needs `--yes`.
 
+use std::ffi::OsString;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
+use std::os::unix::fs::{PermissionsExt, symlink};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
@@ -34,6 +36,39 @@ if [ -n "$profile" ]; then
 fi
 "#;
 
+/// Exits as the real one does: `is-enabled` fails for a unit that is missing.
+const FAKE_SYSTEMCTL: &str = r#"#!/bin/sh
+printf '%s\n' "$*" >> "$FAKE_SYSTEMCTL_ARGS"
+case "$2" in
+  is-enabled)
+    echo "$FAKE_SYSTEMCTL_STATE"
+    [ "$FAKE_SYSTEMCTL_STATE" != not-found ] || exit 4
+    ;;
+  start)
+    if [ -n "$FAKE_SYSTEMCTL_START_ERROR" ]; then
+      echo "$FAKE_SYSTEMCTL_START_ERROR" >&2
+      exit 1
+    fi
+    ;;
+esac
+"#;
+
+const IS_ENABLED: &str = "--user is-enabled emacs.service";
+const START: &str = "--user start emacs.service";
+
+fn write_executable(path: &Path, script: &str) {
+    fs::write(path, script).unwrap();
+    fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
+}
+
+/// This process's PATH with `dir` in front.
+fn path_with(dir: &Path) -> OsString {
+    std::env::join_paths(std::iter::once(dir.to_owned()).chain(std::env::split_paths(
+        &std::env::var_os("PATH").unwrap_or_default(),
+    )))
+    .unwrap()
+}
+
 struct Fixture {
     root: TempDir,
 }
@@ -47,9 +82,8 @@ impl Fixture {
         fs::write(src.join("packages.el"), "").unwrap();
         let bin = root.path().join("bin");
         fs::create_dir(&bin).unwrap();
-        let nix = bin.join("nix");
-        fs::write(&nix, FAKE_NIX).unwrap();
-        fs::set_permissions(&nix, fs::Permissions::from_mode(0o755)).unwrap();
+        write_executable(&bin.join("nix"), FAKE_NIX);
+        write_executable(&bin.join("systemctl"), FAKE_SYSTEMCTL);
         fs::create_dir(root.path().join("state")).unwrap();
         Self { root }
     }
@@ -63,20 +97,18 @@ impl Fixture {
     }
 
     /// `emx` with an environment that reaches only the fixture's directories,
-    /// building `store-emacs`.
+    /// building `store-emacs`, with no `emacs.service`.
     fn emx(&self) -> Command {
-        let path = std::env::join_paths(std::iter::once(self.path("bin")).chain(
-            std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()),
-        ))
-        .unwrap();
         let mut command = Command::new(env!("CARGO_BIN_EXE_emx"));
         command
             .env_remove("EMX_SRC")
-            .env("PATH", path)
+            .env("PATH", path_with(&self.path("bin")))
             .env("HOME", self.path("home"))
             .env("XDG_STATE_HOME", self.path("state"))
             .env("FAKE_NIX_ARGS", self.path("nix-args"))
-            .env("FAKE_NIX_OUT", self.path("store-emacs"));
+            .env("FAKE_NIX_OUT", self.path("store-emacs"))
+            .env("FAKE_SYSTEMCTL_ARGS", self.path("systemctl-args"))
+            .env("FAKE_SYSTEMCTL_STATE", "not-found");
         command
     }
 
@@ -94,6 +126,31 @@ impl Fixture {
         text.split_terminator("--\n")
             .map(|call| call.lines().map(str::to_owned).collect())
             .collect()
+    }
+
+    /// The arguments of each `systemctl` call, in order.
+    fn systemctl_calls(&self) -> Vec<String> {
+        fs::read_to_string(self.path("systemctl-args"))
+            .map(|text| text.lines().map(str::to_owned).collect())
+            .unwrap_or_default()
+    }
+
+    /// A PATH holding the fake `nix` and the tools it calls, and no
+    /// `systemctl`. This process's PATH cannot be filtered instead: on NixOS
+    /// one directory holds both coreutils and `systemctl`.
+    fn path_without_systemctl(&self) -> PathBuf {
+        let bin = self.path("bin-without-systemctl");
+        fs::create_dir(&bin).unwrap();
+        symlink(self.path("bin/nix"), bin.join("nix")).unwrap();
+        let path = std::env::var_os("PATH").unwrap_or_default();
+        for tool in ["basename", "ln", "mkdir"] {
+            let found = std::env::split_paths(&path)
+                .map(|dir| dir.join(tool))
+                .find(|candidate| candidate.exists())
+                .unwrap();
+            symlink(found, bin.join(tool)).unwrap();
+        }
+        bin
     }
 }
 
@@ -199,6 +256,93 @@ fn keeps_the_profile_when_nothing_changed() {
 }
 
 #[test]
+fn starts_an_enabled_daemon_after_the_sync_that_creates_the_profile() {
+    let fixture = Fixture::new();
+    let output = fixture
+        .sync()
+        .arg("--yes")
+        .env("FAKE_SYSTEMCTL_STATE", "enabled")
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+    assert_eq!(fixture.systemctl_calls(), [IS_ENABLED, START]);
+    assert!(text(&output.stdout).ends_with("emx: started the Emacs daemon\n"));
+}
+
+#[test]
+fn starts_no_daemon_unless_its_service_is_enabled() {
+    for state in ["static", "disabled", "not-found"] {
+        let fixture = Fixture::new();
+        let output = fixture
+            .sync()
+            .arg("--yes")
+            .env("FAKE_SYSTEMCTL_STATE", state)
+            .output()
+            .unwrap();
+        assert_exit(&output, 0);
+        assert_eq!(fixture.systemctl_calls(), [IS_ENABLED], "{state}");
+        assert!(!text(&output.stdout).contains("daemon"), "{state}");
+        assert!(!text(&output.stderr).contains("daemon"), "{state}");
+    }
+}
+
+#[test]
+fn says_nothing_about_the_daemon_without_systemctl() {
+    let fixture = Fixture::new();
+    let output = fixture
+        .sync()
+        .arg("--yes")
+        .env("PATH", fixture.path_without_systemctl())
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+    assert!(text(&output.stdout).contains("is now generation 1"));
+    assert!(!text(&output.stdout).contains("daemon"));
+    assert!(!text(&output.stderr).contains("daemon"));
+}
+
+#[test]
+fn leaves_the_daemon_alone_after_later_syncs() {
+    let fixture = Fixture::new();
+    let first = fixture
+        .sync()
+        .arg("--yes")
+        .env("FAKE_SYSTEMCTL_STATE", "enabled")
+        .output()
+        .unwrap();
+    assert_exit(&first, 0);
+    let second = fixture
+        .sync()
+        .arg("--yes")
+        .env("FAKE_SYSTEMCTL_STATE", "enabled")
+        .env("FAKE_NIX_OUT", fixture.path("store-emacs-2"))
+        .output()
+        .unwrap();
+    assert_exit(&second, 0);
+    assert!(text(&second.stdout).contains("is now generation 2"));
+    assert_eq!(fixture.systemctl_calls(), [IS_ENABLED, START]);
+}
+
+#[test]
+fn warns_when_the_daemon_fails_to_start_and_keeps_the_switch() {
+    let fixture = Fixture::new();
+    let output = fixture
+        .sync()
+        .arg("--yes")
+        .env("FAKE_SYSTEMCTL_STATE", "enabled")
+        .env("FAKE_SYSTEMCTL_START_ERROR", "Job for emacs.service failed")
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+    assert_eq!(fixture.systemctl_calls(), [IS_ENABLED, START]);
+    assert!(text(&output.stdout).contains("is now generation 1"));
+    assert!(!text(&output.stdout).contains("daemon"));
+    let stderr = text(&output.stderr);
+    assert!(stderr.contains("cannot start the Emacs daemon"), "{stderr}");
+    assert!(stderr.contains("Job for emacs.service failed"), "{stderr}");
+}
+
+#[test]
 fn needs_yes_without_a_terminal_to_ask() {
     let fixture = Fixture::new();
     let output = fixture.sync().output().unwrap();
@@ -285,8 +429,13 @@ fn rejects_a_missing_subcommand() {
 fn syncs_and_boots_this_repo() {
     let src = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let state = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+    write_executable(&bin.path().join("systemctl"), FAKE_SYSTEMCTL);
     let extra = std::env::var("EMX_TEST_NIX_ARGS").unwrap_or_default();
     let output = Command::new(env!("CARGO_BIN_EXE_emx"))
+        .env("PATH", path_with(bin.path()))
+        .env("FAKE_SYSTEMCTL_ARGS", bin.path().join("systemctl-args"))
+        .env("FAKE_SYSTEMCTL_STATE", "not-found")
         .env("XDG_STATE_HOME", state.path())
         .arg("--src")
         .arg(src)

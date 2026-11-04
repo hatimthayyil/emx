@@ -47,8 +47,9 @@ in
   '';
 
   # Builds a home-manager configuration using the module, and fails if its
-  # closure holds emx's package set or Emacs, which only `emx sync` builds, or
-  # if it lacks the desktop entry's icon.
+  # closure holds emx's package set or Emacs, which only `emx sync` builds, if
+  # it lacks the desktop entry's icon, or if the daemon's service would fail
+  # rather than skip before the first sync.
   home-module =
     pkgs.runCommandLocal "emx-home-module-check"
       {
@@ -67,6 +68,11 @@ in
         done
         if [ ! -e ${home.config.home.path}/share/icons/hicolor/scalable/apps/emacs.svg ]; then
           echo "the home-manager generation lacks Emacs's icon"
+          exit 1
+        fi
+        if ! grep -qxF ConditionPathExists=${home.config.xdg.stateHome}/emx/profile/bin/emacs \
+            ${home.activationPackage}/home-files/.config/systemd/user/emacs.service; then
+          echo "emacs.service does not wait for emx's profile"
           exit 1
         fi
         touch $out
