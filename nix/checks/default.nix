@@ -23,7 +23,6 @@ let
         programs.emx = {
           enable = true;
           src = "/home/emx/code/emx";
-          defaultEditor = true;
         };
         services.emacs.enable = true;
       }

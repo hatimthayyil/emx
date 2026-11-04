@@ -85,16 +85,6 @@ in
         {command}`emx sync` builds Emacs and its packages from it.
       '';
     };
-
-    defaultEditor = lib.mkOption rec {
-      type = lib.types.bool;
-      default = false;
-      example = !default;
-      description = ''
-        Whether to configure {command}`emacsclient` as the default
-        editor using the {env}`EDITOR` environment variable.
-      '';
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -115,12 +105,6 @@ in
       pkgs.ruff # Python linter and formatter
       pkgs.beancount-language-server # TODO split off into a "personal"
     ];
-
-    home.sessionVariables = lib.mkIf cfg.defaultEditor {
-      EDITOR = lib.getBin (
-        pkgs.writeShellScript "editor" ''exec ${launchers}/bin/emacsclient "''${@:---create-frame}"''
-      );
-    };
 
     # services.emacs.enable runs the daemon from emx's profile.
     services.emacs.package = lib.mkDefault launchers;
