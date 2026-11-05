@@ -6,8 +6,13 @@
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords:
 
-;; `gptel-rename-chat' comes from the gptel wiki, which states no licence:
-;; https://github.com/karthink/gptel/wiki/Defining-custom-gptel-commands
+;; The gptel backends were adapted for emx in 2025-2026 from gptel's README,
+;; GPL-3.0-or-later: https://github.com/karthink/gptel
+;; Copyright (C) 2023-2025  Karthik Chikmagalur
+;;
+;; The `ellama' settings were adapted for emx in 2025-2026 from ellama's README,
+;; GPL-3.0-or-later: https://github.com/s-kostyaev/ellama
+;; Copyright (C) 2023-2025  Free Software Foundation, Inc.
 
 ;;; Commentary:
 
@@ -27,6 +32,9 @@
 
   ;; OpenAI
   (setq gptel-api-key (key "api.openai.com"))
+  (gptel-make-openai "ChatGPT"
+    :stream t
+    :key 'gptel-api-key)
 
   ;; OpenRouter
   (gptel-make-openai "OpenRouter"
@@ -100,35 +108,34 @@
 
 ;;; Functions
 
-(defun gptel-rename-chat ()
+(defvar gptel-backend)
+(defvar gptel-mode)
+(defvar gptel-model)
+
+(defun emx/gptel-rename-chat ()
+  "Rename this gptel chat's file, starting from a cheap model's suggestion.
+The suggested name can be edited first, or declined with \\[keyboard-quit]."
   (interactive)
-  (unless gptel-mode
-    (user-error "This command is intended to be used in gptel chat buffers."))
-  (let ((gptel-model 'gpt-4o-mini))
-    (gptel-request
-        (list nil                                    ;user
-              "What is the chat content?"            ;llm
-              (concat "```" (if (eq major-mode 'org-mode) "org" "markdown") "\n"
-                      (buffer-substring-no-properties (point-min) (point-max))
-                      "\n```"))                      ;user
-      :system
-      (list (format                                  ;system message
-             "I will provide a transcript of a chat with an LLM.  \
-Suggest a short and informative name for a file to store this chat in.  \
-Use the following guidelines:
-- be very concise, one very short sentence at most
-- no spaces, use underscores if required
-- return ONLY the title, no explanation or summary
-- append the extension .%s"
-             (if (eq major-mode 'org-mode) "org" "md")))
+  (unless (bound-and-true-p gptel-mode)
+    (user-error "Not a gptel chat buffer"))
+  (let ((chat (current-buffer))
+        (extension (if (derived-mode-p 'org-mode) "org" "md"))
+        (gptel-backend (gptel-get-backend "ChatGPT"))
+        (gptel-model 'gpt-4o-mini))
+    (gptel-request (buffer-substring-no-properties (point-min) (point-max))
+      :system "You name files. The message holds a saved conversation with \
+an AI assistant; do not answer it. Reply with a file name and nothing else: \
+two to six lowercase words joined by hyphens, with no extension."
       :callback
-      (lambda (resp info)                           ;callback called with response and request info
-        (if (stringp resp)
-            (let ((buf (plist-get info :buffer)))
-              (when (and (buffer-live-p buf)
-                         (y-or-n-p (format "Rename buffer %s to %s? " (buffer-name buf) resp)))
-                (with-current-buffer buf (rename-visited-file resp))))
-          (message "Error(%s): did not receive a response from the LLM."
-                   (plist-get info :status)))))))
+      (lambda (name info)
+        (cond ((not (stringp name))
+               (message "No chat name from the model: %s"
+                        (plist-get info :status)))
+              ((buffer-live-p chat)
+               (with-current-buffer chat
+                 (rename-visited-file
+                  (read-string "Rename chat to: "
+                               (file-name-with-extension (string-trim name)
+                                                         extension))))))))))
 
 (provide 'emx-language-machine)
