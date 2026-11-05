@@ -1,14 +1,9 @@
 ;;;; emx-programming.el --- EmX programming, software development, languages  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
-;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Hatim Thayyil <hatim@thayyil.net>
 ;; Keywords: languages
-
-;; The `project' settings are adapted from Prot's Emacs configuration,
-;; GPL-3.0-or-later: https://github.com/protesilaos/dotfiles
-;; Copyright (C) 2020-2025  Protesilaos Stavrou
 
 ;;; Commentary:
 ;;
@@ -28,22 +23,20 @@
 ;; `project'
 (use-package project
   :ensure nil
-  :bind
-  (("C-x p ." . project-dired)
-   ("C-x p C-g" . keyboard-quit)
-   ("C-x p <return>" . project-dired)
-   ("C-x p <delete>" . project-forget-project))
-  :config
-  (setopt project-switch-commands
-          '((project-find-file "Find file")
-            (project-find-regexp "Find regexp")
-            (project-find-dir "Find directory")
-            (project-dired "Root dired")
-            (project-vc-dir "VC-Dir")
-            (project-shell "Shell")
-            (keyboard-quit "Quit")))
-  (setq project-vc-extra-root-markers '(".project")) ; Emacs 29
-  (setq project-key-prompt-style t)) ; Emacs 30
+  :bind (:map project-prefix-map
+              ("<return>" . project-dired)
+              ("<delete>" . project-forget-project))
+  :custom
+  ;; The menu after `project-switch-project'. `C-g' leaves it.
+  (project-switch-commands
+   '((project-dired "Dired")
+     (project-find-file "File")
+     (project-find-dir "Directory")
+     (project-find-regexp "Regexp")
+     (project-shell "Shell")
+     (project-vc-dir "VC")))
+  ;; A `.project' file makes its directory a project root.
+  (project-vc-extra-root-markers '(".project")))
 
 ;; TODO Add tabspaces
 ;;(use-package tabspaces)

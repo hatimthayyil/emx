@@ -67,17 +67,17 @@
 ;; https://leahneukirchen.org/blog/archive/2022/03/note-taking-in-emacs-with-howm.html
 (use-package howm
   :init
-  ;; Where to store the files?
+  ;; Beside the zk and Denote notes that `consult-notes' searches.
   (setq howm-directory "~/work/howm")
   (setq howm-home-directory howm-directory)
-  ;; What format to use for the files?
+  ;; Notes are Org files, so headings and timestamps take Org's form.
   (setq howm-file-name-format "%Y-%m-%d-%H%M%S.org")
   (setq howm-view-title-header "*")
   (setq howm-dtime-format "<%Y-%m-%d %a %H:%M>")
-  ;; Avoid conflicts with Org-mode by changing Howm's prefix from "C-c ,".
+  ;; Org keeps "C-c ," for `org-priority'.
   (setq howm-prefix (kbd "C-c ;"))
   :bind*
-  ;; Conveniently open the Howm menu with "C-c ; ;".
+  ;; Org binds "C-c ;" as well, so this has to override its map.
   ("C-c ; ;" . howm-menu))
 
 ;; zk - simple zettlekasten implementation

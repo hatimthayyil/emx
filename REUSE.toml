@@ -44,9 +44,6 @@ path = [
   "modules/emx.base.el",
   "modules/emx.language-machine.el",
   "modules/emx.organisation.el",
-  "modules/emx.programming.el",
-  "modules/emx.prose.el",
-  "modules/emx.research.el",
   "modules/emx.version-control.el",
   "modules/emx.window.el",
 ]
