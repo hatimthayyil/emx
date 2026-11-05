@@ -41,7 +41,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## LICENSING
 - `REUSE.toml` gives every file its licence, the texts are in `LICENSES/`, and `nix flake check` runs `reuse lint`
-- Elisp that Emacs loads (`init.el`, `early-init.el`, `lisp/`, `modules/`) is GPL-3.0-or-later
-- Everything else is CC0-1.0. The compiled `emx` is GPL-3.0-only because it links dix
+- Everything is Apache-2.0, except the files `REUSE.toml` lists as GPL-3.0-or-later, which hold text copied from GPL sources. Root `LICENSE` is an unmodified copy of `LICENSES/Apache-2.0.txt`, for GitHub. The compiled `emx` is GPL-3.0-only because it links dix
+- Copied GPL text, and text with no stated licence, can't be relabelled, only replaced: write the replacement from what the code does, not by rewording the copy. A file leaves the GPL list once its copied text is gone
 - Elisp copied from elsewhere gets a notice in the file's header: its source, the source's copyright line and its licence. A file marked adapted also says when
 - A new file outside the listed paths needs an entry in `REUSE.toml`

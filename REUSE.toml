@@ -1,11 +1,7 @@
 # The licence of every file in the repo, checked by `reuse lint`. A new file
-# outside these paths fails the check until it is listed here.
+# outside these paths fails the check until it is listed here. When a file
+# matches several annotations, the last one wins.
 version = 1
-
-[[annotations]]
-path = ["init.el", "early-init.el", "lisp/**", "modules/**"]
-SPDX-FileCopyrightText = "2025-2026 Hatim Thayyil"
-SPDX-License-Identifier = "GPL-3.0-or-later"
 
 [[annotations]]
 path = [
@@ -14,6 +10,7 @@ path = [
   "CLAUDE.md",
   "Cargo.lock",
   "Cargo.toml",
+  "README.md",
   "REUSE.toml",
   "TODO.org",
   "ai.toml",
@@ -21,13 +18,37 @@ path = [
   "devenv.lock",
   "devenv.nix",
   "devenv.yaml",
+  "early-init.el",
   "example-usage.nix",
   "flake.lock",
   "flake.nix",
+  "init.el",
+  "lisp/**",
   "lock/**",
+  "modules/**",
   "nix/**",
   "packages.el",
   "recipes/**",
 ]
 SPDX-FileCopyrightText = "2025-2026 Hatim Thayyil"
-SPDX-License-Identifier = "CC0-1.0"
+SPDX-License-Identifier = "Apache-2.0"
+
+# These hold text copied from GPL sources.
+[[annotations]]
+path = [
+  "lisp/emx-early-init.el",
+  "lisp/emx.el",
+  "modules/completion.vertico.el",
+  "modules/emacs.dired.el",
+  "modules/emx.appearance.el",
+  "modules/emx.base.el",
+  "modules/emx.language-machine.el",
+  "modules/emx.organisation.el",
+  "modules/emx.programming.el",
+  "modules/emx.prose.el",
+  "modules/emx.research.el",
+  "modules/emx.version-control.el",
+  "modules/emx.window.el",
+]
+SPDX-FileCopyrightText = "2025-2026 Hatim Thayyil"
+SPDX-License-Identifier = "GPL-3.0-or-later"

@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2025-2026  Hatim Thayyil
 ;; Copyright 2016-2019 Jonas Bernoulli
-;; SPDX-License-Identifier: GPL-3.0-or-later AND ISC
+;; SPDX-License-Identifier: Apache-2.0 AND ISC
 
 ;; The `before-user-init-time' lines are adapted from emacs.g, under ISC:
 ;; https://github.com/emacscollective/emacs.g

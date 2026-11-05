@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "Builds emx's Emacs and its Elisp packages into emx's Nix profile"
 # Linking dix (GPL-3.0-only) makes the compiled binary GPL-3.0-only.
-license = "CC0-1.0"
+license = "Apache-2.0"
 publish = false
 
 [dependencies]
