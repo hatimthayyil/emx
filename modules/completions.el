@@ -1,4 +1,4 @@
-;;; emx-completion.el --- Eagle Completion Configuration -*- lexical-binding: t; -*-
+;;; completions.el --- Eagle Completion Configuration  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -302,5 +302,3 @@
 (use-package tempel-collection
   :after tempel
   :demand t)
-
-(provide 'emx-completion)

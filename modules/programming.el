@@ -1,4 +1,4 @@
-;;;; emx-programming.el --- EmX programming, software development, languages  -*- lexical-binding: t; -*-
+;;; programming.el --- EmX programming, software development, languages  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 
@@ -129,5 +129,4 @@
 (use-package nix-mode
   :mode "\\.nix\\'")
 
-(provide 'emx-programming)
-;;; emx-programming.el ends here
+;;; programming.el ends here

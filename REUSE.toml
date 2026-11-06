@@ -38,14 +38,14 @@ SPDX-License-Identifier = "Apache-2.0"
 path = [
   "lisp/emx-early-init.el",
   "lisp/emx.el",
-  "modules/completion.vertico.el",
-  "modules/emacs.dired.el",
-  "modules/emx.appearance.el",
-  "modules/emx.base.el",
-  "modules/emx.language-machine.el",
-  "modules/emx.organisation.el",
-  "modules/emx.version-control.el",
-  "modules/emx.window.el",
+  "modules/ai.el",
+  "modules/appearance.el",
+  "modules/base.el",
+  "modules/completions.el",
+  "modules/file-manager.el",
+  "modules/organisation.el",
+  "modules/version-control.el",
+  "modules/windows.el",
 ]
 SPDX-FileCopyrightText = "2025-2026 Hatim Thayyil"
 SPDX-License-Identifier = "GPL-3.0-or-later"

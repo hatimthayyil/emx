@@ -39,7 +39,7 @@ in
       nativeBuildInputs = [ pkgs.git ];
     } ''
     export HOME=$TMPDIR
-    # org-directory (modules/emx.organisation.el); org-node's :config fails
+    # org-directory (modules/organisation.el); org-node's :config fails
     # when it is missing.
     mkdir -p $HOME/Documents/org
     ${emacs}/bin/emacs --batch -u "" --init-directory=${src} -l ${./boot.el}

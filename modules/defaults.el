@@ -1,4 +1,4 @@
-;;; emx-defaults.el --- EmX Defaults                 -*- lexical-binding: t; -*-
+;;; defaults.el --- EmX Defaults  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 
@@ -18,5 +18,4 @@
 
 (use-package transient)
 
-(provide 'emx-defaults)
-;;; emx-defaults.el ends here
+;;; defaults.el ends here

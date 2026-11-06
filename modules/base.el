@@ -1,4 +1,4 @@
-;;; emx-base.el ---                     -*- lexical-binding: t -*-
+;;; base.el --- Base Emacs defaults  -*- lexical-binding: t -*-
 ;;;
 ;;; Some sane defaults for a base Emacs installation.
 ;;;
@@ -61,9 +61,8 @@ The DWIM behaviour of this command is as follows:
 (define-key global-map (kbd "C-g") #'emx/keyboard-quit-dwim)
 
 
-(provide 'emx-base)
 
 ;; Local Variables:
 ;; indent-tabs-mode: nil
 ;; End:
-;;; emx-base.el ends here
+;;; base.el ends here

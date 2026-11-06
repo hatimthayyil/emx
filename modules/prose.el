@@ -1,4 +1,4 @@
-;;; emx-prose.el --- EmX Prose, Writing, Reading     -*- lexical-binding: t; -*-
+;;; prose.el --- EmX Prose, Writing, Reading  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 
@@ -49,6 +49,5 @@
   :hook (emacs-startup . global-jinx-mode)
   :bind (("M-$" . jinx-correct)
          ("C-M-$" . jinx-languages)))
- 
-(provide 'emx-prose)
-;;; emx-prose.el ends here
+
+;;; prose.el ends here

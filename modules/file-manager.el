@@ -1,4 +1,4 @@
-;;; emacs.dired.el --- Filesystem navigation and manipulation  -*- lexical-binding: t; -*-
+;;; file-manager.el --- Filesystem navigation and manipulation  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 ;; SPDX-License-Identifier: GPL-3.0-or-later

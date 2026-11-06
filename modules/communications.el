@@ -1,4 +1,4 @@
-;;; emx-mail.el --- Mail                           -*- lexical-binding: t; -*-
+;;; communications.el --- Mail  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 

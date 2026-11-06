@@ -1,4 +1,4 @@
-;;; emx-version-control.el --- EmX version-control, magit, diff  -*- lexical-binding: t; -*-
+;;; version-control.el --- EmX version-control, magit, diff  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -163,5 +163,4 @@
    (concat "git add " (buffer-file-name) "&& "
            "git commit -m '" (read-string "Enter commit message: ") "'")))
 
-(provide 'emx-version-control)
-;;; emx-version-control.el ends here
+;;; version-control.el ends here

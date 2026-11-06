@@ -1,4 +1,4 @@
-;;; emx-multimedia.el --- EmX multimedia             -*- lexical-binding: t; -*-
+;;; multimedia.el --- EmX multimedia  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 
@@ -17,5 +17,4 @@
 
 (use-package empv)
 
-(provide 'emx-multimedia)
-;;; emx-multimedia.el ends here
+;;; multimedia.el ends here

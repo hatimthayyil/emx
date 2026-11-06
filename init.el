@@ -52,39 +52,27 @@
 ;; Load EmX init shim
 (load (expand-file-name "lisp/emx.el" emx-source-dir))
 
-;; Load module system
-(load (expand-file-name "lisp/emx-modules.el" emx-source-dir))
-
 (progn					;     startup
   (message "Loading early birds...done (%.3fs)"
            (float-time (time-subtract (current-time)
                                       before-user-init-time))))
 
-;; Load modules from modules/ directory
-(emx-modules! :emacs
-              undo
-              dired
-              :completion
-              vertico
-              :terminal
-              command-line-interface
-              :emx
-              base
-              defaults
-              appearance
-              multimedia
-              communications
-              programming
-              prose
-              version-control
-              organisation
-              research
-              window
-              navigation
-              finance
-              language-machine
-              footer
-              )
+(defconst emx-modules
+  '(undo file-manager completions terminal base defaults appearance multimedia
+    communications programming prose version-control organisation research
+    windows navigation finance ai footer)
+  "The files in modules/ that init loads, in order.
+No name may equal an Emacs library's: loading such a file by path fires that
+library's string-keyed `eval-after-load' forms early.")
+
+;; A broken module costs only itself.
+(dolist (module emx-modules)
+  (condition-case err
+      (load (expand-file-name (format "modules/%s.el" module) emx-source-dir)
+            nil t)
+    (error (display-warning
+            'emx (format "Module %s: %s" module (error-message-string err))
+            :error))))
 
 ;; Optional personal gptel config, kept outside this repo. Loaded only if present
 ;; so a clean machine (or `emacs -Q`-style boot) does not error.

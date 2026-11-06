@@ -32,6 +32,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Emacs Lisp
 - Follow Emacs Lisp conventions (2 spaces, kebab-case)
 - Add a package to `packages.el`, then regenerate the lock with `nix run --impure .#lock`
+- `modules/<concern>.el` is startup config: `init.el` loads it by path from `emx-modules`. It is not on `load-path` and has no `provide`, and its name must not be an Emacs library's, because loading it would fire that library's string-keyed `eval-after-load` forms
+- `lisp/emx-<name>.el` holds emx's libraries, whose names share Emacs's global namespace
 
 ### Rust
 - The CLI drives Nix through its command line (`cli/src/nix.rs`)

@@ -1,4 +1,4 @@
-;;; emx-research.el --- EmX research, references     -*- lexical-binding: t; -*-
+;;; research.el --- EmX research, references  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 
@@ -151,5 +151,4 @@
 ;; https://joostkremers.github.io/ebib/
 (use-package ebib)
 
-(provide 'emx-research)
-;;; emx-research.el ends here
+;;; research.el ends here

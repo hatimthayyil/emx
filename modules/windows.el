@@ -1,4 +1,4 @@
-;;; General window and buffer configurations -*- lexical-binding: t; -*-
+;;; windows.el --- General window and buffer configurations  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025-2026  Hatim Thayyil
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -36,5 +36,3 @@
   :bind
   (("C-x <right>" . winner-redo)
    ("C-x <left>" . winner-undo)))
-
-(provide 'emx-window)

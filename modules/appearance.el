@@ -1,4 +1,4 @@
-;;; emx-appearance.el --- UI enhancements and style  -*- lexical-binding: t; -*-
+;;; appearance.el --- UI enhancements and style  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -144,5 +144,3 @@ x×X .,·°;:¡!¿?`'‘’   ÄAÃÀ TODO
 ;; https://github.com/emacs-vs/rainbow-csv
 (use-package rainbow-csv
   :hook ((csv-mode tsv-mode) . rainbow-csv-mode))
-
-(provide 'emx-appearance)

@@ -1,4 +1,4 @@
-;;; command-line-interface.el --- Shell, and terminal emulators  -*- lexical-binding: t; -*-
+;;; terminal.el --- Shell, and terminal emulators  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 

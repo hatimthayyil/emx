@@ -18,18 +18,18 @@
 (use-package vundo :ensure t)
 (use-package ws-butler :ensure t)
 
-;; terminal.command-line-interface
+;; terminal
 (use-package eat :ensure t)
 (use-package vterm :ensure t)
 
-;; emx.navigation
+;; navigation
 (use-package beginend :ensure t)
 (use-package mwim :ensure t)
 
-;; emacs.dired
+;; file-manager
 (use-package dirvish :ensure t)
 
-;; emx.appearance
+;; appearance
 (use-package modus-themes :ensure t)
 (use-package ef-themes :ensure t)
 (use-package doom-themes :ensure t)
@@ -41,7 +41,7 @@
 (use-package show-font-mode :ensure t)
 (use-package rainbow-csv :ensure t)
 
-;; completion.vertico
+;; completions
 (use-package vertico :ensure t)
 (use-package orderless :ensure t)
 (use-package marginalia :ensure t)
@@ -50,7 +50,7 @@
 (use-package embark-consult :ensure t)
 (use-package tabspaces :ensure t)
 
-;; emx.version-control
+;; version-control
 (use-package diff-hl :ensure t)
 (use-package git-gutter :ensure t)
 (use-package transient :ensure t)
@@ -62,7 +62,7 @@
 (use-package git-modes :ensure t)
 (use-package with-editor :ensure t)
 
-;; emx.programming
+;; programming
 (use-package lsp-bridge :ensure t)
 (use-package parinfer-rust-mode :ensure t)
 (use-package paredit :ensure t)
@@ -90,7 +90,7 @@
 (use-package erk :ensure t)
 (use-package guix :ensure t)
 
-;; emx.research
+;; research
 (use-package consult-notes :ensure t)
 (use-package denote :ensure t)
 (use-package howm :ensure t)
@@ -106,33 +106,33 @@
 (use-package persid :ensure t)
 (use-package pdf-tools :ensure t)
 
-;; emx.prose
+;; prose
 (use-package writeroom-mode :ensure t)
 (use-package titlecase :ensure t)
 (use-package jinx :ensure t)
 
-;; emx.communications
+;; communications
 (use-package notmuch :ensure t)
 (use-package consult-notmuch :ensure t)
 (use-package elfeed :ensure t)
 (use-package org-msg :ensure t)
 
-;; emx.multimedia
+;; multimedia
 (use-package yeetube :ensure t)
 (use-package mpv :ensure t)
 (use-package empv :ensure t)
 
-;; emx.finance
+;; finance
 (use-package beancount :ensure t)
 
-;; emx.language-machine
+;; ai
 (use-package gptel :ensure t)
 (use-package gptel-quick :ensure t)
 (use-package gptel-aibo :ensure t)
 (use-package aidermacs :ensure t)
 (use-package ellama :ensure t)
 
-;; emx.footer
+;; footer
 (use-package envrc :ensure t)
 
 ;;; packages.el ends here

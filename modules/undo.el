@@ -1,4 +1,4 @@
-;;; emacs.undo.el -*- lexical-binding: t; -*-
+;;; undo.el --- Undo history  -*- lexical-binding: t; -*-
 
 ;; vundo - Visual undo tree
 ;;

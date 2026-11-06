@@ -1,4 +1,4 @@
-;;; emx-language-machine.el --- Language machines              -*- lexical-binding: t; -*-
+;;; ai.el --- AI tools  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -137,5 +137,3 @@ two to six lowercase words joined by hyphens, with no extension."
                   (read-string "Rename chat to: "
                                (file-name-with-extension (string-trim name)
                                                          extension))))))))))
-
-(provide 'emx-language-machine)

@@ -1,4 +1,4 @@
-;;; emx-finance.el --- Financial tools             -*- lexical-binding: t; -*-
+;;; finance.el --- Financial tools  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 
@@ -14,5 +14,3 @@
 (use-package beancount
   :config
   (add-to-list 'auto-mode-alist '("\\.beancount\\'" . beancount-mode)))
-
-(provide 'emx-finance)

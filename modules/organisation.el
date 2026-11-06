@@ -1,4 +1,4 @@
-;;; emx-organisation.el --- Org-mode and tools to stay organised  -*- lexical-binding: t; -*-
+;;; organisation.el --- Org-mode and tools to stay organised  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 ;; SPDX-License-Identifier: GPL-3.0-or-later

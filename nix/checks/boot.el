@@ -53,13 +53,18 @@ and ws-butler exempts `markdown-mode' by default.")
   "Features, and what must hold once each one has loaded.")
 
 (defun emx-boot-check--modules ()
-  "Return a failure for each file in `emx-modules-dir' that init did not load."
-  (let ((loaded (mapcar (lambda (module)
-                          (format "%s.%s.el" (car module) (cdr module)))
-                        emx-modules-enabled)))
-    (mapcar (lambda (file) (format "%s: module not loaded" file))
-            (seq-difference (directory-files emx-modules-dir nil "\\.el\\'")
-                            loaded))))
+  "Return a failure for each file in modules/ that init did not load.
+A name in `emx-modules' that is also a library is a failure too."
+  (let ((failures '()))
+    (dolist (file (directory-files (expand-file-name "modules/" emx-source-dir)
+                                   t "\\.el\\'"))
+      (unless (assoc file load-history)
+        (push (format "%s: module not loaded" (file-name-nondirectory file))
+              failures)))
+    (dolist (module emx-modules)
+      (when-let* ((library (locate-library (symbol-name module))))
+        (push (format "%s: module has the name of %s" module library) failures)))
+    failures))
 
 (defun emx-boot-check--vale (file)
   "Signal an error unless vale reports the repeated word in FILE's buffer."
@@ -169,7 +174,7 @@ and ws-butler exempts `markdown-mode' by default.")
       (while (re-search-forward "^\\(?:Error\\|Emergency\\) .*$" nil t)
         (push (match-string 0) failures))))
   (princ (format "emx boot check: %d modules, %d of %d packages loaded\n"
-                 (length emx-modules-enabled) loaded (length packages)))
+                 (length emx-modules) loaded (length packages)))
   (dolist (failure (nreverse failures))
     (princ (format "FAIL %s\n" failure)))
   (kill-emacs (if failures 1 0)))

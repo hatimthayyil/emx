@@ -1,4 +1,4 @@
-;;; emx-footer.el --- Configuration to be run towards the end of the init  -*- lexical-binding: t; -*-
+;;; footer.el --- Configuration to be run towards the end of the init  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Hatim Thayyil
 
