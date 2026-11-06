@@ -16,22 +16,6 @@
         "type": "github"
       }
     },
-    "aidermacs": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1792178439,
-        "narHash": "sha256-jl5ZJXVu3GcBJOCa3v6otDxvTJTyyRhydYcbm2pU9Es=",
-        "owner": "MatthewZMD",
-        "repo": "aidermacs",
-        "rev": "03ec5747b87920678d0b0ad8bc798ec0e5923125",
-        "type": "github"
-      },
-      "original": {
-        "owner": "MatthewZMD",
-        "repo": "aidermacs",
-        "type": "github"
-      }
-    },
     "aio": {
       "flake": false,
       "locked": {
@@ -512,22 +496,6 @@
         "type": "github"
       }
     },
-    "ellama": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1791360312,
-        "narHash": "sha256-wcjmJTW/YNOMHhWq1YeRBu0aTFp9snlKFNbILDeZdTg=",
-        "owner": "s-kostyaev",
-        "repo": "ellama",
-        "rev": "b6e71f41583e85d2e1fe93ccaa34593f7b4015b8",
-        "type": "github"
-      },
-      "original": {
-        "owner": "s-kostyaev",
-        "repo": "ellama",
-        "type": "github"
-      }
-    },
     "emacsql": {
       "flake": false,
       "locked": {
@@ -781,22 +749,6 @@
       "original": {
         "owner": "karthink",
         "repo": "gptel",
-        "type": "github"
-      }
-    },
-    "gptel-aibo": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1752051066,
-        "narHash": "sha256-1AdKT6l32cfiYsdTJlzuxgd+lPgT8Pe/Re48au+15kA=",
-        "owner": "dolmens",
-        "repo": "gptel-aibo",
-        "rev": "f55b5170b9dfc3023110ec8cad66e6f352ea9d8a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "dolmens",
-        "repo": "gptel-aibo",
         "type": "github"
       }
     },
@@ -1507,7 +1459,6 @@
     "root": {
       "inputs": {
         "acm": "acm",
-        "aidermacs": "aidermacs",
         "aio": "aio",
         "async": "async",
         "auto-compile": "auto-compile",
@@ -1538,7 +1489,6 @@
         "edit-indirect": "edit-indirect",
         "el-job": "el-job",
         "elfeed": "elfeed",
-        "ellama": "ellama",
         "emacsql": "emacsql",
         "embark": "embark",
         "embark-consult": "embark-consult",
@@ -1555,7 +1505,6 @@
         "git-gutter": "git-gutter",
         "git-modes": "git-modes",
         "gptel": "gptel",
-        "gptel-aibo": "gptel-aibo",
         "gptel-quick": "gptel-quick",
         "guix": "guix",
         "hl-todo": "hl-todo",

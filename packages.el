@@ -128,9 +128,6 @@
 ;; ai
 (use-package gptel :ensure t)
 (use-package gptel-quick :ensure t)
-(use-package gptel-aibo :ensure t)
-(use-package aidermacs :ensure t)
-(use-package ellama :ensure t)
 
 ;; footer
 (use-package envrc :ensure t)

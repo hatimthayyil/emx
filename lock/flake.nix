@@ -7,12 +7,6 @@
       repo = "lsp-bridge";
       type = "github";
     };
-    aidermacs = {
-      flake = false;
-      owner = "MatthewZMD";
-      repo = "aidermacs";
-      type = "github";
-    };
     aio = {
       flake = false;
       owner = "skeeto";
@@ -191,12 +185,6 @@
       repo = "elfeed";
       type = "github";
     };
-    ellama = {
-      flake = false;
-      owner = "s-kostyaev";
-      repo = "ellama";
-      type = "github";
-    };
     emacsql = {
       flake = false;
       owner = "magit";
@@ -289,12 +277,6 @@
       flake = false;
       owner = "karthink";
       repo = "gptel";
-      type = "github";
-    };
-    gptel-aibo = {
-      flake = false;
-      owner = "dolmens";
-      repo = "gptel-aibo";
       type = "github";
     };
     gptel-quick = {

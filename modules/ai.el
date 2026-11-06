@@ -9,10 +9,6 @@
 ;; The gptel backends were adapted for emx in 2025-2026 from gptel's README,
 ;; GPL-3.0-or-later: https://github.com/karthink/gptel
 ;; Copyright (C) 2023-2025  Karthik Chikmagalur
-;;
-;; The `ellama' settings were adapted for emx in 2025-2026 from ellama's README,
-;; GPL-3.0-or-later: https://github.com/s-kostyaev/ellama
-;; Copyright (C) 2023-2025  Free Software Foundation, Inc.
 
 ;;; Commentary:
 
@@ -86,24 +82,6 @@
     :stream t
     :models '(;; xAI now only offers `grok-beta` as of the time of this writing
               grok-beta)))
-
-;; ellama - Tool for interacting with LLMs
-(use-package ellama
-  :bind ("C-c e" . ellama)
-  ;; send last message in chat buffer with C-c C-c
-  :hook (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
-  :init
-  (require 'llm-ollama)
-  (setopt ellama-summarization-provider
-          (make-llm-ollama
-           :chat-model "qwen2.5:3b"
-	       :embedding-model "nomic-embed-text"
-           :default-chat-non-standard-params '(("num_ctx" . 32768))))
-  (setopt ellama-coding-provider
-          (make-llm-ollama
-           :chat-model "qwen2.5-coder:3b"
-           :embedding-model "nomic-embed-text"
-           :default-chat-non-standard-params '(("num_ctx" . 32768)))))
 
 
 ;;; Functions
