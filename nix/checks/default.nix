@@ -6,6 +6,18 @@
 , src
 }:
 let
+  # Stands in for `pass` in the boot check: logs each call, prints a key and a
+  # second line, and fails for the entry "missing".
+  fakePass = pkgs.writeShellScriptBin "pass" ''
+    echo "$*" >> "$EMX_PASS_LOG"
+    if [ "$2" = missing ]; then
+      echo "Error: $2 is not in the password store." >&2
+      exit 1
+    fi
+    echo "key for $2"
+    echo "second line"
+  '';
+
   packageList = pkgs.writeText "emx-packages" (
     pkgs.lib.concatLines (builtins.attrNames emacs.packageInputs)
   );
@@ -36,9 +48,10 @@ in
   boot = pkgs.runCommandLocal "emx-boot-check"
     {
       EMX_PACKAGES = packageList;
-      nativeBuildInputs = [ pkgs.git ];
+      nativeBuildInputs = [ fakePass pkgs.git ];
     } ''
     export HOME=$TMPDIR
+    export EMX_PASS_LOG=$TMPDIR/pass.log
     # org-directory (modules/organisation.el); org-node's :config fails
     # when it is missing.
     mkdir -p $HOME/Documents/org

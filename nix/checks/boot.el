@@ -8,7 +8,7 @@
 ;; named in the file $EMX_PACKAGES loads without an error from its
 ;; configuration, the native parts are in place, and Emacs finds the tools its
 ;; modules call.  The build sandbox has none of them, so they can only come
-;; from Emacs's wrapper.
+;; from Emacs's wrapper.  It also fails if loading gptel reads an API key.
 ;;
 ;; Under `use-package-always-defer' a form with no trigger never loads its
 ;; package and nothing says so.  The modes are therefore checked first, before
@@ -64,6 +64,16 @@ and ws-butler exempts `markdown-mode' by default.")
     ("C-c C" . claude-code-ide-menu)
     ("C-c q" . gptel-quick))
   "Global keys, and the commands they must reach.")
+
+(defconst emx-boot-check-api-keys
+  '(("ChatGPT" . "api.openai.com")
+    ("OpenRouter" . "api.openrouter.ai")
+    ("Claude" . "api.anthropic.com")
+    ("Claude-thinking" . "api.anthropic.com")
+    ("TogetherAI" . "api.together.ai")
+    ("DeepSeek" . "api.deepseek.com")
+    ("xAI" . "api.x.ai"))
+  "gptel backends, and the pass entry each one reads its key from.")
 
 (defun emx-boot-check--modules ()
   "Return a failure for each file in modules/ that init did not load.
@@ -164,6 +174,23 @@ A name in `emx-modules' that is also a library is a failure too."
     (unless (member version parinfer-rust-supported-versions)
       (error "Library version %s is not supported" version))))
 
+(defun emx-boot-check--api-keys ()
+  "Signal an error unless gptel reads its API keys from `pass' on demand.
+The `pass' on PATH here logs each call to the file $EMX_PASS_LOG, prints a key
+and a second line, and fails for the entry \"missing\"."
+  (require 'gptel)
+  (when (file-exists-p (getenv "EMX_PASS_LOG"))
+    (error "Loading the packages ran pass"))
+  (pcase-dolist (`(,name . ,entry) emx-boot-check-api-keys)
+    (let* ((gptel-backend (gptel-get-backend name))
+           (key (gptel--get-api-key)))
+      (unless (equal key (concat "key for " entry))
+        (error "%s's key is %S" name key))))
+  (unless (condition-case nil
+              (ignore (funcall (emx-pass-key "missing")))
+            (error t))
+    (error "A failing pass did not signal an error")))
+
 ;; Fail instead of compiling the module when it is missing.
 (setq vterm-always-compile-module nil)
 
@@ -192,6 +219,9 @@ A name in `emx-modules' that is also a library is a failure too."
   (condition-case err
       (emx-boot-check--parinfer)
     (error (push (format "parinfer-rust: %s" (error-message-string err)) failures)))
+  (condition-case err
+      (emx-boot-check--api-keys)
+    (error (push (format "API keys: %s" (error-message-string err)) failures)))
   (dolist (tool emx-boot-check-tools)
     (unless (executable-find tool)
       (push (format "%s: not on exec-path" tool) failures)))

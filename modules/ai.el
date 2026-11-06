@@ -14,9 +14,12 @@
 
 ;;
 
-(defun key (pass-entry)
-  (string-trim
-   (shell-command-to-string (concat "pass " pass-entry))))
+(defun emx-pass-key (entry)
+  "Return a function that reads the API key in pass ENTRY, for gptel's `:key'.
+`pass' runs each time gptel needs the key, never when gptel loads.  A failing
+`pass' signals an error, so its message can never become the key."
+  (lambda ()
+    (car (process-lines "pass" "show" entry))))
 
 (use-package gptel
   :defer t
@@ -35,7 +38,7 @@
   ;;;
 
   ;; OpenAI
-  (setq gptel-api-key (key "api.openai.com"))
+  (setq gptel-api-key (emx-pass-key "api.openai.com"))
   (gptel-make-openai "ChatGPT"
     :stream t
     :key 'gptel-api-key)
@@ -45,16 +48,16 @@
     :host "openrouter.ai"
     :endpoint "/api/v1/chat/completions"
     :stream t
-    :key (key "api.openrouter.ai")
+    :key (emx-pass-key "api.openrouter.ai")
     :models '(openai/gpt-3.5-turbo
               google/gemini-pro))
 
   ;; Claude
   (gptel-make-anthropic "Claude"
     :stream t
-    :key (key "api.anthropic.com"))
+    :key (emx-pass-key "api.anthropic.com"))
   (gptel-make-anthropic "Claude-thinking"
-    :key (key "api.anthropic.com")
+    :key (emx-pass-key "api.anthropic.com")
     :stream t
     :models '(claude-3-7-sonnet-20250219)
     :header (lambda () (when-let* ((key (gptel--get-api-key)))
@@ -69,7 +72,7 @@
   ;; TogetherAI
   (gptel-make-openai "TogetherAI"
     :host "api.together.xyz"
-    :key (key "api.together.ai")
+    :key (emx-pass-key "api.together.ai")
     :stream t
     :models '(deepseek-ai/DeepSeek-R1
               mistralai/Mixtral-8x7B-Instruct-v0.1
@@ -80,12 +83,12 @@
     :host "api.deepseek.com"
     :endpoint "/chat/completions"
     :stream t
-    :key (key "api.deepseek.com")
+    :key (emx-pass-key "api.deepseek.com")
     :models '(deepseek-chat deepseek-coder deepseek-reasoner))
 
   (gptel-make-openai "xAI"
     :host "api.x.ai"
-    :key (key "api.x.ai")
+    :key (emx-pass-key "api.x.ai")
     :endpoint "/v1/chat/completions"
     :stream t
     :models '(;; xAI now only offers `grok-beta` as of the time of this writing
@@ -121,8 +124,8 @@
 (use-package gptel-quick
   :bind ("C-c q" . gptel-quick))
 
-;; LLM calls as Org source blocks.  ob-gptel loads gptel, and so reads the keys
-;; from `pass', so it waits for the first block that runs.
+;; LLM calls as Org source blocks.  ob-gptel loads gptel, so it waits for the
+;; first block that runs.
 (use-package ob-gptel
   :autoload org-babel-execute:gptel
   :init
