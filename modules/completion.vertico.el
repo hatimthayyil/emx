@@ -77,6 +77,7 @@
 
 (use-package vertico-multiform
   :after vertico
+  :demand t
   :config
   (setopt vertico-multiform-commands
           `((consult-outline buffer ,(lambda (_) (text-scale-set -1)))
@@ -298,6 +299,8 @@
 ;; tempel-collection
 ;;
 ;; Base snippet colletion
-(use-package tempel-collection)
+(use-package tempel-collection
+  :after tempel
+  :demand t)
 
 (provide 'emx-completion)

@@ -70,9 +70,12 @@
               command-line-interface
               :emx
               base
+              defaults
               appearance
               multimedia
+              communications
               programming
+              prose
               version-control
               organisation
               research

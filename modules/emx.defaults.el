@@ -14,7 +14,7 @@
 ;;; ws-butler - Cleanup whitespace at end of lines
 (use-package ws-butler
   :delight
-  :config (ws-butler-global-mode t))
+  :hook (after-init . ws-butler-global-mode))
 
 (use-package transient)
 

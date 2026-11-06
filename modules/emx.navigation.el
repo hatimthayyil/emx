@@ -12,7 +12,8 @@
 ;;
 ;; Remap M-< and M-> to move to more meaningful locations, such as the beginning
 ;; of sourcecode.
-(use-package beginend)
+(use-package beginend
+  :hook (after-init . beginend-global-mode))
 
 ;; mwim - Move Where I Mean
 ;;

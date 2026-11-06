@@ -32,15 +32,6 @@
 		 (side . left)
 		 (window-width . 70))))
 
-;; Enable automatic spell check for text and source code.
-(use-package ispell
-  :ensure nil				; built-in
-  :config
-  (setopt ispell-dictionary "en_US") ;; Set the default dictionary for spell checking.
-  (when (executable-find ispell-program-name)
-    (add-hook 'text-mode-hook #'flyspell-mode)
-    (add-hook 'prog-mode-hook #'flyspell-prog-mode)))
-
 ;;; Helper functions
 
 (defun emx/keyboard-quit-dwim ()

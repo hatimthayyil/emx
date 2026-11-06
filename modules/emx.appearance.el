@@ -143,8 +143,6 @@ x×X .,·°;:¡!¿?`'‘’   ÄAÃÀ TODO
 ;;
 ;; https://github.com/emacs-vs/rainbow-csv
 (use-package rainbow-csv
-  :config
-  (add-hook 'csv-mode-hook #'rainbow-csv-mode)
-  (add-hook 'tsv-mode-hook #'rainbow-csv-mode))
+  :hook ((csv-mode tsv-mode) . rainbow-csv-mode))
 
 (provide 'emx-appearance)

@@ -146,6 +146,7 @@
 ;; deps: ripgrep
 (use-package magit-todos
   :after magit
+  :demand t
   :config (magit-todos-mode 1))
 
 ;; git-modes -

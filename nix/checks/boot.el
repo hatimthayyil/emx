@@ -3,10 +3,16 @@
 ;;; Commentary:
 
 ;; Loaded after emx's init by nix/checks/default.nix.  Fails unless init
-;; loaded without error, the main feature of every package named in the file
-;; $EMX_PACKAGES loads without an error from its configuration, the native
-;; parts are in place, and Emacs finds the tools its modules call.  The build
-;; sandbox has none of them, so they can only come from Emacs's wrapper.
+;; loaded without error and loaded every file in modules/, booting and opening
+;; files turns on what the modules promise, the main feature of every package
+;; named in the file $EMX_PACKAGES loads without an error from its
+;; configuration, the native parts are in place, and Emacs finds the tools its
+;; modules call.  The build sandbox has none of them, so they can only come
+;; from Emacs's wrapper.
+;;
+;; Under `use-package-always-defer' a form with no trigger never loads its
+;; package and nothing says so.  The modes are therefore checked first, before
+;; this file loads any package itself.
 
 ;;; Code:
 
@@ -21,6 +27,81 @@ A nil feature means the package is a theme: its file is only located.")
   '("rg" "fd" "yt-dlp" "vale" "vale-ls" "basedpyright" "ruff"
     "beancount-language-server")
   "Programs that Emacs's wrapper puts on PATH.")
+
+(defconst emx-boot-check-global-modes
+  '(beginend-global-mode global-jinx-mode vertico-multiform-mode
+    ws-butler-global-mode)
+  "Global modes that booting turns on.")
+
+(defconst emx-boot-check-file-modes
+  '(("note.txt" flycheck-mode ws-butler-mode)
+    ("note.org" flycheck-mode ws-butler-mode)
+    ("note.md" flycheck-mode)
+    ("table.csv" rainbow-csv-mode)
+    ("code.el" paredit-mode ws-butler-mode))
+  "Files, and the modes that opening each one turns on.
+`jinx--on' refuses batch Emacs, so jinx is checked by its global mode alone,
+and ws-butler exempts `markdown-mode' by default.")
+
+(defconst emx-boot-check-prose-files '("note.txt" "note.org" "note.md")
+  "Files that vale must lint.")
+
+(defconst emx-boot-check-after-load
+  '((tempel . (featurep 'tempel-collection))
+    (magit . magit-todos-mode)
+    (geiser-mode . (memq 'macrostep-geiser-setup geiser-mode-hook)))
+  "Features, and what must hold once each one has loaded.")
+
+(defun emx-boot-check--modules ()
+  "Return a failure for each file in `emx-modules-dir' that init did not load."
+  (let ((loaded (mapcar (lambda (module)
+                          (format "%s.%s.el" (car module) (cdr module)))
+                        emx-modules-enabled)))
+    (mapcar (lambda (file) (format "%s: module not loaded" file))
+            (seq-difference (directory-files emx-modules-dir nil "\\.el\\'")
+                            loaded))))
+
+(defun emx-boot-check--vale (file)
+  "Signal an error unless vale reports the repeated word in FILE's buffer."
+  (with-current-buffer (find-buffer-visiting file)
+    (let ((checker (flycheck-get-checker-for-buffer)))
+      (unless (eq checker 'vale)
+        (error "Flycheck chose %s" checker)))
+    (flycheck-buffer)
+    (while (flycheck-running-p)
+      (accept-process-output nil 0.1))
+    (unless flycheck-current-errors
+      (error "vale reported nothing"))))
+
+(defun emx-boot-check--triggers ()
+  "Return a failure for each thing a booted Emacs has not turned on."
+  (let ((dir (make-temp-file "emx-boot-check" t))
+        ;; lsp-bridge would start its Python server.
+        (prog-mode-hook nil)
+        (failures '()))
+    ;; Batch Emacs exits before it reaches this hook.
+    (run-hooks 'emacs-startup-hook)
+    (dolist (mode emx-boot-check-global-modes)
+      (unless (and (boundp mode) (symbol-value mode))
+        (push (format "%s: off after boot" mode) failures)))
+    (write-region "[*]\nBasedOnStyles = Vale\n" nil
+                  (expand-file-name ".vale.ini" dir))
+    (dolist (entry emx-boot-check-file-modes)
+      (let ((file (expand-file-name (car entry) dir)))
+        (write-region "This is is a repeated word.\n" nil file)
+        (with-current-buffer (find-file-noselect file)
+          (dolist (mode (cdr entry))
+            (unless (and (boundp mode) (symbol-value mode))
+              (push (format "%s: %s is off" (car entry) mode) failures))))))
+    (dolist (name emx-boot-check-prose-files)
+      (condition-case err
+          (emx-boot-check--vale (expand-file-name name dir))
+        (error (push (format "%s: %s" name (error-message-string err)) failures))))
+    (dolist (entry emx-boot-check-after-load)
+      (require (car entry))
+      (unless (eval (cdr entry) t)
+        (push (format "%s: %S does not hold" (car entry) (cdr entry)) failures)))
+    failures))
 
 (defun emx-boot-check--packages ()
   "Return the package names listed in the file $EMX_PACKAGES."
@@ -59,6 +140,11 @@ A nil feature means the package is a theme: its file is only located.")
       (failures '()))
   (when init-file-had-error
     (push "init: loading the init files signalled an error" failures))
+  (condition-case err
+      (setq failures (nconc (emx-boot-check--modules)
+                            (emx-boot-check--triggers)
+                            failures))
+    (error (push (format "boot: %s" (error-message-string err)) failures)))
   (dolist (package packages)
     (condition-case err
         (progn (emx-boot-check--load package)

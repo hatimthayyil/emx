@@ -91,7 +91,13 @@
 ;; Some of them looks very interesting.
 ;;
 ;; see 'https://karthinks.com/software/a-consistent-structural-editing-interface/'
-(use-package paredit)
+(use-package paredit
+  :hook ((emacs-lisp-mode lisp-mode scheme-mode clojure-mode) . paredit-mode)
+  ;; M-s stays the prefix for consult's search commands, and RET stays acm's
+  ;; key to accept a completion.
+  :bind (:map paredit-mode-map
+         ("M-s" . nil)
+         ("RET" . nil)))
 
 ;; geiser
 ;;
@@ -110,8 +116,7 @@
 ;;
 ;; This is based on macrostep. It currently is in the emacsorphanage
 (use-package macrostep-geiser
-  :after geiser-mode
-  :config (add-hook 'geiser-mode-hook #'macrostep-geiser-setup))
+  :hook (geiser-mode . macrostep-geiser-setup))
 
 ;; Common Lisp
 ;;
