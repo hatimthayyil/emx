@@ -16,10 +16,18 @@
 
 (defun emx-pass-key (entry)
   "Return a function that reads the API key in pass ENTRY, for gptel's `:key'.
-`pass' runs each time gptel needs the key, never when gptel loads.  A failing
-`pass' signals an error, so its message can never become the key."
+`pass' runs each time gptel needs the key, never when gptel loads.  The key is
+the first line of its standard output; its error stream is discarded, so a gpg
+warning can't become the key.  A non-zero exit or an empty key signals an error
+naming ENTRY, and that error holds nothing `pass' printed."
   (lambda ()
-    (car (process-lines "pass" "show" entry))))
+    (with-temp-buffer
+      (let ((status (call-process "pass" nil '(t nil) nil "show" entry)))
+        (goto-char (point-min))
+        (let ((key (buffer-substring-no-properties (point) (line-end-position))))
+          (unless (and (eql status 0) (not (string-empty-p key)))
+            (error "pass show %s gave no key (exit status %s)" entry status))
+          key)))))
 
 (use-package gptel
   :defer t

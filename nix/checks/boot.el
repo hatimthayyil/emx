@@ -185,8 +185,9 @@ A name in `emx-modules' that is also a library is a failure too."
 
 (defun emx-boot-check--api-keys ()
   "Signal an error unless gptel reads its API keys from `pass' on demand.
-The `pass' on PATH here logs each call to the file $EMX_PASS_LOG, prints a key
-and a second line, and fails for the entry \"missing\"."
+The `pass' on PATH here logs each call to the file $EMX_PASS_LOG and prints a
+key and a second line.  It warns on stderr first for the entry \"noisy\", exits
+1 after a line for \"missing\", and prints nothing for \"empty\"."
   (require 'gptel)
   (when (file-exists-p (getenv "EMX_PASS_LOG"))
     (error "Loading the packages ran pass"))
@@ -195,10 +196,15 @@ and a second line, and fails for the entry \"missing\"."
            (key (gptel--get-api-key)))
       (unless (equal key (concat "key for " entry))
         (error "%s's key is %S" name key))))
-  (unless (condition-case nil
-              (ignore (funcall (emx-pass-key "missing")))
-            (error t))
-    (error "A failing pass did not signal an error")))
+  (let ((key (funcall (emx-pass-key "noisy"))))
+    (unless (equal key "key for noisy")
+      (error "The key read past pass's stderr is %S" key)))
+  (dolist (entry '("missing" "empty"))
+    (let ((failure (condition-case err
+                       (ignore (funcall (emx-pass-key entry)))
+                     (error (error-message-string err)))))
+      (unless (and failure (string-search entry failure))
+        (error "Pass entry %s gave %S, not an error naming it" entry failure)))))
 
 ;; Fail instead of compiling the module when it is missing.
 (setq vterm-always-compile-module nil)

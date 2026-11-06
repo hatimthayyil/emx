@@ -6,14 +6,24 @@
 , src
 }:
 let
-  # Stands in for `pass` in the boot check: logs each call, prints a key and a
-  # second line, and fails for the entry "missing".
+  # Stands in for `pass` in the boot check: logs each call and prints a key and
+  # a second line. It warns on stderr first for the entry "noisy", exits 1 after
+  # a line for "missing", and prints nothing for "empty".
   fakePass = pkgs.writeShellScriptBin "pass" ''
     echo "$*" >> "$EMX_PASS_LOG"
-    if [ "$2" = missing ]; then
-      echo "Error: $2 is not in the password store." >&2
-      exit 1
-    fi
+    case "$2" in
+      noisy)
+        echo "gpg: WARNING: a warning from gpg" >&2
+        ;;
+      missing)
+        echo "partial output"
+        echo "Error: $2 is not in the password store." >&2
+        exit 1
+        ;;
+      empty)
+        exit 0
+        ;;
+    esac
     echo "key for $2"
     echo "second line"
   '';
