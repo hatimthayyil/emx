@@ -1,7 +1,7 @@
 //! The emx repo: the flake that emx's Emacs and packages are built from.
 
 use std::ffi::OsString;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::error::Error;
 
@@ -30,6 +30,15 @@ impl Source {
             }
         }
         Ok(Self { root })
+    }
+
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
+    /// The nested flake that pins every package.
+    pub fn lock_dir(&self) -> PathBuf {
+        self.root.join("lock")
     }
 
     /// The installable naming the flake output `output` of this repo.

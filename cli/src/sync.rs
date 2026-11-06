@@ -18,10 +18,27 @@ use crate::source::Source;
 /// The flake output holding Emacs with every package (nix/emacs).
 const EMACS_OUTPUT: &str = "emacs";
 
+/// What a sync did to emx's profile.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Outcome {
+    /// The profile already held this build.
+    Unchanged,
+    /// The build is the profile's first generation.
+    Created,
+    /// The build is a new generation.
+    Switched,
+}
+
 pub fn run(src: Option<PathBuf>, args: &SyncArgs) -> Result<(), Error> {
     let source = Source::open(src)?;
     let profile = Profile::from_env()?;
     prompt::ensure_answerable(args.yes)?;
+    apply(&source, &profile, args).map(|_| ())
+}
+
+/// Builds `source` and, once confirmed, makes the build a generation of
+/// `profile`. The caller has checked with [`prompt::ensure_answerable`].
+pub fn apply(source: &Source, profile: &Profile, args: &SyncArgs) -> Result<Outcome, Error> {
     profile.create_parent()?;
     let current = profile.current()?;
 
@@ -38,7 +55,7 @@ pub fn run(src: Option<PathBuf>, args: &SyncArgs) -> Result<(), Error> {
             current.number,
             build.store_path().display()
         );
-        return Ok(());
+        return Ok(Outcome::Unchanged);
     }
 
     let shown = match &current {
@@ -64,12 +81,13 @@ pub fn run(src: Option<PathBuf>, args: &SyncArgs) -> Result<(), Error> {
         generation.number,
         generation.store_path.display()
     );
-    if current.is_none() {
-        match daemon::start_if_enabled() {
-            Ok(true) => println!("emx: started the Emacs daemon"),
-            Ok(false) => {}
-            Err(err) => eprintln!("emx: cannot start the Emacs daemon: {err}"),
-        }
+    if current.is_some() {
+        return Ok(Outcome::Switched);
     }
-    Ok(())
+    match daemon::start_if_enabled() {
+        Ok(true) => println!("emx: started the Emacs daemon"),
+        Ok(false) => {}
+        Err(err) => eprintln!("emx: cannot start the Emacs daemon: {err}"),
+    }
+    Ok(Outcome::Created)
 }

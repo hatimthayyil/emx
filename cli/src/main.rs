@@ -1,5 +1,6 @@
 //! `emx` builds emx's Emacs and its Elisp packages from the emx repo into
-//! emx's own Nix profile, which the `emacs` and `emacsclient` launchers run.
+//! emx's own Nix profile, which the `emacs` and `emacsclient` launchers run,
+//! upgrades those packages, and rolls the profile back.
 //!
 //! Exit status: 0 on success, 1 when a command fails, 2 on a usage error.
 
@@ -12,8 +13,10 @@ mod manifest;
 mod nix;
 mod profile;
 mod prompt;
+mod rollback;
 mod source;
 mod sync;
+mod upgrade;
 
 use std::process::ExitCode;
 
@@ -36,5 +39,7 @@ fn main() -> ExitCode {
 fn run(cli: Cli) -> Result<(), Error> {
     match cli.command {
         Command::Sync(args) => sync::run(cli.src, &args),
+        Command::Upgrade(args) => upgrade::run(cli.src, &args),
+        Command::Rollback => rollback::run(),
     }
 }

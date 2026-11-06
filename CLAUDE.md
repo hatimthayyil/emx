@@ -9,11 +9,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `emx sync` (the Rust CLI in `cli/`) builds Emacs and its packages into emx's own Nix profile, `$XDG_STATE_HOME/emx/profile`; home-manager installs emx once and never builds the package set
 - The tools emx's modules call are `executablePackages` in `nix/emacs/default.nix`: they sit in emx's profile, on the `PATH` of Emacs and what it starts, and nothing outside Emacs sees them
 - Emacs loads its Elisp from the emx repo (`programs.emx.src`, `EMX_SRC` for the CLI), so edits need no build
+- The config repo's `emx` input needs bumping only for changes to `cli/`, `Cargo.toml`, `Cargo.lock`, `nix/cli.nix` or `nix/home-module.nix`, or for a new Emacs major version. Elisp edits and package upgrades never touch it
 
 ## BUILD/LINT/TEST COMMANDS
 - Dev environment: `devenv shell` (Rust toolchain, treefmt, commit hooks)
 - CLI tests: `cargo test` (or `devenv test`); `cargo test -- --ignored` also builds emx's Emacs with Nix into a temporary profile and boots it (extra `nix build` arguments in `EMX_TEST_NIX_ARGS`)
 - Build Emacs into emx's profile: `emx sync` (extra `nix build` arguments after `--`). It shows what changes and asks before switching; without a terminal, such as from an agent, pass `--yes`. The sync that creates the profile starts `emacs.service` if it is enabled; later syncs leave the daemon running
+- Upgrade packages: `emx upgrade [PACKAGE...]` moves pins in `lock/` to upstream's newest, then syncs (`--yes` and extra Nix arguments after `--`, as for `emx sync`). With names it moves those git packages; with none it moves every package. ELPA packages move only together, so naming one is refused. A source Nix can't reach keeps its pin: the rest still move and sync, then emx names it and exits 1. The new pins stay uncommitted: commit them, or undo them with `git restore lock`. A running Emacs loads a new generation on `systemctl --user restart emacs`
+- Roll back: `emx rollback` returns emx's profile to its previous generation; `lock/` stays, so the next sync builds its pins again
 - Build: `nix build .#emacs`, `nix build .#emx`
 - Check (boots the real init and loads every package, checks the home-manager module): `nix flake check`
 - Throttle local builds: `--max-jobs 2 --cores 4`

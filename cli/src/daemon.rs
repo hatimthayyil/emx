@@ -7,6 +7,12 @@ use std::process::{Command, Output, Stdio};
 
 const SERVICE: &str = "emacs.service";
 
+/// Tells the user how a running Emacs picks up a new generation, since emx
+/// leaves it running: a restart would close the user's buffers.
+pub fn print_restart() {
+    println!("emx: restart Emacs to load it: systemctl --user restart emacs");
+}
+
 /// Starts the daemon when its service is enabled, and says whether it did.
 /// A socket-activated service reads as `static`, and its socket starts it.
 /// Blocks until Emacs is ready: the service is `Type=notify`.

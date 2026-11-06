@@ -42,7 +42,7 @@ pub enum Error {
     #[error("cannot run nix: {source}")]
     NixSpawn { source: io::Error },
 
-    #[error("nix build failed ({status}); its output is above")]
+    #[error("nix failed ({status}); its output is above")]
     NixFailed { status: ExitStatus },
 
     #[error("cannot run nom (nix-output-monitor): it is not on PATH")]
@@ -56,6 +56,33 @@ pub enum Error {
 
     #[error("cannot read the answer: {source}")]
     Prompt { source: io::Error },
+
+    #[error("cannot read {path}: {source}")]
+    ReadLock { path: PathBuf, source: io::Error },
+
+    #[error("cannot parse {path}: {source}")]
+    ParseLock {
+        path: PathBuf,
+        source: serde_json::Error,
+    },
+
+    #[error(
+        "{name} is an ELPA package, and those move together: \
+         run `emx upgrade` with no package names"
+    )]
+    ArchivePackage { name: String },
+
+    #[error("{name} is not locked: add it to packages.el, then run `nix run --impure .#lock`")]
+    UnknownPackage { name: String },
+
+    #[error(
+        "could not refresh {}: pins stay as they were, and Nix's output above says why",
+        names.join(", ")
+    )]
+    NotRefreshed { names: Vec<String> },
+
+    #[error("emx's profile has no generation to return to: run `emx sync` first")]
+    NoGeneration,
 
     #[error("not switched: {}", match generation {
         Some(number) => format!("emx's profile stays at generation {number}"),

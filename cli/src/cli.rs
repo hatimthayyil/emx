@@ -23,6 +23,15 @@ pub enum Command {
     /// the result the current generation of emx's profile. The sync that creates
     /// the profile also starts the Emacs daemon, if its service is enabled.
     Sync(SyncArgs),
+
+    /// Move packages in the emx repo's lock to their newest versions, then sync.
+    /// The new pins stay uncommitted in lock/. Without package names, every
+    /// package moves, ELPA packages included. A package whose source can't be
+    /// reached keeps its pin: the rest still move, then emx names it and exits 1.
+    Upgrade(UpgradeArgs),
+
+    /// Return emx's profile to its previous generation. lock/ stays as it is.
+    Rollback,
 }
 
 #[derive(Debug, Args)]
@@ -31,10 +40,21 @@ pub struct SyncArgs {
     #[arg(long, short)]
     pub yes: bool,
 
-    /// Extra arguments for `nix build`, given after `--`
-    /// (for example `-- --max-jobs 2 --cores 4`).
+    /// Extra arguments for the Nix commands that fetch and build, given after
+    /// `--` (for example `-- --max-jobs 2 --cores 4`).
     #[arg(last = true, value_name = "NIX_ARGS")]
     pub nix_args: Vec<OsString>,
+}
+
+#[derive(Debug, Args)]
+pub struct UpgradeArgs {
+    /// Git packages to move. ELPA packages move together, so they cannot be
+    /// named.
+    #[arg(value_name = "PACKAGE")]
+    pub packages: Vec<String>,
+
+    #[command(flatten)]
+    pub sync: SyncArgs,
 }
 
 #[cfg(test)]
@@ -51,7 +71,30 @@ mod tests {
     #[test]
     fn sync_passes_arguments_after_double_dash_to_nix() {
         let cli = Cli::try_parse_from(["emx", "sync", "--", "--max-jobs", "2"]).unwrap();
-        let Command::Sync(args) = cli.command;
+        let Command::Sync(args) = cli.command else {
+            panic!("parsed as another command");
+        };
         assert_eq!(args.nix_args, ["--max-jobs", "2"]);
+    }
+
+    #[test]
+    fn upgrade_takes_packages_and_arguments_for_nix() {
+        let cli = Cli::try_parse_from([
+            "emx",
+            "upgrade",
+            "gptel",
+            "magit",
+            "--yes",
+            "--",
+            "--max-jobs",
+            "2",
+        ])
+        .unwrap();
+        let Command::Upgrade(args) = cli.command else {
+            panic!("parsed as another command");
+        };
+        assert_eq!(args.packages, ["gptel", "magit"]);
+        assert!(args.sync.yes);
+        assert_eq!(args.sync.nix_args, ["--max-jobs", "2"]);
     }
 }
