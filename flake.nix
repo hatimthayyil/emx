@@ -36,8 +36,11 @@
       # `nix run --impure .#lock` regenerates lock/ from packages.el, and
       # `nix run --impure .#update` moves the ELPA archive packages to their
       # newest releases. Both read the archives live, so they need --impure;
-      # as apps, `nix flake check` would evaluate them and fail.
-      legacyPackages.${system} = emacs.makeApps { lockDirName = "lock"; };
+      # as apps, `nix flake check` would evaluate them and fail. `nix run`
+      # accepts only derivations here, so each twist app is wrapped in one.
+      legacyPackages.${system} = builtins.mapAttrs
+        (name: app: pkgs.writeShellScriptBin name ''exec ${app.program} "$@"'')
+        (emacs.makeApps { lockDirName = "lock"; });
 
       # `emx sync` builds `emacs` into emx's profile; home-manager installs `emx`.
       packages.${system} = {
