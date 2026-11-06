@@ -76,5 +76,5 @@ elpaca.local.el
 
 # Agent workspace
 /ai/
-/ai.local.toml
 /.ai/local/
+*.local*
