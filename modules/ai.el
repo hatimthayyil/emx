@@ -117,6 +117,26 @@
   :after gptel
   :demand t)
 
+;; Explains the region, a pdf-tools selection or the sexp at point in a line.
+(use-package gptel-quick
+  :bind ("C-c q" . gptel-quick))
+
+;; LLM calls as Org source blocks.  ob-gptel loads gptel, and so reads the keys
+;; from `pass', so it waits for the first block that runs.
+(use-package ob-gptel
+  :autoload org-babel-execute:gptel
+  :init
+  ;; Org reads a block's defaults before it calls the autoload.
+  (defvar org-babel-default-header-args:gptel
+    '((:results . "replace")
+      (:exports . "both")
+      (:eval . "never-export")
+      (:format . "org"))
+    "Default header arguments for gptel source blocks.")
+  ;; Otherwise fontifying a block runs `gptel-mode', which loads gptel.
+  (with-eval-after-load 'org-src
+    (add-to-list 'org-src-lang-modes '("gptel" . text))))
+
 ;; Drives agents over ACP.  Claude Code runs through `claude-agent-acp', signed
 ;; in with the machine's Claude Code login.
 (use-package agent-shell

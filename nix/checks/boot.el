@@ -47,7 +47,11 @@ and ws-butler exempts `markdown-mode' by default.")
   "Files that vale must lint.")
 
 (defconst emx-boot-check-after-load
-  '((tempel . (featurep 'tempel-collection))
+  '((pdf-loader . (assoc pdf-loader--auto-mode-alist-item auto-mode-alist))
+    (org . (and (fboundp 'org-babel-execute:gptel)
+                (eq (org-src-get-lang-mode "gptel") 'text-mode)
+                (not (featurep 'gptel))))
+    (tempel . (featurep 'tempel-collection))
     (magit . magit-todos-mode)
     (geiser-mode . (memq 'macrostep-geiser-setup geiser-mode-hook))
     (claude-code-ide . claude-code-ide-enable-mcp-server)
@@ -57,7 +61,8 @@ and ws-butler exempts `markdown-mode' by default.")
 
 (defconst emx-boot-check-keys
   '(("C-c s" . agent-shell)
-    ("C-c C" . claude-code-ide-menu))
+    ("C-c C" . claude-code-ide-menu)
+    ("C-c q" . gptel-quick))
   "Global keys, and the commands they must reach.")
 
 (defun emx-boot-check--modules ()

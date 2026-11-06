@@ -95,6 +95,16 @@
   (setq zk-search-function #'zk-consult-grep))
 
 
+;; pdf-tools - PDF viewer
+;;
+;; https://github.com/vedang/pdf-tools
+;;
+;; Loads when the first PDF opens.  `epdfinfo' comes from Nix, so the install
+;; never needs the prompt that would stop a daemon.
+(use-package pdf-tools
+  :init
+  (pdf-loader-install t))
+
 ;; denote - prot's note taking system
 ;;
 ;; https://protesilaos.com/emacs/denote

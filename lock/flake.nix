@@ -457,6 +457,12 @@
       type = "git";
       url = "https://git.notmuchmail.org/git/notmuch";
     };
+    ob-gptel = {
+      flake = false;
+      owner = "jwiegley";
+      repo = "ob-gptel";
+      type = "github";
+    };
     orderless = {
       flake = false;
       owner = "oantolin";

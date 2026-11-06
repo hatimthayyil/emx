@@ -1514,6 +1514,19 @@
     "packageRequires": {},
     "version": null
   },
+  "ob-gptel": {
+    "author": "John Wiegley",
+    "meta": {
+      "description": "Org-babel backend for GPTel AI interactions",
+      "homepage": "https://github.com/jwiegley/ob-gptel"
+    },
+    "narHash": "sha256-ldhSZuDlcjcz2iSqTcE02G6o7YGcnADvGaqZ1EeFQ3Q=",
+    "packageRequires": {
+      "emacs": "26.1",
+      "gptel": "0.9.8.5"
+    },
+    "version": "0.1.0"
+  },
   "orderless": {
     "author": "Omar Antolín Camarena <omar@matem.unam.mx>",
     "meta": {

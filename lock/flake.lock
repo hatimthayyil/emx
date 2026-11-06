@@ -1232,6 +1232,22 @@
         "url": "https://git.notmuchmail.org/git/notmuch"
       }
     },
+    "ob-gptel": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793121054,
+        "narHash": "sha256-ldhSZuDlcjcz2iSqTcE02G6o7YGcnADvGaqZ1EeFQ3Q=",
+        "owner": "jwiegley",
+        "repo": "ob-gptel",
+        "rev": "65646efa49c8ba15177fcc47a69be20e314c4488",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jwiegley",
+        "repo": "ob-gptel",
+        "type": "github"
+      }
+    },
     "orderless": {
       "flake": false,
       "locked": {
@@ -1599,6 +1615,7 @@
         "nix-mode": "nix-mode",
         "no-littering": "no-littering",
         "notmuch": "notmuch",
+        "ob-gptel": "ob-gptel",
         "orderless": "orderless",
         "org-mem": "org-mem",
         "org-msg": "org-msg",
