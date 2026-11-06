@@ -110,6 +110,11 @@ A name in `emx-modules' that is also a library is a failure too."
         ;; lsp-bridge would start its Python server.
         (prog-mode-hook nil)
         (failures '()))
+    ;; First: anything else that uses Info initialises it, hiding a failure.
+    (require 'info)
+    (unless (info--manual-names nil)
+      (push "info: no manual names, so gptel-agent's manual_names is empty"
+            failures))
     ;; Batch Emacs exits before it reaches this hook.
     (run-hooks 'emacs-startup-hook)
     (dolist (mode emx-boot-check-global-modes)

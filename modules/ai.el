@@ -124,6 +124,10 @@
   :after gptel
   :demand t)
 
+;; `manual_names' reads `Info-directory-list', which is empty until this runs.
+(with-eval-after-load 'info
+  (info-initialize))
+
 ;; Explains the region, a pdf-tools selection or the sexp at point in a line.
 (use-package gptel-quick
   :bind ("C-c q" . gptel-quick))
