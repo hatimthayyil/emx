@@ -74,12 +74,6 @@ library's string-keyed `eval-after-load' forms early.")
             'emx (format "Module %s: %s" module (error-message-string err))
             :error))))
 
-;; Optional personal gptel config, kept outside this repo. Loaded only if present
-;; so a clean machine (or `emacs -Q`-style boot) does not error.
-(let ((emx-gptel-config (expand-file-name "~/.assistant/gptel-config.el")))
-  (when (file-exists-p emx-gptel-config)
-    (load emx-gptel-config nil 'nomessage)))
-
 ;; Local Variables:
 ;; indent-tabs-mode: nil
 ;; End:

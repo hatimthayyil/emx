@@ -49,7 +49,9 @@ and ws-butler exempts `markdown-mode' by default.")
 (defconst emx-boot-check-after-load
   '((tempel . (featurep 'tempel-collection))
     (magit . magit-todos-mode)
-    (geiser-mode . (memq 'macrostep-geiser-setup geiser-mode-hook)))
+    (geiser-mode . (memq 'macrostep-geiser-setup geiser-mode-hook))
+    (gptel . (and (gptel-get-tool "introspection") (gptel-get-tool "Eval")
+                  (gptel-get-preset 'introspect))))
   "Features, and what must hold once each one has loaded.")
 
 (defun emx-boot-check--modules ()

@@ -948,6 +948,32 @@
     },
     "version": "0.9.9.6"
   },
+  "gptel-agent": {
+    "author": null,
+    "meta": {
+      "description": "Agentic LLM use for gptel",
+      "homepage": "https://github.com/karthink/gptel-agent",
+      "license": {
+        "deprecated": false,
+        "free": true,
+        "fullName": "GNU General Public License v3.0 or later",
+        "licenseType": "simple",
+        "redistributable": true,
+        "shortName": "gpl3Plus",
+        "spdxId": "GPL-3.0-or-later",
+        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
+      }
+    },
+    "narHash": "sha256-gAmXGecE6c4zcNHFHmaiQdf740wgfMPkNDWV6dA0ky8=",
+    "packageRequires": {
+      "compat": "30.1.0.0",
+      "emacs": "29.1",
+      "gptel": "0.9.9",
+      "orderless": "1.1",
+      "yaml": "1.2.0"
+    },
+    "version": "0.0.1"
+  },
   "gptel-quick": {
     "author": "Karthik Chikmagalur <karthikchikmagalur@gmail.com>",
     "meta": {

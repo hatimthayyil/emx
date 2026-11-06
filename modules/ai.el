@@ -21,6 +21,14 @@
 (use-package gptel
   :defer t
   :bind (("C-c RET" . gptel-send))
+  :custom
+  (gptel-default-mode 'org-mode)
+  (gptel-prompt-prefix-alist
+   (mapcar (lambda (mode) (cons mode (format "%s ›  " (user-login-name))))
+           '(markdown-mode org-mode text-mode)))
+  (gptel-response-prefix-alist
+   (mapcar (lambda (mode) (cons mode "language machine  "))
+           '(markdown-mode org-mode text-mode)))
   :config
   ;;;
   ;;; ================ Language models
@@ -81,7 +89,33 @@
     :endpoint "/v1/chat/completions"
     :stream t
     :models '(;; xAI now only offers `grok-beta` as of the time of this writing
-              grok-beta)))
+              grok-beta))
+
+  ;;;
+  ;;; ================ Chat buffers
+  ;;;
+
+  (add-hook 'gptel-post-stream-hook #'gptel-auto-scroll)
+  (add-hook 'gptel-post-response-functions #'gptel-end-of-response)
+  (add-to-list 'gptel-directives '(arabic . "Reply in plain Classical Arabic.") t)
+
+  ;;;
+  ;;; ================ Presets
+  ;;;
+
+  ;; `gptel-tools' stays empty, so a chat sends tools only under a preset.
+  (gptel-make-preset 'introspect
+    :description "Let the model read this Emacs: symbols, source and manuals"
+    :tools '("introspection" "Eval")))
+
+;; gptel-agent's tools, without its agent.  Loading them only registers them.
+(use-package gptel-agent-tools
+  :after gptel
+  :demand t)
+
+(use-package gptel-agent-tools-introspection
+  :after gptel
+  :demand t)
 
 
 ;;; Functions

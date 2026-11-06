@@ -127,6 +127,7 @@
 
 ;; ai
 (use-package gptel :ensure t)
+(use-package gptel-agent :ensure t)
 (use-package gptel-quick :ensure t)
 
 ;; footer

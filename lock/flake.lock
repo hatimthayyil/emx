@@ -752,6 +752,22 @@
         "type": "github"
       }
     },
+    "gptel-agent": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791784705,
+        "narHash": "sha256-gAmXGecE6c4zcNHFHmaiQdf740wgfMPkNDWV6dA0ky8=",
+        "owner": "karthink",
+        "repo": "gptel-agent",
+        "rev": "2fbe4f6c71a6a1355c647ce90151c8c2bc1c4bdf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "karthink",
+        "repo": "gptel-agent",
+        "type": "github"
+      }
+    },
     "gptel-quick": {
       "flake": false,
       "locked": {
@@ -1505,6 +1521,7 @@
         "git-gutter": "git-gutter",
         "git-modes": "git-modes",
         "gptel": "gptel",
+        "gptel-agent": "gptel-agent",
         "gptel-quick": "gptel-quick",
         "guix": "guix",
         "hl-todo": "hl-todo",

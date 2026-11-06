@@ -279,6 +279,12 @@
       repo = "gptel";
       type = "github";
     };
+    gptel-agent = {
+      flake = false;
+      owner = "karthink";
+      repo = "gptel-agent";
+      type = "github";
+    };
     gptel-quick = {
       flake = false;
       owner = "karthink";
