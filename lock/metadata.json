@@ -284,7 +284,7 @@
         "Bozhidar Batsov <bozhidar@batsov.dev>"
       ]
     },
-    "narHash": "sha256-H8K0M7k7zzX8SUaUEKaGMQvQw6dGCz16EY/vPayxqr4=",
+    "narHash": "sha256-KrfoxMXFecExruLj9g4rpSkEhiT6Zy8qsaBkjvTGD7k=",
     "packageRequires": {
       "emacs": "27.1"
     },
@@ -715,7 +715,7 @@
     "meta": {
       "description": "A multimedia player/manager, YouTube interface"
     },
-    "narHash": "sha256-1m+ORgeDY39iWhLbn/ilXMSx0MmkNAxG+uDdX81Y5+s=",
+    "narHash": "sha256-EWTUzHfx6ptjFbE2bYS8X2AEwaAKa5CynBvkK95juJo=",
     "packageRequires": {
       "compat": "29.1.4.4",
       "emacs": "28.1",
@@ -776,7 +776,7 @@
         "Bozhidar Batsov <bozhidar@batsov.dev>"
       ]
     },
-    "narHash": "sha256-rxUinDLdbpuRBqKd0sw3R7jSorN3Jo44eCLJ7mefTOQ=",
+    "narHash": "sha256-/e2WPwDlFMqrs8XinCZ+cil5uRy4cJdc/RL5WLl9WNY=",
     "packageRequires": {
       "emacs": "28.1",
       "seq": "2.24"
@@ -816,7 +816,7 @@
         "Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>"
       ]
     },
-    "narHash": "sha256-P1YVI6XGvJV403oFMvE//oOocNcWBe8XxC6xrs9VSAo=",
+    "narHash": "sha256-5TlWl6D2nnn45LFdB6Hu7ku5Htp50+0pXehZJw7RCbo=",
     "packageRequires": {
       "closql": "2.4",
       "compat": "31.0",
@@ -992,7 +992,7 @@
         "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
       }
     },
-    "narHash": "sha256-7IN0IJFAa+rgfe+iW17S1NLCdECSHnPMohPqNQIbf5M=",
+    "narHash": "sha256-OQtjgQU0CxnlsUBcA80aOfYMRYrwzOh0hwfVtBMX6qY=",
     "packageRequires": {
       "compat": "30.1.0.0",
       "emacs": "27.1",
@@ -1315,7 +1315,7 @@
         "Kyle Meyer <kyle@kyleam.com>"
       ]
     },
-    "narHash": "sha256-KAIDBR7hX2OwfLuIXg5F0GARcn2U7Najwx5QVh2Dv+o=",
+    "narHash": "sha256-43vu4ulja29FWSX+yRZ2WUTqi4KvGA2GIM3D0Qpsxss=",
     "packageRequires": {
       "compat": "31.0",
       "cond-let": "1.1",
@@ -1374,7 +1374,7 @@
         "Jonas Bernoulli <emacs.magit@jonas.bernoulli.dev>"
       ]
     },
-    "narHash": "sha256-KAIDBR7hX2OwfLuIXg5F0GARcn2U7Najwx5QVh2Dv+o=",
+    "narHash": "sha256-43vu4ulja29FWSX+yRZ2WUTqi4KvGA2GIM3D0Qpsxss=",
     "packageRequires": {
       "compat": "31.0",
       "cond-let": "1.1",
