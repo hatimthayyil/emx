@@ -56,7 +56,10 @@ and ws-butler exempts `markdown-mode' by default.")
     (geiser-mode . (memq 'macrostep-geiser-setup geiser-mode-hook))
     (claude-code-ide . claude-code-ide-enable-mcp-server)
     (gptel . (and (gptel-get-tool "introspection") (gptel-get-tool "Eval")
-                  (gptel-get-preset 'introspect))))
+                  (gptel-get-preset 'introspect)))
+    (gptel . (and (equal (gptel-backend-name gptel-backend) "Claude")
+                  (eq gptel-model 'claude-opus-5-5)
+                  (memq gptel-model (gptel-backend-models gptel-backend)))))
   "Features, and what must hold once each one has loaded.")
 
 (defconst emx-boot-check-keys

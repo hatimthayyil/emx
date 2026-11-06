@@ -94,6 +94,10 @@
     :models '(;; xAI now only offers `grok-beta` as of the time of this writing
               grok-beta))
 
+  ;; New chats.
+  (setq gptel-backend (gptel-get-backend "Claude")
+        gptel-model 'claude-opus-5-5)
+
   ;;;
   ;;; ================ Chat buffers
   ;;;
