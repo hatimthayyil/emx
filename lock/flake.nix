@@ -7,6 +7,18 @@
       repo = "lsp-bridge";
       type = "github";
     };
+    acp = {
+      flake = false;
+      owner = "xenodium";
+      repo = "acp.el";
+      type = "github";
+    };
+    agent-shell = {
+      flake = false;
+      owner = "xenodium";
+      repo = "agent-shell";
+      type = "github";
+    };
     aio = {
       flake = false;
       owner = "skeeto";
@@ -83,6 +95,12 @@
       flake = false;
       owner = "andras-simonyi";
       repo = "citeproc-el";
+      type = "github";
+    };
+    claude-code-ide = {
+      flake = false;
+      owner = "manzaltu";
+      repo = "claude-code-ide.el";
       type = "github";
     };
     clojure-mode = {
@@ -558,6 +576,12 @@
       repo = "sesman";
       type = "github";
     };
+    shell-maker = {
+      flake = false;
+      owner = "xenodium";
+      repo = "shell-maker";
+      type = "github";
+    };
     show-font-mode = {
       flake = false;
       owner = "melissaboiko";
@@ -661,6 +685,18 @@
       flake = false;
       owner = "akermu";
       repo = "emacs-libvterm";
+      type = "github";
+    };
+    web-server = {
+      flake = false;
+      owner = "eschulte";
+      repo = "emacs-web-server";
+      type = "github";
+    };
+    websocket = {
+      flake = false;
+      owner = "ahyatt";
+      repo = "emacs-websocket";
       type = "github";
     };
     with-editor = {

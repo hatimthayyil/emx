@@ -1,0 +1,1 @@
+(claude-code-ide :fetcher github :repo "manzaltu/claude-code-ide.el")

@@ -24,7 +24,7 @@
 A nil feature means the package is a theme: its file is only located.")
 
 (defconst emx-boot-check-tools
-  '("rg" "fd" "yt-dlp" "vale" "vale-ls" "basedpyright" "ruff"
+  '("rg" "fd" "yt-dlp" "claude-agent-acp" "vale" "vale-ls" "basedpyright" "ruff"
     "beancount-language-server")
   "Programs that Emacs's wrapper puts on PATH.")
 
@@ -50,9 +50,15 @@ and ws-butler exempts `markdown-mode' by default.")
   '((tempel . (featurep 'tempel-collection))
     (magit . magit-todos-mode)
     (geiser-mode . (memq 'macrostep-geiser-setup geiser-mode-hook))
+    (claude-code-ide . claude-code-ide-enable-mcp-server)
     (gptel . (and (gptel-get-tool "introspection") (gptel-get-tool "Eval")
                   (gptel-get-preset 'introspect))))
   "Features, and what must hold once each one has loaded.")
+
+(defconst emx-boot-check-keys
+  '(("C-c s" . agent-shell)
+    ("C-c C" . claude-code-ide-menu))
+  "Global keys, and the commands they must reach.")
 
 (defun emx-boot-check--modules ()
   "Return a failure for each file in modules/ that init did not load.
@@ -129,6 +135,20 @@ A name in `emx-modules' that is also a library is a failure too."
           ((not (locate-library (symbol-name package)))
            (error "Not on load-path")))))
 
+(defun emx-boot-check--keys ()
+  "Return a failure for each key in `emx-boot-check-keys' that misses its command."
+  (let ((failures '()))
+    (pcase-dolist (`(,key . ,command) emx-boot-check-keys)
+      (condition-case err
+          (progn
+            (unless (eq (keymap-global-lookup key) command)
+              (error "Bound to %S" (keymap-global-lookup key)))
+            (autoload-do-load (symbol-function command) command)
+            (unless (commandp command)
+              (error "Not a command")))
+        (error (push (format "%s: %s" key (error-message-string err)) failures))))
+    failures))
+
 (defun emx-boot-check--parinfer ()
   "Signal an error unless parinfer-rust-mode has a supported library."
   (require 'parinfer-rust-mode)
@@ -150,6 +170,7 @@ A name in `emx-modules' that is also a library is a failure too."
   (condition-case err
       (setq failures (nconc (emx-boot-check--modules)
                             (emx-boot-check--triggers)
+                            (emx-boot-check--keys)
                             failures))
     (error (push (format "boot: %s" (error-message-string err)) failures)))
   (dolist (package packages)

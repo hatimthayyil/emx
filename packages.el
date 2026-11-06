@@ -129,6 +129,8 @@
 (use-package gptel :ensure t)
 (use-package gptel-agent :ensure t)
 (use-package gptel-quick :ensure t)
+(use-package agent-shell :ensure t)
+(use-package claude-code-ide :ensure t)
 
 ;; footer
 (use-package envrc :ensure t)

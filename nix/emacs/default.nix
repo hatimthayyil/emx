@@ -58,6 +58,10 @@ in
         pkgs.ripgrep
         pkgs.fd
         pkgs.yt-dlp
+        # Runs the `claude` on PATH: nixpkgs would pin its own, unfree one.
+        (pkgs.claude-agent-acp.override {
+          claude-code = pkgs.writeShellScriptBin "claude" ''exec claude "$@"'';
+        })
 
         (pkgs.vale.withStyles (styles: [ styles.write-good ])) # syntax aware prose linter
         pkgs.vale-ls # LSP for vale

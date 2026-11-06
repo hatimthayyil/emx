@@ -117,6 +117,24 @@
   :after gptel
   :demand t)
 
+;; Drives agents over ACP.  Claude Code runs through `claude-agent-acp', signed
+;; in with the machine's Claude Code login.
+(use-package agent-shell
+  :bind ("C-c s" . agent-shell)
+  :custom
+  (agent-shell-preferred-agent-config 'claude-code))
+
+;; Runs Claude Code's own terminal interface and links it to Emacs.
+(use-package claude-code-ide
+  :bind ("C-c C" . claude-code-ide-menu)
+  :custom
+  (claude-code-ide-terminal-backend 'eat)
+  (claude-code-ide-enable-execute-code nil)
+  :config
+  ;; A false value in the environment beats `--ide' and leaves Emacs unlinked.
+  (setenv "CLAUDE_CODE_AUTO_CONNECT_IDE" "true")
+  (claude-code-ide-emacs-tools-setup))
+
 
 ;;; Functions
 
