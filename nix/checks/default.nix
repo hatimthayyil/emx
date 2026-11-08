@@ -18,6 +18,23 @@ let
     echo "second line"
   '';
 
+  inherit (import ../init-files.nix { inherit (pkgs) lib; }) elispString initFiles;
+
+  # The init directory the boot check starts Emacs from: the init files
+  # nix/home-module.nix writes to ~/.config/emx, whose early-init first records
+  # warnings, with lisp/emx-warnings.el's filter. Emacs loads site-start before
+  # any early-init, so the check starts it with --no-site-file and the
+  # early-init loads site-start after the recording begins, just before emx's
+  # early-init as Emacs would.
+  bootInit = pkgs.linkFarm "emx-boot-init" (pkgs.lib.mapAttrs pkgs.writeText (initFiles {
+    src = "${src}";
+    prelude = ''
+      (load ${elispString "${src}/lisp/emx-warnings.el"} nil t)
+      (load ${elispString "${./record-warnings.el}"} nil t)
+      (load "site-start" t t)
+    '';
+  }));
+
   packageList = pkgs.writeText "emx-packages" (
     pkgs.lib.concatLines (builtins.attrNames emacs.packageInputs)
   );
@@ -42,8 +59,9 @@ let
   };
 in
 {
-  # Boots with emx's real init, then loads every package in the set, including
-  # dependencies. Batch mode loads init files only when -u names a user.
+  # Boots with emx's real init through bootInit's shims, then loads every
+  # package in the set, including dependencies. Batch mode loads init files
+  # only when -u names a user.
   # magit computes the git version when it loads.
   boot = pkgs.runCommandLocal "emx-boot-check"
     {
@@ -55,7 +73,8 @@ in
     # org-directory (modules/organisation.el); org-node's :config fails
     # when it is missing.
     mkdir -p $HOME/Documents/org
-    ${emacs}/bin/emacs --batch -u "" --init-directory=${src} -l ${./boot.el}
+    ${emacs}/bin/emacs --batch --no-site-file -u "" --init-directory=${bootInit} \
+      -l ${./boot.el}
     touch $out
   '';
 

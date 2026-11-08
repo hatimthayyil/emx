@@ -2,10 +2,11 @@
 
 ;;; Commentary:
 
-;; Loaded after emx's init by nix/checks/default.nix.  Fails unless init
-;; loaded without error and loaded every file in modules/, booting and opening
-;; files turns on what the modules promise, the main feature of every package
-;; named in the file $EMX_PACKAGES loads without an error from its
+;; Loaded after emx's init by nix/checks/default.nix, whose early-init first
+;; loads record-warnings.el.  Fails unless no warning at level `:error' or
+;; `:emergency' was logged, init loaded every file in modules/, booting and
+;; opening files turns on what the modules promise, the main feature of every
+;; package named in the file $EMX_PACKAGES loads without an error from its
 ;; configuration, the native parts are in place, and Emacs finds the tools its
 ;; modules call.  The build sandbox has none of them, so they can only come
 ;; from Emacs's wrapper.  It also fails if loading gptel reads an API key.
@@ -205,8 +206,6 @@ and a second line, and fails for the entry \"missing\"."
 (let ((packages (emx-boot-check--packages))
       (loaded 0)
       (failures '()))
-  (when init-file-had-error
-    (push "init: loading the init files signalled an error" failures))
   (condition-case err
       (setq failures (nconc (emx-boot-check--modules)
                             (emx-boot-check--triggers)
@@ -233,12 +232,11 @@ and a second line, and fails for the entry \"missing\"."
   (dolist (tool emx-boot-check-tools)
     (unless (executable-find tool)
       (push (format "%s: not on exec-path" tool) failures)))
-  ;; use-package reports an error in a :config block as a warning.
-  (when-let* ((warnings (get-buffer "*Warnings*")))
-    (with-current-buffer warnings
-      (goto-char (point-min))
-      (while (re-search-forward "^\\(?:Error\\|Emergency\\) .*$" nil t)
-        (push (match-string 0) failures))))
+  (dolist (failure (if (advice-member-p #'emx-boot-check-warnings--record 'display-warning)
+                       (emx-boot-check-boot-failures)
+                     '("warnings: nothing recorded them, so the check's early-init did \
+not load record-warnings.el")))
+    (push failure failures))
   (princ (format "emx boot check: %d modules, %d of %d packages loaded\n"
                  (length emx-modules) loaded (length packages)))
   (dolist (failure (nreverse failures))
