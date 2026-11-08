@@ -12,22 +12,45 @@
 
 ;;; Commentary:
 
-;;
+;; Each gptel backend reads its API key from pass through `emx-pass-key', once
+;; a session.  After changing a key in pass, run `emx-pass-key-forget' so the
+;; next request reads it again.
+
+(defvar emx-pass-key--cache (make-hash-table :test #'equal)
+  "The API keys read from pass this session, by pass entry.
+Inspecting this variable shows the keys.")
 
 (defun emx-pass-key (entry)
-  "Return a function that reads the API key in pass ENTRY, for gptel's `:key'.
-`pass' runs each time gptel needs the key, never when gptel loads.  The key is
-the first line of its standard output; its error stream is discarded, so a gpg
-warning can't become the key.  A non-zero exit or an empty key signals an error
-naming ENTRY, and that error holds nothing `pass' printed."
+  "Return a function that gives the API key in pass ENTRY, for gptel's `:key'.
+The function's first call reads the key with `pass', and later calls return
+it, so a session runs `pass' once per entry and never when gptel loads.  A read
+that fails signals an error naming ENTRY and caches nothing, so the next call
+reads again.  `emx-pass-key-forget' drops the keys read so far."
   (lambda ()
-    (with-temp-buffer
-      (let ((status (call-process "pass" nil '(t nil) nil "show" entry)))
-        (goto-char (point-min))
-        (let ((key (buffer-substring-no-properties (point) (line-end-position))))
-          (unless (and (eql status 0) (not (string-empty-p key)))
-            (error "pass show %s gave no key (exit status %s)" entry status))
-          key)))))
+    (or (gethash entry emx-pass-key--cache)
+        (puthash entry (emx-pass-key--read entry) emx-pass-key--cache))))
+
+(defun emx-pass-key--read (entry)
+  "Return the API key in pass ENTRY: the first line `pass show' prints.
+Its error stream is discarded, so a gpg warning can't become the key.  No
+`pass' on `exec-path', a non-zero exit or an empty key signals an error naming
+ENTRY, and that error holds nothing `pass' printed."
+  (with-temp-buffer
+    (let ((status (condition-case nil
+                      (call-process "pass" nil '(t nil) nil "show" entry)
+                    (file-missing
+                     (error "pass show %s gave no key: pass isn't on exec-path" entry)))))
+      (goto-char (point-min))
+      (let ((key (buffer-substring-no-properties (point) (line-end-position))))
+        (unless (and (eql status 0) (not (string-empty-p key)))
+          (error "pass show %s gave no key (exit status %s)" entry status))
+        key))))
+
+(defun emx-pass-key-forget ()
+  "Forget the API keys read from pass, so each is read again when next needed.
+Run it after changing a key in pass."
+  (interactive)
+  (clrhash emx-pass-key--cache))
 
 (use-package gptel
   :defer t

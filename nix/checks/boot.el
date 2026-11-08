@@ -185,6 +185,9 @@ A name in `emx-modules' that is also a library is a failure too."
 
 (defun emx-boot-check--api-keys ()
   "Signal an error unless gptel reads its API keys from `pass' on demand.
+Each entry must be read once a session, a failed read must be tried again, and
+after `emx-pass-key-forget' the next call must read again.  With no `pass' to
+run, a read must signal an error naming its entry.
 The `pass' on PATH here logs each call to the file $EMX_PASS_LOG and prints a
 key and a second line.  It warns on stderr first for the entry \"noisy\", exits
 1 after a line for \"missing\", and prints nothing for \"empty\"."
@@ -199,12 +202,40 @@ key and a second line.  It warns on stderr first for the entry \"noisy\", exits
   (let ((key (funcall (emx-pass-key "noisy"))))
     (unless (equal key "key for noisy")
       (error "The key read past pass's stderr is %S" key)))
-  (dolist (entry '("missing" "empty"))
+  (dolist (entry '("missing" "empty" "missing"))
     (let ((failure (condition-case err
                        (ignore (funcall (emx-pass-key entry)))
                      (error (error-message-string err)))))
       (unless (and failure (string-search entry failure))
-        (error "Pass entry %s gave %S, not an error naming it" entry failure)))))
+        (error "Pass entry %s gave %S, not an error naming it" entry failure))))
+  (let ((failure (condition-case err
+                     (let ((exec-path nil))
+                       (ignore (funcall (emx-pass-key "unfound"))))
+                   (error (error-message-string err)))))
+    (unless (and failure (string-search "unfound" failure))
+      (error "With no pass, entry unfound gave %S, not an error naming it" failure)))
+  (pcase-dolist (`(,name . ,_) emx-boot-check-api-keys)
+    (let ((gptel-backend (gptel-get-backend name)))
+      (gptel--get-api-key)))
+  (pcase-dolist (`(,entry . ,reads)
+                 `(,@(mapcar (lambda (entry) (cons entry 1))
+                             (seq-uniq (mapcar #'cdr emx-boot-check-api-keys)))
+                   ("noisy" . 1) ("empty" . 1) ("missing" . 2)))
+    (let ((count (emx-boot-check--pass-reads entry)))
+      (unless (= count reads)
+        (error "pass read %s %d times, not %d" entry count reads))))
+  (emx-pass-key-forget)
+  (funcall (emx-pass-key "noisy"))
+  (let ((count (emx-boot-check--pass-reads "noisy")))
+    (unless (= count 2)
+      (error "After emx-pass-key-forget, pass read noisy %d times in all, not 2"
+             count))))
+
+(defun emx-boot-check--pass-reads (entry)
+  "Return how many times the logging `pass' was asked for ENTRY."
+  (with-temp-buffer
+    (insert-file-contents (getenv "EMX_PASS_LOG"))
+    (how-many (concat "^show " (regexp-quote entry) "$") (point-min) (point-max))))
 
 ;; Fail instead of compiling the module when it is missing.
 (setq vterm-always-compile-module nil)
