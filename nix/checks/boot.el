@@ -668,6 +668,41 @@ themes that <f5> rotates."
       (error "M-<f5> (%s) enabled %s, not an Ef theme"
              command (car custom-enabled-themes)))))
 
+(defun emx-boot-check--load-time-calls (function form)
+  "Return how many times the macroexpanded FORM calls FUNCTION in no set buffer.
+Code `eval-after-load' defers, such as a `use-package' :config, runs in
+whichever buffer is current when its feature loads, so it counts.  A call in
+any other function, such as a hook's, or in another buffer's body does not."
+  (pcase form
+    (`(eval-after-load ,_ ,(or `(function (lambda ,_ . ,body)) `(quote ,body)))
+     (emx-boot-check--load-time-calls function body))
+    ((or (pred atom) `(,(or 'quote 'function 'save-current-buffer) . ,_)) 0)
+    (_ (let ((count (if (eq (car form) function) 1 0)))
+         (while (consp form)
+           (setq count (+ count (emx-boot-check--load-time-calls function (car form)))
+                 form (cdr form)))
+         count))))
+
+(defun emx-boot-check--tabs ()
+  "Signal an error unless emx makes spaces the default, and only the default.
+No emx file may call `indent-tabs-mode' as it loads: that sets tabs in
+whichever buffer loads the file, such as a Makefile's when a reload runs from
+it.  Startup resets the buffer init loads in, so only reading the files shows
+such a call."
+  (when (default-value 'indent-tabs-mode)
+    (error "Tabs are the default"))
+  (dolist (file (emx-boot-check--config-files))
+    (with-temp-buffer
+      (insert-file-contents file)
+      (condition-case nil
+          (while t
+            (when (> (emx-boot-check--load-time-calls
+                      'indent-tabs-mode (macroexpand-all (read (current-buffer))))
+                     0)
+              (error "%s calls indent-tabs-mode as it loads"
+                     (file-relative-name file emx-source-dir))))
+        (end-of-file nil)))))
+
 ;; Fail instead of compiling the module when it is missing.
 (setq vterm-always-compile-module nil)
 
@@ -703,7 +738,8 @@ themes that <f5> rotates."
     (error (push (format "API keys: %s" (error-message-string err)) failures)))
   (pcase-dolist (`(,what . ,check)
                  '(("claude-code-ide" . emx-boot-check--claude-code-ide)
-                   ("Ef themes" . emx-boot-check--ef-rotation)))
+                   ("Ef themes" . emx-boot-check--ef-rotation)
+                   ("tabs" . emx-boot-check--tabs)))
     (condition-case err
         (funcall check)
       (error (push (format "%s: %s" what (error-message-string err)) failures))))
