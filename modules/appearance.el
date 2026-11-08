@@ -39,12 +39,20 @@
   (modus-themes-load-theme 'modus-operandi-tinted))
 
 (use-package ef-themes
+  :preface
+  (defvar modus-themes-to-rotate)
+  (defun emx-ef-themes-rotate ()
+    "Rotate among the Ef themes, as `ef-themes-rotate' documents.
+Since ef-themes 2.0, `ef-themes-to-rotate' is an alias of
+`modus-themes-to-rotate', and `ef-themes-rotate' obeys it, so the
+Modus themes `modus-themes-to-rotate' lists would rotate instead."
+    (interactive)
+    (let ((modus-themes-to-rotate nil))
+      (call-interactively #'ef-themes-rotate)))
   :bind
-  (("M-<f5>" . ef-themes-rotate)
+  (("M-<f5>" . emx-ef-themes-rotate)
    ("C-<f5>" . ef-themes-select))
   :config
-  ;; Why is this not ef-themes-to-rotate
-  (setopt ef-themes-rotate ef-themes-items)
   (setopt ef-themes-mixed-fonts t))
 
 ;; Lin

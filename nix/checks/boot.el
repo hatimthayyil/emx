@@ -651,6 +651,23 @@ afterwards, and Emacs itself, must keep the value Emacs inherited."
                    (cons (executable-find "env") (cdr command)))
       args)))
 
+(defvar ef-themes-items)
+(defvar modus-themes-to-rotate)
+
+(defun emx-boot-check--ef-rotation ()
+  "Signal an error unless M-<f5> rotates the Ef themes.
+`ef-themes-rotate' obeys `modus-themes-to-rotate', which lists the Modus
+themes that <f5> rotates."
+  (let ((command (key-binding (kbd "M-<f5>")))
+        (modus-themes-to-rotate '(modus-operandi modus-operandi-tinted
+                                  modus-vivendi modus-vivendi-tinted)))
+    (unless (commandp command)
+      (error "M-<f5> runs %S, not a command" command))
+    (call-interactively command)
+    (unless (memq (car custom-enabled-themes) ef-themes-items)
+      (error "M-<f5> (%s) enabled %s, not an Ef theme"
+             command (car custom-enabled-themes)))))
+
 ;; Fail instead of compiling the module when it is missing.
 (setq vterm-always-compile-module nil)
 
@@ -685,7 +702,8 @@ afterwards, and Emacs itself, must keep the value Emacs inherited."
       (emx-boot-check--api-keys)
     (error (push (format "API keys: %s" (error-message-string err)) failures)))
   (pcase-dolist (`(,what . ,check)
-                 '(("claude-code-ide" . emx-boot-check--claude-code-ide)))
+                 '(("claude-code-ide" . emx-boot-check--claude-code-ide)
+                   ("Ef themes" . emx-boot-check--ef-rotation)))
     (condition-case err
         (funcall check)
       (error (push (format "%s: %s" what (error-message-string err)) failures))))
