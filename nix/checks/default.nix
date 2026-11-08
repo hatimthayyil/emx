@@ -144,6 +144,9 @@ in
     } ''
     export HOME=$TMPDIR
     export EMX_PASS_LOG=$TMPDIR/pass.log
+    # A false value beats claude --ide, so claude-code-ide's Claude must still
+    # get true.
+    export CLAUDE_CODE_AUTO_CONNECT_IDE=false
     # org-directory (modules/organisation.el); org-node's :config fails
     # when it is missing.
     mkdir -p $HOME/Documents/org

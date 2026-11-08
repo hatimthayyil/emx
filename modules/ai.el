@@ -191,11 +191,12 @@ Run it after changing a key in pass."
 (use-package claude-code-ide
   :bind ("C-c C" . claude-code-ide-menu)
   :custom
+  ;; Runs claude with CLAUDE_CODE_AUTO_CONNECT_IDE=true (nix/emacs/default.nix).
+  ;; A false value beats --ide, and no other process Emacs starts gets true.
+  (claude-code-ide-cli-path "claude-code-ide-claude")
   (claude-code-ide-terminal-backend 'eat)
   (claude-code-ide-enable-execute-code nil)
   :config
-  ;; A false value in the environment beats `--ide' and leaves Emacs unlinked.
-  (setenv "CLAUDE_CODE_AUTO_CONNECT_IDE" "true")
   (claude-code-ide-emacs-tools-setup))
 
 

@@ -72,6 +72,12 @@ in
         (pkgs.claude-agent-acp.override {
           claude-code = pkgs.writeShellScriptBin "claude" ''exec claude "$@"'';
         })
+        # claude-code-ide's Claude (modules/ai.el), told to link to Emacs: a
+        # false value beats --ide, and every other process keeps Emacs's own.
+        (pkgs.writeShellScriptBin "claude-code-ide-claude" ''
+          CLAUDE_CODE_AUTO_CONNECT_IDE=true exec claude "$@"
+        '')
+        pkgs.direnv # run by envrc (modules/footer.el)
 
         (pkgs.vale.withStyles (styles: [ styles.write-good ])) # syntax aware prose linter
         pkgs.vale-ls # LSP for vale

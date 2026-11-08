@@ -25,8 +25,8 @@
 A nil feature means the package is a theme: its file is only located.")
 
 (defconst emx-boot-check-tools
-  '("rg" "fd" "yt-dlp" "claude-agent-acp" "vale" "vale-ls" "basedpyright" "ruff"
-    "beancount-language-server")
+  '("rg" "fd" "yt-dlp" "claude-agent-acp" "claude-code-ide-claude" "direnv" "vale"
+    "vale-ls" "basedpyright" "ruff" "beancount-language-server")
   "Programs that Emacs's wrapper puts on PATH.")
 
 (defconst emx-boot-check-global-modes
@@ -242,6 +242,90 @@ key and a second line.  It warns on stderr first for the entry \"noisy\", exits
     (insert-file-contents (getenv "EMX_PASS_LOG"))
     (how-many (concat "^show " (regexp-quote entry) "$") (point-min) (point-max))))
 
+(defun emx-boot-check--told (buffer)
+  "Return the `CLAUDE_CODE_AUTO_CONNECT_IDE' a process BUFFER starts gets."
+  (let ((process-environment (buffer-local-value 'process-environment buffer)))
+    (with-temp-buffer
+      (call-process "sh" nil t nil "-c"
+                    "printf %s \"${CLAUDE_CODE_AUTO_CONNECT_IDE-unset}\"")
+      (buffer-string))))
+
+(defun emx-boot-check--claude-code-ide ()
+  "Signal an error unless only claude-code-ide's Claude is told to link to Emacs.
+In a project whose .envrc direnv allows, envrc gives two files' buffers the
+project's environment.  claude-code-ide, started from the first, runs
+`claude-code-ide-cli-path' through eat, and the fake claude that runs must get
+a true `CLAUDE_CODE_AUTO_CONNECT_IDE'.  A process either buffer starts
+afterwards, and Emacs itself, must keep the value Emacs inherited."
+  (let* ((dir (file-name-as-directory (make-temp-file "emx-boot-check-claude" t)))
+         (bin (expand-file-name "bin" dir))
+         (value (expand-file-name "value" dir))
+         (claude-code-ide-terminal-backend 'eat)
+         (claude-code-ide-enable-mcp-server nil)
+         (inherited (or (getenv-internal "CLAUDE_CODE_AUTO_CONNECT_IDE" initial-environment)
+                        "unset"))
+         (buffers '())
+         (session nil))
+    (make-directory bin)
+    (let ((claude (expand-file-name "claude" bin)))
+      (with-temp-file claude
+        (insert (format "#!/bin/sh\nprintf %%s \"${CLAUDE_CODE_AUTO_CONNECT_IDE-unset}\" \
+> %s.new && mv %s.new %s\n"
+                        value value value)))
+      (set-file-modes claude #o755))
+    (write-region "export EMX_BOOT_CHECK_ENVRC=1\n" nil (expand-file-name ".envrc" dir))
+    ;; eat starts its process through /usr/bin/env, which the build sandbox lacks.
+    (advice-add 'make-process :filter-args #'emx-boot-check--env-from-path)
+    (unwind-protect
+        (with-temp-buffer
+          (let ((process-environment
+                 (cons (concat "PATH=" bin path-separator (getenv "PATH"))
+                       process-environment)))
+            (unless (eq 0 (call-process "direnv" nil nil nil "allow" dir))
+              (error "direnv allow failed"))
+            (dolist (name '("a.txt" "b.txt"))
+              (let ((buffer (find-file-noselect (expand-file-name name dir))))
+                (push buffer buffers)
+                (unless (equal (with-current-buffer buffer (getenv "EMX_BOOT_CHECK_ENVRC"))
+                               "1")
+                  (error "envrc gave %s no environment from the project's .envrc" name))))
+            (setq buffers (nreverse buffers))
+            (with-current-buffer (car buffers)
+              (setq session (claude-code-ide--create-terminal-session
+                             "*emx-boot-check claude*" dir 0 nil nil "emx-boot-check")))
+            (with-timeout (10 (error "The fake claude recorded nothing in 10 s"))
+              (while (not (file-exists-p value))
+                (accept-process-output nil 0.1)))
+            (let ((told (with-temp-buffer
+                          (insert-file-contents value)
+                          (buffer-string))))
+              (unless (equal told "true")
+                (error "claude-code-ide's Claude gets %s, not true" told)))
+            (dolist (buffer buffers)
+              (let ((told (emx-boot-check--told buffer)))
+                (unless (equal told inherited)
+                  (error "A process %s starts gets %s, not the inherited %s"
+                         (buffer-name buffer) told inherited))))))
+      (advice-remove 'make-process #'emx-boot-check--env-from-path)
+      (when-let* ((process (cdr session)))
+        (set-process-query-on-exit-flag process nil)
+        (delete-process process))
+      (when-let* ((buffer (car session)))
+        (kill-buffer buffer))
+      (mapc #'kill-buffer buffers)
+      (delete-directory dir t))
+    (unless (equal (or (getenv "CLAUDE_CODE_AUTO_CONNECT_IDE") "unset") inherited)
+      (error "Emacs's own value is %S, not the inherited %S"
+             (getenv "CLAUDE_CODE_AUTO_CONNECT_IDE") inherited))))
+
+(defun emx-boot-check--env-from-path (args)
+  "Return `make-process' ARGS, with a command of /usr/bin/env run from PATH."
+  (let ((command (plist-get args :command)))
+    (if (equal (car command) "/usr/bin/env")
+        (plist-put (copy-sequence args) :command
+                   (cons (executable-find "env") (cdr command)))
+      args)))
+
 ;; Fail instead of compiling the module when it is missing.
 (setq vterm-always-compile-module nil)
 
@@ -271,6 +355,11 @@ key and a second line.  It warns on stderr first for the entry \"noisy\", exits
   (condition-case err
       (emx-boot-check--api-keys)
     (error (push (format "API keys: %s" (error-message-string err)) failures)))
+  (pcase-dolist (`(,what . ,check)
+                 '(("claude-code-ide" . emx-boot-check--claude-code-ide)))
+    (condition-case err
+        (funcall check)
+      (error (push (format "%s: %s" what (error-message-string err)) failures))))
   (dolist (tool emx-boot-check-tools)
     (unless (executable-find tool)
       (push (format "%s: not on exec-path" tool) failures)))
