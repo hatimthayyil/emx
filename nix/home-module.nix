@@ -2,8 +2,8 @@
 # `emacsclient` launchers that run Emacs from emx's profile, and Emacs's icons;
 # an EMX menu entry, which opens a window on the daemon (starting it through
 # libexec/emx/open-on-daemon when no server answers) or, without the daemon,
-# runs plain `emacs`; and the init shims in ~/.config/emx that load the Elisp
-# from the emx repo.
+# runs plain `emacs`; the fonts emx's configuration names; and the init shims
+# in ~/.config/emx that load the Elisp from the emx repo.
 # `emx sync` builds Emacs, its packages and the tools its modules call into the
 # profile, so home-manager never builds them and an update needs no switch.
 { self }:
@@ -100,6 +100,21 @@ in
   options.programs.emx = {
     enable = lib.mkEnableOption "emx, an Emacs distribution";
 
+    fonts = lib.mkOption {
+      type = lib.types.listOf lib.types.package;
+      default = [
+        pkgs.amiri
+        pkgs.iosevka-comfy.comfy-motion
+      ];
+      defaultText = lib.literalExpression "[ pkgs.amiri pkgs.iosevka-comfy.comfy-motion ]";
+      description = ''
+        Fonts installed for the families emx's configuration names:
+        Amiri Quran Colored and Iosevka Comfy Motion, in
+        {file}`modules/appearance.el`. Fontconfig finds them, as it does
+        every font in the user's profile.
+      '';
+    };
+
     src = lib.mkOption {
       type = lib.types.pathWith {
         absolute = true;
@@ -114,7 +129,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ emx ];
+    fonts.fontconfig.enable = lib.mkIf (cfg.fonts != [ ]) (lib.mkDefault true);
+
+    home.packages = [ emx ] ++ cfg.fonts;
 
     # services.emacs.enable runs the daemon from emx's profile. The service
     # skips until the profile exists, and the `emx sync` creating it starts it

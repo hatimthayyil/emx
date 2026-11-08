@@ -54,6 +54,30 @@ let
     pkgs.lib.concatLines (builtins.attrNames emacs.packageInputs)
   );
 
+  # The font families emx's configuration names, one per line: each
+  # `…-family` in Fontaine's presets, read once emx's real init, booted
+  # through bootInit's shims, has loaded Fontaine. Fails if that boot went
+  # wrong.
+  configFontFamilies = pkgs.runCommandLocal "emx-font-families" { } ''
+    export HOME=$TMPDIR
+    mkdir -p $HOME/Documents/org
+    ${emacs}/bin/emacs --batch --no-site-file -u "" --init-directory=${bootInit} \
+      --eval '(require (quote fontaine))' -l ${pkgs.writeText "font-families.el" ''
+        (when-let* ((failures (emx-boot-check-boot-failures)))
+          (error "emx's init didn't boot cleanly: %s" (string-join failures "; ")))
+        (let (families)
+          (dolist (preset fontaine-presets)
+            (let ((properties (cdr preset)))
+              (while properties
+                (when (and (string-suffix-p "-family" (symbol-name (car properties)))
+                           (stringp (cadr properties)))
+                  (push (cadr properties) families))
+                (setq properties (cddr properties)))))
+          (dolist (family (delete-dups (nreverse families)))
+            (princ (concat family "\n"))))
+      ''} > $out
+  '';
+
   # A home-manager configuration using the module, with services.emacs set to
   # `emacsService`.
   homeWith = emacsService: homeManager.lib.homeManagerConfiguration {
@@ -228,8 +252,9 @@ in
   # standalone Emacs while the daemon runs or starts, if the module allows
   # socket activation, if a plain Emacs isn't told to leave the server to the
   # daemon exactly when services.emacs runs it, if emx isn't told the daemon's
-  # unit, or if emx's first sync starts the daemon when the session wouldn't
-  # or doesn't when it would.
+  # unit, if emx's first sync starts the daemon when the session wouldn't or
+  # doesn't when it would, or if fontconfig can't find a font family emx's
+  # configuration names.
   home-module =
     pkgs.runCommandLocal "emx-home-module-check"
       {
@@ -237,6 +262,7 @@ in
           "closure"
           home.activationPackage
         ];
+        nativeBuildInputs = [ pkgs.fontconfig ];
       }
       ''
         for path in ${builtins.unsafeDiscardStringContext emacs.outPath} \
@@ -304,6 +330,22 @@ in
             exit 1
           fi
         done
+        if [ ! -e ${home.activationPackage}/home-files/.config/fontconfig/conf.d/10-hm-fonts.conf ]; then
+          echo "fontconfig does not look in the profile, so Emacs can't find emx's fonts"
+          exit 1
+        fi
+        families=$(FONTCONFIG_FILE=${pkgs.makeFontsConf { fontDirectories = [ ]; }} XDG_CACHE_HOME=$TMPDIR \
+          fc-scan --format '%{family}\n' ${home.config.home.path}/share/fonts | tr , '\n')
+        if [ ! -s ${configFontFamilies} ]; then
+          echo "found no font family in emx's configuration"
+          exit 1
+        fi
+        while IFS= read -r family; do
+          if ! grep -qxF "$family" <<<"$families"; then
+            echo "the home-manager generation lacks the font family $family, which emx's configuration names"
+            exit 1
+          fi
+        done < ${configFontFamilies}
         touch $out
       '';
 
