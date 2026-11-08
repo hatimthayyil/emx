@@ -1,7 +1,8 @@
 //! `emx sync`: builds the emx repo's Emacs and packages, shows what the build
 //! changes, and after confirmation makes it a new generation of emx's
-//! profile. The sync that creates the profile also starts the Emacs daemon;
-//! later ones reload a running Emacs into the new generation (reload.rs).
+//! profile. The sync that creates the profile also starts the Emacs daemon
+//! that the session would have (daemon.rs); later ones reload a running Emacs
+//! into the new generation (reload.rs).
 
 use std::path::PathBuf;
 
@@ -49,6 +50,9 @@ pub fn reload_if_switched(profile: &Profile, outcome: Outcome) -> Result<(), Err
 
 /// Builds `source` and, once confirmed, makes the build a generation of
 /// `profile`. The caller has checked with [`prompt::ensure_answerable`].
+/// When the build is the profile's first generation, the daemon the session
+/// would have started starts on it; if that fails, the switch stays and this
+/// fails.
 pub fn apply(source: &Source, profile: &Profile, args: &SyncArgs) -> Result<Outcome, Error> {
     profile.create_parent()?;
     let current = profile.current()?;
@@ -95,10 +99,12 @@ pub fn apply(source: &Source, profile: &Profile, args: &SyncArgs) -> Result<Outc
     if current.is_some() {
         return Ok(Outcome::Switched);
     }
-    match daemon::start_if_enabled() {
-        Ok(true) => println!("emx: started the Emacs daemon"),
-        Ok(false) => {}
-        Err(err) => eprintln!("emx: cannot start the Emacs daemon: {err}"),
+    match daemon::start_for_session() {
+        Ok(daemon::Start::Started) => println!("emx: started the Emacs daemon"),
+        Ok(daemon::Start::Skipped(reason)) => {
+            println!("emx: started no Emacs daemon, since {reason}")
+        }
+        Err(err) => return Err(Error::DaemonStart(err)),
     }
     Ok(Outcome::Created)
 }

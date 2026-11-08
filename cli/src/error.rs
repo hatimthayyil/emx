@@ -92,6 +92,9 @@ pub enum Error {
     })]
     Reload(#[from] ReloadError),
 
+    #[error("emx's profile is switched, but the Emacs daemon didn't start: {0}")]
+    DaemonStart(String),
+
     #[error("not switched: {}", match generation {
         Some(number) => format!("emx's profile stays at generation {number}"),
         None => "emx's profile stays empty".to_owned(),

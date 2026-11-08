@@ -63,6 +63,14 @@ let
 
   emacs = self.packages.${system}.emacs.emacs;
 
+  # Whether the session starts the daemon, as home-manager decides when it
+  # gives emacs.service an [Install] section. The sync that creates emx's
+  # profile starts it then (cli/src/daemon.rs), since the session's start
+  # skipped while the profile was missing. emx is told the daemon's unit
+  # whenever services.emacs runs the daemon, for its restart advice.
+  sessionDaemon =
+    config.services.emacs.enable && config.services.emacs.startWithUserSession != false;
+
   # The launchers and Emacs's application icons are copied in, so the closure
   # holds no separate launcher paths and no Emacs. `version` is Emacs's:
   # home-manager's Emacs service reads it to choose the socket and window class.
@@ -73,7 +81,9 @@ let
       meta.mainProgram = "emx";
     } ''
     makeWrapper ${lib.getExe self.packages.${system}.emx} $out/bin/emx \
-      --set-default EMX_SRC ${lib.escapeShellArg src}
+      --set-default EMX_SRC ${lib.escapeShellArg src} \
+      ${lib.optionalString config.services.emacs.enable "--set EMX_DAEMON_UNIT ${daemonUnit}"} \
+      ${lib.optionalString sessionDaemon "--set EMX_DAEMON_STARTS_WITH_SESSION 1"}
     install -m555 ${launcher "emacs" "--init-directory ${lib.escapeShellArg initDirectory}"} $out/bin/emacs
     install -m555 ${launcher "emacsclient" ""} $out/bin/emacsclient
     install -Dm555 ${lib.getExe openOnDaemon} $out/libexec/emx/open-on-daemon
@@ -107,7 +117,8 @@ in
     home.packages = [ emx ];
 
     # services.emacs.enable runs the daemon from emx's profile. The service
-    # skips until the profile exists, and the `emx sync` creating it starts it.
+    # skips until the profile exists, and the `emx sync` creating it starts it
+    # if the session would have.
     services.emacs.package = lib.mkDefault emx;
     systemd.user.services.emacs = lib.mkIf config.services.emacs.enable {
       Unit.ConditionPathExists = "${config.xdg.stateHome}/emx/profile/bin/emacs";

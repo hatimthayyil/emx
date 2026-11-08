@@ -21,8 +21,8 @@ pub struct Cli {
 pub enum Command {
     /// Build the emx repo's Emacs and packages, as its lock pins them, and make
     /// the result the current generation of emx's profile. The sync that creates
-    /// the profile also starts the Emacs daemon, if its service is enabled; a
-    /// later one reloads a running Emacs into the new generation.
+    /// the profile also starts the Emacs daemon, if home-manager starts one with
+    /// the session; a later one reloads a running Emacs into the new generation.
     Sync(SyncArgs),
 
     /// Move packages in the emx repo's lock to their newest versions, then sync.

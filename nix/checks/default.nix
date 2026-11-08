@@ -79,6 +79,12 @@ let
 
   homeWithoutDaemon = homeWith { enable = false; };
 
+  # The daemon is installed, but the session doesn't start it.
+  homeWithManualDaemon = homeWith {
+    enable = true;
+    startWithUserSession = false;
+  };
+
   # Whether the module refuses services.emacs.socketActivation. home-manager
   # throws for a failed assertion once the configuration is read.
   refusesSocketActivation = !(builtins.tryEval (homeWith {
@@ -220,8 +226,10 @@ in
   # it lacks the desktop entry's icon, if the daemon's service would fail
   # rather than skip before the first sync, if the EMX menu entry opens a
   # standalone Emacs while the daemon runs or starts, if the module allows
-  # socket activation, or if a plain Emacs isn't told to leave the server to
-  # the daemon exactly when services.emacs runs it.
+  # socket activation, if a plain Emacs isn't told to leave the server to the
+  # daemon exactly when services.emacs runs it, if emx isn't told the daemon's
+  # unit, or if emx's first sync starts the daemon when the session wouldn't
+  # or doesn't when it would.
   home-module =
     pkgs.runCommandLocal "emx-home-module-check"
       {
@@ -276,6 +284,26 @@ in
           echo "a plain Emacs is not told to leave the server to the daemon exactly when services.emacs runs it"
           exit 1
         fi
+        for emx in ${emxOf home} ${emxOf homeWithManualDaemon}; do
+          if ! grep -q 'EMX_DAEMON_UNIT.*emacs\.service' $emx/bin/emx; then
+            echo "with the daemon, emx is not told its unit: $emx"
+            exit 1
+          fi
+        done
+        if grep -q EMX_DAEMON_UNIT ${emxOf homeWithoutDaemon}/bin/emx; then
+          echo "without the daemon, emx is told of a daemon unit"
+          exit 1
+        fi
+        if ! grep -q 'EMX_DAEMON_STARTS_WITH_SESSION.*1' ${emxOf home}/bin/emx; then
+          echo "when the session starts the daemon, emx is not told to start it on the first sync"
+          exit 1
+        fi
+        for emx in ${emxOf homeWithoutDaemon} ${emxOf homeWithManualDaemon}; do
+          if grep -q EMX_DAEMON_STARTS_WITH_SESSION $emx/bin/emx; then
+            echo "emx is told to start a daemon that the session does not start: $emx"
+            exit 1
+          fi
+        done
         touch $out
       '';
 

@@ -56,24 +56,19 @@ elif [ -n "$profile" ]; then
 fi
 "#;
 
-/// Exits as the real one does: `is-enabled` fails for a unit that is missing.
+/// `start` fails with FAKE_SYSTEMCTL_START_ERROR on stderr when it is set.
 const FAKE_SYSTEMCTL: &str = r#"#!/bin/sh
 printf '%s\n' "$*" >> "$FAKE_SYSTEMCTL_ARGS"
-case "$2" in
-  is-enabled)
-    echo "$FAKE_SYSTEMCTL_STATE"
-    [ "$FAKE_SYSTEMCTL_STATE" != not-found ] || exit 4
-    ;;
-  start)
-    if [ -n "$FAKE_SYSTEMCTL_START_ERROR" ]; then
-      echo "$FAKE_SYSTEMCTL_START_ERROR" >&2
-      exit 1
-    fi
-    ;;
-esac
+if [ "$2" = start ] && [ -n "$FAKE_SYSTEMCTL_START_ERROR" ]; then
+  echo "$FAKE_SYSTEMCTL_START_ERROR" >&2
+  exit 1
+fi
 "#;
 
-const IS_ENABLED: &str = "--user is-enabled emacs.service";
+/// What nix/home-module.nix sets to the unit that runs the daemon.
+const DAEMON_UNIT: &str = "EMX_DAEMON_UNIT";
+/// What nix/home-module.nix sets to `1` when the session starts that unit.
+const WITH_SESSION: &str = "EMX_DAEMON_STARTS_WITH_SESSION";
 const START: &str = "--user start emacs.service";
 
 /// Records the file it runs as and its arguments, then writes the report that
@@ -268,6 +263,8 @@ impl Fixture {
             .env("GIT_CONFIG_COUNT", rewrites.len().to_string())
             .env_remove("EMX_SRC")
             .env_remove("EMACS_SOCKET_NAME")
+            .env_remove(DAEMON_UNIT)
+            .env_remove(WITH_SESSION)
             .env("PATH", path_with(&self.path("bin")))
             .env("HOME", self.path("home"))
             .env("XDG_STATE_HOME", self.path("state"))
@@ -276,8 +273,7 @@ impl Fixture {
             .env("FAKE_NIX_ARGS", self.path("nix-args"))
             .env("FAKE_NIX_DIRS", self.path("nix-dirs"))
             .env("FAKE_NIX_OUT", self.path("store-emacs"))
-            .env("FAKE_SYSTEMCTL_ARGS", self.path("systemctl-args"))
-            .env("FAKE_SYSTEMCTL_STATE", "not-found");
+            .env("FAKE_SYSTEMCTL_ARGS", self.path("systemctl-args"));
         command
     }
 
@@ -424,7 +420,8 @@ fn builds_into_a_root_then_switches_the_profile() {
     assert_eq!(
         text(&output.stdout),
         format!(
-            "emx: {} is now generation 1: {}\n",
+            "emx: {} is now generation 1: {}\n\
+             emx: started no Emacs daemon, since none starts with your session\n",
             fixture.state("profile").display(),
             fixture.path("store-emacs").display()
         )
@@ -473,48 +470,87 @@ fn keeps_the_profile_when_nothing_changed() {
 }
 
 #[test]
-fn starts_an_enabled_daemon_after_the_sync_that_creates_the_profile() {
+fn starts_the_session_daemon_after_the_sync_that_creates_the_profile() {
     let fixture = Fixture::new();
     let output = fixture
         .sync()
         .arg("--yes")
-        .env("FAKE_SYSTEMCTL_STATE", "enabled")
+        .env(DAEMON_UNIT, "emacs.service")
+        .env(WITH_SESSION, "1")
         .output()
         .unwrap();
     assert_exit(&output, 0);
-    assert_eq!(fixture.systemctl_calls(), [IS_ENABLED, START]);
+    assert_eq!(fixture.systemctl_calls(), [START]);
     assert!(text(&output.stdout).ends_with("emx: started the Emacs daemon\n"));
 }
 
 #[test]
-fn starts_no_daemon_unless_its_service_is_enabled() {
-    for state in ["static", "disabled", "not-found"] {
-        let fixture = Fixture::new();
-        let output = fixture
-            .sync()
-            .arg("--yes")
-            .env("FAKE_SYSTEMCTL_STATE", state)
-            .output()
-            .unwrap();
-        assert_exit(&output, 0);
-        assert_eq!(fixture.systemctl_calls(), [IS_ENABLED], "{state}");
-        assert!(!text(&output.stdout).contains("daemon"), "{state}");
-        assert!(!text(&output.stderr).contains("daemon"), "{state}");
-    }
-}
-
-#[test]
-fn says_nothing_about_the_daemon_without_systemctl() {
+fn starts_the_unit_home_manager_names() {
     let fixture = Fixture::new();
     let output = fixture
         .sync()
         .arg("--yes")
+        .env(DAEMON_UNIT, "other-emacs.service")
+        .env(WITH_SESSION, "1")
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+    assert_eq!(
+        fixture.systemctl_calls(),
+        ["--user start other-emacs.service"]
+    );
+}
+
+#[test]
+fn starts_no_daemon_unless_one_starts_with_the_session() {
+    // No daemon, a daemon the session doesn't start, and a session start
+    // with no unit to start.
+    let cases = [
+        (None, None),
+        (Some(""), Some("1")),
+        (Some("emacs.service"), None),
+        (Some("emacs.service"), Some("")),
+    ];
+    for case @ (unit, with_session) in cases {
+        let fixture = Fixture::new();
+        let mut sync = fixture.sync();
+        sync.arg("--yes");
+        if let Some(unit) = unit {
+            sync.env(DAEMON_UNIT, unit);
+        }
+        if let Some(with_session) = with_session {
+            sync.env(WITH_SESSION, with_session);
+        }
+        let output = sync.output().unwrap();
+        assert_exit(&output, 0);
+        assert!(fixture.systemctl_calls().is_empty(), "{case:?}");
+        assert!(
+            text(&output.stdout)
+                .ends_with("emx: started no Emacs daemon, since none starts with your session\n"),
+            "{case:?}"
+        );
+        assert!(!text(&output.stderr).contains("daemon"), "{case:?}");
+    }
+}
+
+#[test]
+fn says_why_it_started_no_daemon_without_systemctl() {
+    let fixture = Fixture::new();
+    let output = fixture
+        .sync()
+        .arg("--yes")
+        .env(DAEMON_UNIT, "emacs.service")
+        .env(WITH_SESSION, "1")
         .env("PATH", fixture.path_without_systemctl())
         .output()
         .unwrap();
     assert_exit(&output, 0);
-    assert!(text(&output.stdout).contains("is now generation 1"));
-    assert!(!text(&output.stdout).contains("daemon"));
+    let stdout = text(&output.stdout);
+    assert!(stdout.contains("is now generation 1"), "{stdout}");
+    assert!(
+        stdout.ends_with("emx: started no Emacs daemon, since systemctl isn't on PATH\n"),
+        "{stdout}"
+    );
     assert!(!text(&output.stderr).contains("daemon"));
 }
 
@@ -524,59 +560,69 @@ fn leaves_the_daemon_alone_after_later_syncs() {
     let first = fixture
         .sync()
         .arg("--yes")
-        .env("FAKE_SYSTEMCTL_STATE", "enabled")
+        .env(DAEMON_UNIT, "emacs.service")
+        .env(WITH_SESSION, "1")
         .output()
         .unwrap();
     assert_exit(&first, 0);
     let second = fixture
         .sync()
         .arg("--yes")
-        .env("FAKE_SYSTEMCTL_STATE", "enabled")
+        .env(DAEMON_UNIT, "emacs.service")
+        .env(WITH_SESSION, "1")
         .env("FAKE_NIX_OUT", fixture.path("store-emacs-2"))
         .output()
         .unwrap();
     assert_exit(&second, 0);
     assert!(text(&second.stdout).contains("is now generation 2"));
-    assert_eq!(fixture.systemctl_calls(), [IS_ENABLED, START]);
+    assert!(!text(&second.stdout).contains("daemon"));
+    assert_eq!(fixture.systemctl_calls(), [START]);
 }
 
 #[test]
-fn warns_when_the_daemon_fails_to_start_and_keeps_the_switch() {
+fn fails_when_the_daemon_fails_to_start_and_keeps_the_switch() {
     let fixture = Fixture::new();
     let output = fixture
         .sync()
         .arg("--yes")
-        .env("FAKE_SYSTEMCTL_STATE", "enabled")
+        .env(DAEMON_UNIT, "emacs.service")
+        .env(WITH_SESSION, "1")
         .env("FAKE_SYSTEMCTL_START_ERROR", "Job for emacs.service failed")
         .output()
         .unwrap();
-    assert_exit(&output, 0);
-    assert_eq!(fixture.systemctl_calls(), [IS_ENABLED, START]);
+    assert_exit(&output, 1);
+    assert_eq!(fixture.systemctl_calls(), [START]);
     assert!(text(&output.stdout).contains("is now generation 1"));
     assert!(!text(&output.stdout).contains("daemon"));
+    assert!(fixture.state("profile-1-link").exists());
     let stderr = text(&output.stderr);
-    assert!(stderr.contains("cannot start the Emacs daemon"), "{stderr}");
+    assert!(
+        stderr.contains("emx's profile is switched, but the Emacs daemon didn't start"),
+        "{stderr}"
+    );
     assert!(stderr.contains("Job for emacs.service failed"), "{stderr}");
 }
 
 /// A profile whose current generation is `store-old`, switched to `store-emacs`
 /// by `emx sync` while an Emacs server runs whose reload ends in `outcome`.
 fn sync_with_a_server(outcome: &str) -> (Fixture, Output) {
-    sync_with_a_server_of(outcome, false)
+    sync_with_a_server_of(outcome, false, None)
 }
 
-/// As `sync_with_a_server`, with the server a daemon if `daemon`.
-fn sync_with_a_server_of(outcome: &str, daemon: bool) -> (Fixture, Output) {
+/// As `sync_with_a_server`, with the server a daemon if `daemon`, and emx
+/// told the daemon's `unit`.
+fn sync_with_a_server_of(outcome: &str, daemon: bool, unit: Option<&str>) -> (Fixture, Output) {
     let fixture = synced_fixture();
     fixture.give_emacsclient("store-emacs");
     let _server = fixture.serve();
-    let output = fixture
-        .sync()
-        .arg("--yes")
+    let mut sync = fixture.sync();
+    sync.arg("--yes")
         .env("FAKE_EMACSCLIENT", outcome)
-        .env("FAKE_EMACSCLIENT_DAEMON", daemon.to_string())
-        .output()
-        .unwrap();
+        .env("FAKE_EMACSCLIENT_DAEMON", daemon.to_string());
+    if let Some(unit) = unit {
+        sync.env(DAEMON_UNIT, unit);
+    }
+    let output = sync.output().unwrap();
     (fixture, output)
 }
 
@@ -621,18 +667,29 @@ fn reloads_a_running_emacs_after_switching() {
 
 #[test]
 fn asks_for_a_restart_when_the_reload_cannot_load_everything() {
+    // Only the daemon restarts through systemd, and only when emx knows its
+    // unit, whether or not the session starts it; a standalone Emacs holding
+    // the socket isn't that unit.
+    let cases = [
+        (
+            true,
+            Some("emacs.service"),
+            format!("restart Emacs: {RESTART}.service"),
+        ),
+        (true, None, "restart the Emacs daemon".to_owned()),
+        (false, Some("emacs.service"), "restart Emacs".to_owned()),
+        (false, None, "restart Emacs".to_owned()),
+    ];
     for outcome in ["restart-recommended", "restart-required"] {
-        // Only a daemon restarts through systemd.
-        for (daemon, how) in [(true, format!(": {RESTART}")), (false, String::new())] {
-            let (_fixture, output) = sync_with_a_server_of(outcome, daemon);
+        for (daemon, unit, advice) in &cases {
+            let (_fixture, output) = sync_with_a_server_of(outcome, *daemon, *unit);
             assert_exit(&output, 0);
             let stdout = text(&output.stdout);
             assert!(
                 stdout.ends_with(&format!(
-                    "emx-reload: a report for {outcome}\n\
-                     emx: restart Emacs{how}\n"
+                    "emx-reload: a report for {outcome}\nemx: {advice}\n"
                 )),
-                "{outcome}, daemon {daemon}: {stdout}"
+                "{outcome}, daemon {daemon}, unit {unit:?}: {stdout}"
             );
         }
     }
@@ -1565,7 +1622,8 @@ fn real_emx(state: &Path, bin: &Path, runtime: &Path) -> Command {
     own_server(&mut command, runtime)
         .env("PATH", path_with(bin))
         .env("FAKE_SYSTEMCTL_ARGS", bin.join("systemctl-args"))
-        .env("FAKE_SYSTEMCTL_STATE", "not-found")
+        .env_remove(DAEMON_UNIT)
+        .env_remove(WITH_SESSION)
         .env("XDG_STATE_HOME", state)
         .arg("--src")
         .arg(this_repo());
