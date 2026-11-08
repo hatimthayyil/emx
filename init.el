@@ -58,6 +58,9 @@
 
 (autoload 'emx-reload (expand-file-name "lisp/emx-reload" emx-source-dir)
   "Bring this Emacs up to date with emx's profile and configuration." t)
+(autoload 'emx-reload-record-choices (expand-file-name "lisp/emx-reload" emx-source-dir))
+;; Last, so it records what every other startup function chose.
+(add-hook 'emacs-startup-hook #'emx-reload-record-choices 90)
 
 (progn					;     startup
   (message "Loading early birds...done (%.3fs)"

@@ -137,6 +137,8 @@ update, must have it run."
     (emx-reload-check--expect (process-live-p server) "same: no server runs to keep")
     (ws-butler-global-mode -1)
     (remove-hook 'after-init-hook #'ws-butler-global-mode)
+    ;; As a configuration that last loaded without it chose.
+    (emx-reload-record-choices)
     (let ((outcome (emx-reload)))
       (emx-reload-check--expect (eq outcome 'reloaded)
                                 (format "same: emx-reload returned %s" outcome)))
@@ -426,6 +428,87 @@ still refuses with a `user-error'."
      (eq (alist-get 'daemon (emx-reload-check--read-report file)) t)
      "report: a daemon's report doesn't say it came from a daemon")))
 
+;;;; Choices made while Emacs runs
+
+(defun emx-reload-check--choices ()
+  "Check that a reload keeps the user's theme and global modes.
+A choice the configuration's edit changes is the configuration's again.
+The hook function that records choices must be there once, however often
+Emacs reloads."
+  (modus-themes-load-theme 'modus-vivendi)
+  (blink-cursor-mode 1)
+  (emx-reload)
+  (emx-reload-check--expect (eq (car custom-enabled-themes) 'modus-vivendi)
+                            (format "choices: the theme the user chose became %s"
+                                    (car custom-enabled-themes)))
+  (emx-reload-check--expect blink-cursor-mode
+                            "choices: blink-cursor-mode, which the user turned on, is off")
+  (let ((source emx-source-dir))
+    (setq emx-source-dir (emx-reload-check--edited-config
+                          "(load-theme 'modus-vivendi-tinted t)"))
+    (unwind-protect (emx-reload)
+      (setq emx-source-dir source)))
+  (emx-reload-check--expect (eq (car custom-enabled-themes) 'modus-vivendi-tinted)
+                            (format "choices: the theme the edited configuration loads became %s"
+                                    (car custom-enabled-themes)))
+  (let ((count (cl-count #'emx-reload-record-choices
+                         (default-value 'emacs-startup-hook))))
+    (emx-reload-check--expect (= count 1)
+                              (format "choices: emacs-startup-hook holds \
+emx-reload-record-choices %d times"
+                                      count))))
+
+(defun emx-reload-check--choices-moved ()
+  "Check that an edited configuration's mode wins when the mode's package moved.
+The same reload loads the package that defines the mode from a new directory."
+  (let* ((base (emx-reload--read-manifest emx-reload-current-manifest))
+         (mode (concat "(define-minor-mode emx-check-mode \"A mode the check edits.\" \
+:global t)\n" "(provide 'emx-check-mode)\n"))
+         (old-dir (emx-reload-check--package "mode-old" "mode" "emx-check-mode.el" mode))
+         (new-dir (emx-reload-check--package "mode-new" "mode" "emx-check-mode.el" mode))
+         (packages (alist-get 'elispPackages base))
+         (source emx-source-dir))
+    (setq emx-reload-current-manifest
+          (emx-reload-check--manifest
+           "mode-old.json"
+           (emx-reload-check--alter base 'elispPackages
+                                    `((emx-check-mode . ,old-dir) ,@packages))))
+    (push old-dir load-path)
+    (require 'emx-check-mode)
+    ;; As a configuration that last loaded with the mode off chose.
+    (emx-reload-record-choices)
+    (setq emx-source-dir (emx-reload-check--edited-config
+                          "(require 'emx-check-mode)\n(emx-check-mode 1)"))
+    (unwind-protect
+        (emx-reload (emx-reload-check--manifest
+                     "mode-new.json"
+                     (emx-reload-check--alter base 'elispPackages
+                                              `((emx-check-mode . ,new-dir) ,@packages))))
+      (setq emx-source-dir source))
+    (emx-reload-check--expect
+     (and (equal (symbol-file 'emx-check-mode 'defun)
+                 (expand-file-name "emx-check-mode.el" new-dir))
+          emx-check-mode)
+     "choices: the mode the edited configuration turns on is off, as its package moved")))
+
+(defun emx-reload-check--gone-theme ()
+  "Check that a chosen theme whose file is gone doesn't stop the reload.
+The configuration's theme stays, and the report names the theme."
+  (let ((dir (file-name-directory
+              (emx-reload-check--file "themes/emx-check-theme.el"
+                                      "(deftheme emx-check)\n(provide-theme 'emx-check)\n"))))
+    (push dir custom-theme-load-path)
+    (load-theme 'emx-check t)
+    (setq custom-theme-load-path (delete dir custom-theme-load-path))
+    (let ((outcome (emx-reload emx-reload-current-manifest))
+          (failures (emx-reload--result-failures emx-reload-check--result)))
+      (emx-reload-check--expect
+       (and (eq outcome 'restart-recommended)
+            (seq-some (lambda (failure) (string-search "emx-check" failure)) failures))
+       (format "gone theme: emx-reload returned %s, with failures %S" outcome failures)))
+    (emx-reload-check--expect (not (eq (car custom-enabled-themes) 'emx-check))
+                              (format "gone theme: the themes are %S" custom-enabled-themes))))
+
 ;; Batch Emacs exits before it reaches this hook.
 (run-hooks 'emacs-startup-hook)
 
@@ -439,7 +522,9 @@ still refuses with a `user-error'."
 (dolist (check '(emx-reload-check--profile emx-reload-check--same emx-reload-check--queue
                  emx-reload-check--warnings emx-reload-check--warnings-edited
                  emx-reload-check--removals emx-reload-check--swap
-                 emx-reload-check--other-emacs emx-reload-check--report-file))
+                 emx-reload-check--other-emacs emx-reload-check--report-file
+                 emx-reload-check--choices emx-reload-check--choices-moved
+                 emx-reload-check--gone-theme))
   (condition-case err
       (funcall check)
     (error (push (format "%s: %s" check (error-message-string err))

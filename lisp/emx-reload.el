@@ -20,6 +20,15 @@
 ;; went stays in this Emacs until it restarts, so the report names it.  Other
 ;; removed configuration, such as a hook or a definition, stays unnamed.  A
 ;; different Emacs can't be loaded at all.  early-init.el doesn't load again.
+;;
+;; The configuration chooses a theme and turns global minor modes on or off
+;; as it loads, so loading it again would undo the choices the user made
+;; since.  A reload keeps those: a theme or mode it changed goes back to what
+;; the user had, unless the configuration itself now chooses differently from
+;; when it last loaded.  A choice that can't be put back, such as a theme whose
+;; package went, stays as the configuration set it, and the report names it.
+;; Other settings the user changed while Emacs ran, such as a variable or a
+;; key, take the configuration's value again.
 
 ;;; Code:
 
@@ -340,6 +349,84 @@ them run now.  Comparing with what was there before gives the modules and
     (setf (emx-reload--result-modules result) emx-modules
           (emx-reload--result-removed-modules result) (seq-difference old-modules emx-modules))))
 
+;;;; Choices made while Emacs runs
+
+(defvar emx-reload--chosen nil
+  "What the configuration chose when it last loaded, as `emx-reload--choices'.
+Recorded when startup ends and after each reload.  It's nil in an Emacs that
+started without recording it, and then every changed choice counts as the
+user's.")
+
+(defun emx-reload--choices ()
+  "Return the choices a reload keeps, as a plist.
+`:themes' is `custom-enabled-themes', `:on' the global minor modes that are
+on, and `:modes' the minor modes defined, which `emx-reload--defined-p'
+reads."
+  (list :themes (copy-sequence custom-enabled-themes)
+        :on (copy-sequence global-minor-modes)
+        :modes (copy-sequence minor-mode-list)))
+
+(defun emx-reload--defined-p (mode choices)
+  "Return non-nil if MODE was defined when CHOICES were taken.
+The mode's name, not the file defining it, counts: a package that moved to
+a new directory defines the same modes."
+  (memq mode (plist-get choices :modes)))
+
+;;;###autoload
+(defun emx-reload-record-choices ()
+  "Record what the configuration chose, for `emx-reload'.
+A reload keeps apart the choices the user made since.  init.el runs this
+when startup ends."
+  (setq emx-reload--chosen (emx-reload--choices)))
+
+(defun emx-reload--theme-file (theme)
+  "Return the file `load-theme' would load THEME from, or nil."
+  (locate-file (concat (symbol-name theme) "-theme.el") (custom-theme--load-path)
+               '("" "c")))
+
+(defun emx-reload--enable-themes (themes)
+  "Enable THEMES and disable every other theme, the first taking precedence.
+A theme whose file is gone, as when its package went, leaves the themes as
+they are: `load-theme' would disable it before failing to find it."
+  (if-let* ((missing (seq-remove #'emx-reload--theme-file themes)))
+      (emx-reload--fail (format "theme %s" (car missing))
+                        (list 'error "its file is gone, so the configuration's theme stays"))
+    (condition-case err
+        (progn
+          (dolist (theme custom-enabled-themes)
+            (unless (memq theme themes)
+              (disable-theme theme)))
+          (dolist (theme (reverse themes))
+            (load-theme theme t)))
+      (error (emx-reload--fail (format "themes %s" (emx-reload--names themes)) err)))))
+
+(defun emx-reload--keep-choices (before)
+  "Put back the choices the configuration's reload undid.
+BEFORE is `emx-reload--choices' from before the configuration loaded again.
+A changed theme or global minor mode goes back to BEFORE unless the
+configuration now chooses differently from when it last loaded.  A mode that
+didn't exist before is the configuration's to set.  A mode whose package
+loaded after the configuration last loaded counts as the user's."
+  (let* ((after (emx-reload--choices))
+         (chosen emx-reload--chosen)
+         (themes (plist-get before :themes))
+         (on (plist-get before :on))
+         (now-on (plist-get after :on)))
+    (unless (or (equal themes (plist-get after :themes))
+                (and chosen
+                     (not (eq (car (plist-get after :themes))
+                              (car (plist-get chosen :themes))))))
+      (emx-reload--enable-themes themes))
+    (dolist (mode (append (seq-difference on now-on) (seq-difference now-on on)))
+      (when (and (or (memq mode on) (emx-reload--defined-p mode before))
+                 (or (not (emx-reload--defined-p mode chosen))
+                     (eq (and (memq mode now-on) t)
+                         (and (memq mode (plist-get chosen :on)) t))))
+        (condition-case err
+            (funcall mode (if (memq mode on) 1 -1))
+          (error (emx-reload--fail mode err)))))
+    (setq emx-reload--chosen after)))
+
 ;;;; Report
 
 (defun emx-reload--names (names)
@@ -422,7 +509,9 @@ Emacs to load it.  Nothing changed." (alist-get 'emacsPath new)))
                 (when swapped
                   (emx-reload--swap-packages old new)
                   (setq emx-reload-current-manifest file))
-                (emx-reload--load-config))
+                (let ((choices (emx-reload--choices)))
+                  (emx-reload--load-config)
+                  (emx-reload--keep-choices choices)))
             (advice-remove 'display-warning #'emx-reload--note-warning))
           (cons (if (or (emx-reload--removed emx-reload--result)
                         (emx-reload--result-failures emx-reload--result))
