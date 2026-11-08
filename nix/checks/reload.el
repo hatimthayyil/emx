@@ -385,6 +385,47 @@ It also moves the tools, native code and manuals."
           (eq (assoc (expand-file-name "init.el" emx-source-dir) load-history) init))
      "other Emacs: the reload changed something")))
 
+;;;; The report emx's CLI reads
+
+(defun emx-reload-check--read-report (file)
+  "Return the report in FILE, as an alist."
+  (with-temp-buffer
+    (let ((coding-system-for-read 'utf-8-unix))
+      (insert-file-contents file))
+    (json-parse-buffer :object-type 'alist)))
+
+(defun emx-reload-check--report-file ()
+  "Check the report `emx-reload-write-report' writes for emx's CLI.
+A manifest that doesn't exist, as for a generation built before emx-reload,
+must give `restart-required' with the refusal, while `emx-reload' itself
+still refuses with a `user-error'."
+  (let ((file (expand-file-name "report.json" emx-reload-check--dir))
+        (missing (expand-file-name "missing.json" emx-reload-check--dir)))
+    (emx-reload-check--expect
+     (eq (condition-case nil (progn (emx-reload missing) 'returned)
+           (user-error 'refused))
+         'refused)
+     "report: emx-reload didn't refuse a missing manifest")
+    (pcase-dolist (`(,manifest ,outcome ,mention)
+                   `((,missing "restart-required" "No manifest at")
+                     (,emx-reload-current-manifest "reloaded" "same generation")))
+      (when (file-exists-p file)
+        (delete-file file))
+      (let ((returned (emx-reload-write-report file manifest)))
+        (emx-reload-check--expect (equal (symbol-name returned) outcome)
+                                  (format "report: returned %s, not %s" returned outcome)))
+      (let ((report (and (file-exists-p file) (emx-reload-check--read-report file))))
+        (emx-reload-check--expect
+         (and (equal (alist-get 'outcome report) outcome)
+              (string-search mention (or (alist-get 'report report) ""))
+              (eq (alist-get 'daemon report) :false))
+         (format "report: %S isn't %s naming %S, from no daemon" report outcome mention))))
+    (cl-letf (((symbol-function 'daemonp) #'always))
+      (emx-reload-write-report file emx-reload-current-manifest))
+    (emx-reload-check--expect
+     (eq (alist-get 'daemon (emx-reload-check--read-report file)) t)
+     "report: a daemon's report doesn't say it came from a daemon")))
+
 ;; Batch Emacs exits before it reaches this hook.
 (run-hooks 'emacs-startup-hook)
 
@@ -398,7 +439,7 @@ It also moves the tools, native code and manuals."
 (dolist (check '(emx-reload-check--profile emx-reload-check--same emx-reload-check--queue
                  emx-reload-check--warnings emx-reload-check--warnings-edited
                  emx-reload-check--removals emx-reload-check--swap
-                 emx-reload-check--other-emacs))
+                 emx-reload-check--other-emacs emx-reload-check--report-file))
   (condition-case err
       (funcall check)
     (error (push (format "%s: %s" check (error-message-string err))

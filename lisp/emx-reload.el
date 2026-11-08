@@ -394,19 +394,9 @@ them run now.  Comparing with what was there before gives the modules and
 
 ;;;; Command
 
-(defun emx-reload (&optional manifest)
-  "Bring this Emacs up to date with emx's profile and configuration.
-MANIFEST is the manifest of the generation to load, by default the one
-`emx-reload-profile-manifest' returns; interactively, a prefix argument asks
-for it.  The packages, native code, Info manuals and tools move to that
-generation, then init.el loads again from `emx-source-dir'.  Nothing prompts:
-a prompt fails as an error.
-
-Return `reloaded'; `restart-recommended' when something was removed, which
-this Emacs keeps until it restarts, or failed; or `restart-required' when the
-generation runs a different Emacs, in which case nothing changes."
-  (interactive (list (and current-prefix-arg
-                          (read-file-name "Manifest: " nil nil t))))
+(defun emx-reload--run (manifest)
+  "Do what `emx-reload' does with MANIFEST, and return (OUTCOME . REPORT).
+REPORT is the text that describes OUTCOME."
   (let ((file (file-truename (or manifest (emx-reload-profile-manifest)))))
     (unless (file-readable-p file)
       (user-error "No manifest at %s: restart Emacs to load this generation" file))
@@ -415,10 +405,9 @@ generation runs a different Emacs, in which case nothing changes."
     (let ((old (emx-reload--read-manifest emx-reload-current-manifest))
           (new (emx-reload--read-manifest file)))
       (if (not (equal (alist-get 'emacsPath old) (alist-get 'emacsPath new)))
-          (progn
-            (message "emx-reload: this generation runs a different Emacs, %s; restart \
-Emacs to load it.  Nothing changed." (alist-get 'emacsPath new))
-            'restart-required)
+          (cons 'restart-required
+                (format "emx-reload: this generation runs a different Emacs, %s; restart \
+Emacs to load it.  Nothing changed." (alist-get 'emacsPath new)))
         (let* ((emx-reload--result (emx-reload--result-create))
                (swapped (not (equal file (file-truename emx-reload-current-manifest))))
                (inhibit-interaction t))
@@ -435,11 +424,48 @@ Emacs to load it.  Nothing changed." (alist-get 'emacsPath new))
                   (setq emx-reload-current-manifest file))
                 (emx-reload--load-config))
             (advice-remove 'display-warning #'emx-reload--note-warning))
-          (message "%s" (emx-reload--report emx-reload--result swapped))
-          (if (or (emx-reload--removed emx-reload--result)
-                  (emx-reload--result-failures emx-reload--result))
-              'restart-recommended
-            'reloaded))))))
+          (cons (if (or (emx-reload--removed emx-reload--result)
+                        (emx-reload--result-failures emx-reload--result))
+                    'restart-recommended
+                  'reloaded)
+                (emx-reload--report emx-reload--result swapped)))))))
+
+(defun emx-reload (&optional manifest)
+  "Bring this Emacs up to date with emx's profile and configuration.
+MANIFEST is the manifest of the generation to load, by default the one
+`emx-reload-profile-manifest' returns; interactively, a prefix argument asks
+for it.  The packages, native code, Info manuals and tools move to that
+generation, then init.el loads again from `emx-source-dir'.  Nothing prompts:
+a prompt fails as an error.
+
+Return `reloaded'; `restart-recommended' when something was removed, which
+this Emacs keeps until it restarts, or failed; or `restart-required' when the
+generation runs a different Emacs, in which case nothing changes."
+  (interactive (list (and current-prefix-arg
+                          (read-file-name "Manifest: " nil nil t))))
+  (pcase-let ((`(,outcome . ,report) (emx-reload--run manifest)))
+    (message "%s" report)
+    outcome))
+
+(defun emx-reload-write-report (file &optional manifest)
+  "Do what `emx-reload' does with MANIFEST, and write how it went to FILE.
+FILE gets a JSON object: its `outcome' is the name of what `emx-reload'
+returns, or `restart-required' when it refuses with a `user-error'; its
+`report' is the text that says why; and `daemon' says whether this Emacs is
+a daemon, which decides how to restart it.  Any other error is signalled,
+and FILE isn't written.  `emx sync', `emx upgrade' and `emx rollback' reload
+a running Emacs through this function (cli/src/reload.rs).  Return the
+outcome."
+  (pcase-let ((`(,outcome . ,report)
+               (condition-case err
+                   (emx-reload--run manifest)
+                 (user-error (cons 'restart-required (error-message-string err))))))
+    (message "%s" report)
+    (let ((coding-system-for-write 'utf-8-unix))
+      (with-temp-file file
+        (json-insert `((outcome . ,(symbol-name outcome)) (report . ,report)
+                       (daemon . ,(if (daemonp) t :false))))))
+    outcome))
 
 (provide 'emx-reload)
 
