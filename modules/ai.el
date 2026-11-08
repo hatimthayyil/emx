@@ -32,19 +32,29 @@ reads again.  `emx-pass-key-forget' drops the keys read so far."
 
 (defun emx-pass-key--read (entry)
   "Return the API key in pass ENTRY: the first line `pass show' prints.
-Its error stream is discarded, so a gpg warning can't become the key.  No
+The key comes from standard output alone, so a gpg warning can't become it.  No
 `pass' on `exec-path', a non-zero exit or an empty key signals an error naming
-ENTRY, and that error holds nothing `pass' printed."
-  (with-temp-buffer
-    (let ((status (condition-case nil
-                      (call-process "pass" nil '(t nil) nil "show" entry)
-                    (file-missing
-                     (error "pass show %s gave no key: pass isn't on exec-path" entry)))))
-      (goto-char (point-min))
-      (let ((key (buffer-substring-no-properties (point) (line-end-position))))
-        (unless (and (eql status 0) (not (string-empty-p key)))
-          (error "pass show %s gave no key (exit status %s)" entry status))
-        key))))
+ENTRY.  The error carries what `pass' printed on its error stream, which never
+holds the key, and nothing it printed on standard output."
+  (let ((default-directory (expand-file-name "~/"))
+        (stderr (make-temp-file "emx-pass-key")))
+    (unwind-protect
+        (with-temp-buffer
+          (let ((status (condition-case nil
+                            (call-process "pass" nil (list t stderr) nil "show" entry)
+                          (file-missing
+                           (error "pass show %s gave no key: pass isn't on exec-path"
+                                  entry)))))
+            (goto-char (point-min))
+            (let ((key (buffer-substring-no-properties (point) (line-end-position))))
+              (unless (and (eql status 0) (not (string-empty-p key)))
+                (let ((reason (with-temp-buffer
+                                (insert-file-contents stderr)
+                                (string-trim (buffer-string)))))
+                  (error "pass show %s gave no key (exit status %s)%s" entry status
+                         (if (string-empty-p reason) "" (concat ": " reason)))))
+              key)))
+      (delete-file stderr))))
 
 (defun emx-pass-key-forget ()
   "Forget the API keys read from pass, so each is read again when next needed.

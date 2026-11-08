@@ -187,9 +187,11 @@ A name in `emx-modules' that is also a library is a failure too."
   "Signal an error unless gptel reads its API keys from `pass' on demand.
 Each entry must be read once a session, a failed read must be tried again, and
 after `emx-pass-key-forget' the next call must read again.  With no `pass' to
-run, a read must signal an error naming its entry.  ChatGPT must have a key
-function of its own, not `gptel-api-key', which `gptel' sets to what the user
-types when a key fails.
+run, a read must signal an error naming its entry.  A failed read's error must
+carry what `pass' printed on stderr and nothing from its standard output, and a
+read must work from a directory that is gone.  ChatGPT must have a key function
+of its own, not `gptel-api-key', which `gptel' sets to what the user types when
+a key fails.
 The `pass' on PATH here logs each call to the file $EMX_PASS_LOG and prints a
 key and a second line.  It warns on stderr first for the entry \"noisy\", exits
 1 after a line for \"missing\", and prints nothing for \"empty\"."
@@ -209,7 +211,18 @@ key and a second line.  It warns on stderr first for the entry \"noisy\", exits
                        (ignore (funcall (emx-pass-key entry)))
                      (error (error-message-string err)))))
       (unless (and failure (string-search entry failure))
-        (error "Pass entry %s gave %S, not an error naming it" entry failure))))
+        (error "Pass entry %s gave %S, not an error naming it" entry failure))
+      (when (equal entry "missing")
+        (unless (string-search "is not in the password store" failure)
+          (error "Pass entry missing gave %S, without pass's stderr" failure))
+        (when (string-search "partial output" failure)
+          (error "Pass entry missing gave %S, which holds pass's standard output"
+                 failure)))))
+  (let ((default-directory (expand-file-name "emx-boot-check-gone/"
+                                             temporary-file-directory)))
+    (let ((key (funcall (emx-pass-key "elsewhere"))))
+      (unless (equal key "key for elsewhere")
+        (error "From a directory that is gone, the key is %S" key))))
   (let ((failure (condition-case err
                      (let ((exec-path nil))
                        (ignore (funcall (emx-pass-key "unfound"))))
@@ -222,7 +235,7 @@ key and a second line.  It warns on stderr first for the entry \"noisy\", exits
   (pcase-dolist (`(,entry . ,reads)
                  `(,@(mapcar (lambda (entry) (cons entry 1))
                              (seq-uniq (mapcar #'cdr emx-boot-check-api-keys)))
-                   ("noisy" . 1) ("empty" . 1) ("missing" . 2)))
+                   ("noisy" . 1) ("empty" . 1) ("missing" . 2) ("elsewhere" . 1)))
     (let ((count (emx-boot-check--pass-reads entry)))
       (unless (= count reads)
         (error "pass read %s %d times, not %d" entry count reads))))
