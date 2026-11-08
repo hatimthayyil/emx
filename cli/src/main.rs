@@ -1,8 +1,11 @@
 //! `emx` builds emx's Emacs and its Elisp packages from the emx repo into
 //! emx's own Nix profile, which the `emacs` and `emacsclient` launchers run,
-//! upgrades those packages, and rolls the profile back.
+//! upgrades those packages, and rolls the profile back. After each switch, it
+//! reloads a running Emacs into the new generation.
 //!
-//! Exit status: 0 on success, 1 when a command fails, 2 on a usage error.
+//! Exit status: 0 on success, 1 when a command fails, 2 on a usage error. A
+//! command that switched the profile but couldn't reload the running Emacs
+//! exits 1, and the profile stays switched.
 
 mod build;
 mod cli;
@@ -13,6 +16,7 @@ mod manifest;
 mod nix;
 mod profile;
 mod prompt;
+mod reload;
 mod rollback;
 mod source;
 mod sync;

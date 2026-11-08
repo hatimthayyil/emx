@@ -10,7 +10,7 @@ emx upgrade gptel magit  # only these git packages
 emx rollback             # back to the previous build
 ```
 
-`emx upgrade` moves the pins in `lock/`, shows what the build changes, and asks before switching. The new pins stay uncommitted: commit them to keep them, or run `git restore lock` to undo them. `emx rollback` moves only the profile, so `lock/` keeps its pins. After either command, `systemctl --user restart emacs` loads the new build.
+`emx upgrade` moves the pins in `lock/`, shows what the build changes, and asks before switching. The new pins stay uncommitted: commit them to keep them, or run `git restore lock` to undo them. `emx rollback` moves only the profile, so `lock/` keeps its pins. After either command, a running Emacs reloads into the new build in place. emx says when it needs a restart instead: for a different Emacs, or to drop packages and config that were removed. `M-x emx-reload` does the same reload by hand.
 
 When a package's source can't be reached and Nix has a cached copy, the package keeps its pin and everything else still moves. `emx upgrade` then names it and exits 1, so run it again later.
 

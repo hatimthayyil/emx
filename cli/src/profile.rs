@@ -54,6 +54,17 @@ impl Profile {
         self.parent().join("pending")
     }
 
+    /// Where a running Emacs reports how its reload went (reload.rs).
+    pub fn reload_report(&self) -> PathBuf {
+        self.parent().join("reload.json")
+    }
+
+    /// The manifest of the current generation, which a running Emacs reloads
+    /// into (nix/emacs/default.nix links it into each build).
+    pub fn manifest(&self) -> PathBuf {
+        self.link.join("share/emx/manifest.json")
+    }
+
     /// Creates the directory that holds the profile and its generations.
     pub fn create_parent(&self) -> Result<(), Error> {
         let parent = self.parent();

@@ -1,7 +1,7 @@
 //! `emx sync`: builds the emx repo's Emacs and packages, shows what the build
 //! changes, and after confirmation makes it a new generation of emx's
 //! profile. The sync that creates the profile also starts the Emacs daemon;
-//! later ones leave it running, since a restart would close the user's buffers.
+//! later ones reload a running Emacs into the new generation (reload.rs).
 
 use std::path::PathBuf;
 
@@ -13,6 +13,7 @@ use crate::error::Error;
 use crate::nix;
 use crate::profile::Profile;
 use crate::prompt;
+use crate::reload;
 use crate::source::Source;
 
 /// The flake output holding Emacs with every package (nix/emacs).
@@ -33,7 +34,17 @@ pub fn run(src: Option<PathBuf>, args: &SyncArgs) -> Result<(), Error> {
     let source = Source::open(src)?;
     let profile = Profile::from_env()?;
     prompt::ensure_answerable(args.yes)?;
-    apply(&source, &profile, args).map(|_| ())
+    let outcome = apply(&source, &profile, args)?;
+    reload_if_switched(&profile, outcome)
+}
+
+/// Reloads a running Emacs when `outcome` is a new generation. The sync that
+/// creates the profile starts the daemon on it instead.
+pub fn reload_if_switched(profile: &Profile, outcome: Outcome) -> Result<(), Error> {
+    if outcome == Outcome::Switched {
+        reload::running_emacs(profile)?;
+    }
+    Ok(())
 }
 
 /// Builds `source` and, once confirmed, makes the build a generation of

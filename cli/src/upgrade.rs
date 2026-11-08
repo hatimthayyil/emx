@@ -10,13 +10,12 @@ use serde::Deserialize;
 use serde::de::{DeserializeOwned, IgnoredAny};
 
 use crate::cli::UpgradeArgs;
-use crate::daemon;
 use crate::error::Error;
 use crate::nix;
 use crate::profile::Profile;
 use crate::prompt;
 use crate::source::Source;
-use crate::sync::{self, Outcome};
+use crate::sync;
 
 /// The flake app that refreshes `lock/metadata.json` and leaves ELPA packages
 /// where they are.
@@ -104,16 +103,15 @@ pub fn run(src: Option<PathBuf>, args: &UpgradeArgs) -> Result<(), Error> {
         sync::apply(&source, &profile, &args.sync)
     });
 
-    match &synced {
-        Ok(Outcome::Switched) => daemon::print_restart(),
-        Ok(Outcome::Created | Outcome::Unchanged) => {}
-        Err(_) => eprintln!(
+    if synced.is_err() {
+        eprintln!(
             "emx: lock/ keeps the moved pins: `git restore lock` in {} undoes them",
             source.root().display()
-        ),
+        );
     }
+    let synced = synced.and_then(|outcome| sync::reload_if_switched(&profile, outcome));
     if failed.is_empty() {
-        return synced.map(|_| ());
+        return synced;
     }
     let not_refreshed = Error::NotRefreshed {
         names: names_at(&source.lock_dir(), &failed)?,

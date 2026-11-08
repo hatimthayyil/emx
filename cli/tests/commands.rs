@@ -1,12 +1,15 @@
 //! emx's commands run as a program. A fake `nix` on PATH records each call's
 //! arguments and does what the real one would to the build root and the
 //! profile, and a fake `systemctl` records its calls and answers as told, so
-//! these tests need neither Nix nor the user's state directory or daemon.
+//! these tests need neither Nix nor the user's state directory or daemon. An
+//! Emacs server is a socket the test listens on in its own runtime directory,
+//! and a generation's fake `emacsclient` answers its reload as told.
 //! Their stdin is not a terminal, so emx never asks and needs `--yes`.
 
 use std::ffi::OsString;
 use std::fs;
 use std::os::unix::fs::{PermissionsExt, symlink};
+use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
@@ -68,6 +71,32 @@ esac
 const IS_ENABLED: &str = "--user is-enabled emacs.service";
 const START: &str = "--user start emacs.service";
 
+/// Records the file it runs as and its arguments, then writes the report that
+/// `emx-reload-write-report` would to the file the Elisp names, with the
+/// outcome in FAKE_EMACSCLIENT and, if FAKE_EMACSCLIENT_DAEMON is `true`, from
+/// a daemon. `fail` fails as emacsclient does when Emacs signals an error, and
+/// `garbage` writes a report that isn't JSON.
+const FAKE_EMACSCLIENT: &str = r#"#!/bin/sh
+printf '%s\n' "$(readlink -f "$0")" "$@" -- >> "$FAKE_EMACSCLIENT_ARGS"
+expression=
+while [ $# -gt 0 ]; do
+  [ "$1" != --eval ] || expression=$2
+  shift
+done
+report=$(printf '%s' "$expression" | sed -n 's/.*(emx-reload-write-report "\([^"]*\)".*/\1/p')
+case "$FAKE_EMACSCLIENT" in
+  fail)
+    echo "*ERROR*: Wrong type argument: stringp, nil" >&2
+    exit 1
+    ;;
+  garbage) echo 'not a report' > "$report" ;;
+  *) printf '{"outcome": "%s", "report": "emx-reload: a report for %s", "daemon": %s}' \
+       "$FAKE_EMACSCLIENT" "$FAKE_EMACSCLIENT" "${FAKE_EMACSCLIENT_DAEMON:-false}" > "$report" ;;
+esac
+"#;
+
+const RESTART: &str = "systemctl --user restart emacs";
+
 fn write_executable(path: &Path, script: &str) {
     fs::write(path, script).unwrap();
     fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
@@ -120,14 +149,17 @@ impl Fixture {
     }
 
     /// `emx` with an environment that reaches only the fixture's directories,
-    /// building `store-emacs`, with no `emacs.service`.
+    /// building `store-emacs`, with no `emacs.service` and no Emacs server.
     fn emx(&self) -> Command {
         let mut command = Command::new(env!("CARGO_BIN_EXE_emx"));
         command
             .env_remove("EMX_SRC")
+            .env_remove("EMACS_SOCKET_NAME")
             .env("PATH", path_with(&self.path("bin")))
             .env("HOME", self.path("home"))
             .env("XDG_STATE_HOME", self.path("state"))
+            .env("XDG_RUNTIME_DIR", self.path("runtime"))
+            .env("FAKE_EMACSCLIENT_ARGS", self.path("emacsclient-args"))
             .env("FAKE_NIX_ARGS", self.path("nix-args"))
             .env("FAKE_NIX_DIRS", self.path("nix-dirs"))
             .env("FAKE_NIX_OUT", self.path("store-emacs"))
@@ -169,6 +201,35 @@ impl Fixture {
         fs::read_to_string(self.path("nix-dirs"))
             .map(|text| text.lines().map(PathBuf::from).collect())
             .unwrap_or_default()
+    }
+
+    /// The socket emx finds an Emacs server on.
+    fn socket(&self) -> PathBuf {
+        self.path("runtime/emacs/server")
+    }
+
+    /// An Emacs server, for as long as the listener lives. Nothing accepts:
+    /// emx only connects, and the fake `emacsclient` answers.
+    fn serve(&self) -> UnixListener {
+        fs::create_dir_all(self.path("runtime/emacs")).unwrap();
+        UnixListener::bind(self.socket()).unwrap()
+    }
+
+    /// Gives the build at `store_path`, a fixture path, a fake `emacsclient`.
+    fn give_emacsclient(&self, store_path: &str) {
+        let bin = self.path(store_path).join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        write_executable(&bin.join("emacsclient"), FAKE_EMACSCLIENT);
+    }
+
+    /// The file each `emacsclient` call ran as, then its arguments, in order.
+    fn emacsclient_calls(&self) -> Vec<Vec<String>> {
+        let Ok(text) = fs::read_to_string(self.path("emacsclient-args")) else {
+            return Vec::new();
+        };
+        text.split_terminator("--\n")
+            .map(|call| call.lines().map(str::to_owned).collect())
+            .collect()
     }
 
     /// The arguments of each `systemctl` call, in order.
@@ -385,6 +446,166 @@ fn warns_when_the_daemon_fails_to_start_and_keeps_the_switch() {
     assert!(stderr.contains("Job for emacs.service failed"), "{stderr}");
 }
 
+/// A profile whose current generation is `store-old`, switched to `store-emacs`
+/// by `emx sync` while an Emacs server runs whose reload ends in `outcome`.
+fn sync_with_a_server(outcome: &str) -> (Fixture, Output) {
+    sync_with_a_server_of(outcome, false)
+}
+
+/// As `sync_with_a_server`, with the server a daemon if `daemon`.
+fn sync_with_a_server_of(outcome: &str, daemon: bool) -> (Fixture, Output) {
+    let fixture = synced_fixture();
+    fixture.give_emacsclient("store-emacs");
+    let _server = fixture.serve();
+    let output = fixture
+        .sync()
+        .arg("--yes")
+        .env("FAKE_EMACSCLIENT", outcome)
+        .env("FAKE_EMACSCLIENT_DAEMON", daemon.to_string())
+        .output()
+        .unwrap();
+    (fixture, output)
+}
+
+#[test]
+fn reloads_a_running_emacs_after_switching() {
+    let (fixture, output) = sync_with_a_server("reloaded");
+    assert_exit(&output, 0);
+    let calls = fixture.emacsclient_calls();
+    assert_eq!(calls.len(), 1, "{calls:?}");
+    let call = &calls[0];
+    // The new generation's emacsclient, at the server's socket.
+    assert_eq!(
+        Path::new(&call[0]),
+        fixture
+            .path("store-emacs/bin/emacsclient")
+            .canonicalize()
+            .unwrap()
+    );
+    assert_eq!(
+        call[1],
+        format!("--socket-name={}", fixture.socket().display())
+    );
+    assert_eq!(call[2], "--eval");
+    // Into the manifest of the profile's new generation, so Emacs needn't
+    // locate the profile itself.
+    assert!(
+        call[3].contains(&format!(
+            "(emx-reload-write-report \"{}\" \"{}\")",
+            fixture.state("reload.json").display(),
+            fixture.state("profile/share/emx/manifest.json").display()
+        )),
+        "{call:?}"
+    );
+    let stdout = text(&output.stdout);
+    assert!(
+        stdout.ends_with("emx-reload: a report for reloaded\n"),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("restart"), "{stdout}");
+    assert!(!fixture.state("reload.json").exists());
+}
+
+#[test]
+fn asks_for_a_restart_when_the_reload_cannot_load_everything() {
+    for outcome in ["restart-recommended", "restart-required"] {
+        // Only a daemon restarts through systemd.
+        for (daemon, how) in [(true, format!(": {RESTART}")), (false, String::new())] {
+            let (_fixture, output) = sync_with_a_server_of(outcome, daemon);
+            assert_exit(&output, 0);
+            let stdout = text(&output.stdout);
+            assert!(
+                stdout.ends_with(&format!(
+                    "emx-reload: a report for {outcome}\n\
+                     emx: restart Emacs{how}\n"
+                )),
+                "{outcome}, daemon {daemon}: {stdout}"
+            );
+        }
+    }
+}
+
+#[test]
+fn reloads_nothing_in_an_emacs_without_emx() {
+    let (fixture, output) = sync_with_a_server("not-emx");
+    assert_exit(&output, 0);
+    let stdout = text(&output.stdout);
+    assert!(
+        stdout.ends_with("emx-reload: a report for not-emx\n"),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("restart"), "{stdout}");
+    // An Emacs without emx's configuration has no emx-source-dir, so the
+    // expression checks for it before loading emx-reload.
+    let calls = fixture.emacsclient_calls();
+    assert!(
+        calls[0][3].starts_with("(if (boundp 'emx-source-dir) "),
+        "{calls:?}"
+    );
+}
+
+#[test]
+fn fails_keeping_the_switch_when_the_reload_fails() {
+    for (outcome, said) in [
+        (
+            "fail",
+            "*ERROR*: Wrong type argument: stringp, nil\n\
+             emx: emx's profile is switched, but the running Emacs didn't reload: \
+             emacsclient failed (exit status: 1); its output is above",
+        ),
+        ("garbage", "cannot parse its report"),
+    ] {
+        let (fixture, output) = sync_with_a_server(outcome);
+        assert_exit(&output, 1);
+        assert_eq!(
+            fs::read_link(fixture.state("profile")).unwrap(),
+            Path::new("profile-2-link"),
+            "{outcome}"
+        );
+        assert!(text(&output.stdout).contains("is now generation 2"));
+        let stderr = text(&output.stderr);
+        assert!(
+            stderr.contains("emx's profile is switched, but the running Emacs didn't reload"),
+            "{outcome}: {stderr}"
+        );
+        assert!(stderr.contains(said), "{outcome}: {stderr}");
+        // With no report, emx can't tell a daemon from a standalone Emacs.
+        assert!(
+            stderr.contains("Restart Emacs to load the new generation"),
+            "{outcome}: {stderr}"
+        );
+        assert!(!stderr.contains(RESTART), "{outcome}: {stderr}");
+        assert!(!fixture.state("reload.json").exists(), "{outcome}");
+    }
+}
+
+#[test]
+fn reloads_nothing_without_a_running_emacs() {
+    for stale in [false, true] {
+        let fixture = synced_fixture();
+        fixture.give_emacsclient("store-emacs");
+        if stale {
+            // The socket file of an Emacs that died.
+            drop(fixture.serve());
+            assert!(fixture.socket().exists());
+        }
+        let output = fixture.sync().arg("--yes").output().unwrap();
+        assert_exit(&output, 0);
+        assert!(fixture.emacsclient_calls().is_empty(), "stale: {stale}");
+        assert!(
+            text(&output.stdout).ends_with(&format!(
+                "is now generation 2: {}\n",
+                fixture.path("store-emacs").display()
+            )),
+            "stale: {stale}"
+        );
+        assert!(
+            !text(&output.stderr).contains("didn't reload"),
+            "stale: {stale}"
+        );
+    }
+}
+
 #[test]
 fn needs_yes_without_a_terminal_to_ask() {
     let fixture = Fixture::new();
@@ -564,24 +785,34 @@ fn passes_arguments_for_nix_to_each_step_that_fetches_or_builds() {
 }
 
 #[test]
-fn asks_for_a_restart_after_switching() {
+fn reloads_a_running_emacs_after_upgrading() {
     let fixture = synced_fixture();
-    let output = fixture.upgrade().arg("--yes").output().unwrap();
+    fixture.give_emacsclient("store-emacs");
+    let _server = fixture.serve();
+    let output = fixture
+        .upgrade()
+        .arg("--yes")
+        .env("FAKE_EMACSCLIENT", "reloaded")
+        .output()
+        .unwrap();
     assert_exit(&output, 0);
     assert_eq!(
         fs::read_link(fixture.state("profile")).unwrap(),
         Path::new("profile-2-link")
     );
+    assert_eq!(fixture.emacsclient_calls().len(), 1);
     let stdout = text(&output.stdout);
     assert!(
-        stdout.ends_with("systemctl --user restart emacs\n"),
+        stdout.ends_with("emx-reload: a report for reloaded\n"),
         "{stdout}"
     );
 }
 
 #[test]
-fn asks_for_no_restart_when_nothing_changed() {
+fn reloads_nothing_when_nothing_changed() {
     let fixture = synced_fixture();
+    fixture.give_emacsclient("store-old");
+    let _server = fixture.serve();
     let output = fixture
         .upgrade()
         .arg("--yes")
@@ -592,14 +823,18 @@ fn asks_for_no_restart_when_nothing_changed() {
     let stdout = text(&output.stdout);
     assert!(stdout.contains("nothing changed"), "{stdout}");
     assert!(!stdout.contains("restart"), "{stdout}");
+    assert!(fixture.emacsclient_calls().is_empty());
 }
 
 #[test]
-fn asks_for_no_restart_after_creating_the_profile() {
+fn reloads_nothing_after_creating_the_profile() {
     let fixture = Fixture::new();
+    fixture.give_emacsclient("store-emacs");
+    let _server = fixture.serve();
     let output = fixture.upgrade().arg("--yes").output().unwrap();
     assert_exit(&output, 0);
     assert!(!text(&output.stdout).contains("restart"));
+    assert!(fixture.emacsclient_calls().is_empty());
 }
 
 #[test]
@@ -685,7 +920,6 @@ fn finishes_the_upgrade_then_fails_naming_what_it_could_not_refresh() {
         fs::read_link(fixture.state("profile")).unwrap(),
         Path::new("profile-2-link")
     );
-    assert!(text(&output.stdout).ends_with("systemctl --user restart emacs\n"));
     let stderr = text(&output.stderr);
     for shown in [GIT_FETCH_FAILED, GITHUB_FETCH_FAILED, ARCHIVE_FETCH_FAILED] {
         assert!(stderr.contains(shown), "{stderr}");
@@ -729,9 +963,8 @@ fn rolls_back_to_the_previous_generation() {
     );
     let stdout = text(&output.stdout);
     assert!(stdout.contains("back at generation 1"), "{stdout}");
-    assert!(stdout.contains("lock/ is not rolled back"), "{stdout}");
     assert!(
-        stdout.ends_with("systemctl --user restart emacs\n"),
+        stdout.ends_with("lock/ is not rolled back, so the next sync builds its pins again\n"),
         "{stdout}"
     );
     let call = fixture.nix_calls().pop().unwrap();
@@ -739,6 +972,30 @@ fn rolls_back_to_the_previous_generation() {
         after(&call, "--profile"),
         fixture.state("profile").to_str().unwrap()
     );
+}
+
+#[test]
+fn reloads_a_running_emacs_into_the_generation_it_rolls_back_to() {
+    let fixture = synced_fixture();
+    assert_exit(&fixture.upgrade().arg("--yes").output().unwrap(), 0);
+    fixture.give_emacsclient("store-old");
+    let _server = fixture.serve();
+    let output = fixture
+        .rollback()
+        .env("FAKE_EMACSCLIENT", "reloaded")
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+    let calls = fixture.emacsclient_calls();
+    assert_eq!(calls.len(), 1, "{calls:?}");
+    assert_eq!(
+        Path::new(&calls[0][0]),
+        fixture
+            .path("store-old/bin/emacsclient")
+            .canonicalize()
+            .unwrap()
+    );
+    assert!(text(&output.stdout).ends_with("emx-reload: a report for reloaded\n"));
 }
 
 #[test]
@@ -830,43 +1087,170 @@ git update-ref refs/heads/main "$commit"
     );
 }
 
-/// Builds this repo's Emacs with the real Nix into a temporary profile and
-/// boots it with the real init. Extra `nix build` arguments come from
-/// `EMX_TEST_NIX_ARGS`, split on whitespace.
-#[test]
-#[ignore = "builds emx's Emacs with Nix; run with `cargo test -- --ignored`"]
-fn syncs_and_boots_this_repo() {
-    let src = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
-    let state = tempfile::tempdir().unwrap();
-    let bin = tempfile::tempdir().unwrap();
-    write_executable(&bin.path().join("systemctl"), FAKE_SYSTEMCTL);
-    let extra = std::env::var("EMX_TEST_NIX_ARGS").unwrap_or_default();
-    let output = Command::new(env!("CARGO_BIN_EXE_emx"))
-        .env("PATH", path_with(bin.path()))
-        .env("FAKE_SYSTEMCTL_ARGS", bin.path().join("systemctl-args"))
+/// This repo, which the real-Nix tests build.
+fn this_repo() -> &'static Path {
+    Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap()
+}
+
+/// Gives `command` the Emacs server directory `runtime`, a temporary one, so
+/// that neither the emx nor the Emacs it runs reaches the user's Emacs server
+/// or takes its socket.
+fn own_server<'a>(command: &'a mut Command, runtime: &Path) -> &'a mut Command {
+    command
+        .env("XDG_RUNTIME_DIR", runtime)
+        .env_remove("EMACS_SOCKET_NAME")
+}
+
+/// `emx` with the real Nix, a fake `systemctl` in `bin`, emx's profile under
+/// `state` and the Emacs server directory `runtime`, building this repo. Extra
+/// `nix build` arguments come from `EMX_TEST_NIX_ARGS`, split on whitespace.
+fn real_emx(state: &Path, bin: &Path, runtime: &Path) -> Command {
+    write_executable(&bin.join("systemctl"), FAKE_SYSTEMCTL);
+    let mut command = Command::new(env!("CARGO_BIN_EXE_emx"));
+    own_server(&mut command, runtime)
+        .env("PATH", path_with(bin))
+        .env("FAKE_SYSTEMCTL_ARGS", bin.join("systemctl-args"))
         .env("FAKE_SYSTEMCTL_STATE", "not-found")
-        .env("XDG_STATE_HOME", state.path())
+        .env("XDG_STATE_HOME", state)
         .arg("--src")
-        .arg(src)
+        .arg(this_repo());
+    command
+}
+
+/// Builds this repo's Emacs into emx's profile under `state`.
+fn sync_this_repo(state: &Path, bin: &Path, runtime: &Path) {
+    let extra = std::env::var("EMX_TEST_NIX_ARGS").unwrap_or_default();
+    let output = real_emx(state, bin, runtime)
         .args(["sync", "--yes", "--"])
         .args(extra.split_whitespace())
         .status()
         .unwrap();
     assert!(output.success(), "emx sync failed: {output}");
+}
+
+/// A home in which emx's init loads: org-directory (the organisation module)
+/// must exist.
+fn emacs_home() -> TempDir {
+    let home = tempfile::tempdir().unwrap();
+    fs::create_dir_all(home.path().join("Documents/org")).unwrap();
+    home
+}
+
+/// Gives the Emacs `command` runs the home `home`, with its XDG cache, config
+/// and data directories in it, so that it neither reads nor writes the user's,
+/// as emx's init writes under the cache directory.
+fn in_home<'a>(command: &'a mut Command, home: &Path) -> &'a mut Command {
+    command
+        .env("HOME", home)
+        .env("XDG_CACHE_HOME", home.join(".cache"))
+        .env("XDG_CONFIG_HOME", home.join(".config"))
+        .env("XDG_DATA_HOME", home.join(".local/share"))
+}
+
+/// Builds this repo's Emacs with the real Nix into a temporary profile and
+/// boots it with the real init.
+#[test]
+#[ignore = "builds emx's Emacs with Nix; run with `cargo test -- --ignored`"]
+fn syncs_and_boots_this_repo() {
+    let state = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+    let runtime = tempfile::tempdir().unwrap();
+    sync_this_repo(state.path(), bin.path(), runtime.path());
 
     let emacs = state.path().join("emx/profile/bin/emacs");
-    let home = tempfile::tempdir().unwrap();
-    // org-directory (the organisation module) must exist.
-    fs::create_dir_all(home.path().join("Documents/org")).unwrap();
-    let boot = Command::new(&emacs)
-        .env("HOME", home.path())
-        .arg("--batch")
-        .arg("-u")
-        .arg("")
-        .arg(format!("--init-directory={}", src.display()))
-        .arg("--eval")
-        .arg("(kill-emacs (if init-file-had-error 1 0))")
+    let home = emacs_home();
+    // emx's init starts a server.
+    let boot = in_home(
+        own_server(&mut Command::new(&emacs), runtime.path()),
+        home.path(),
+    )
+    .arg("--batch")
+    .arg("-u")
+    .arg("")
+    .arg(format!("--init-directory={}", this_repo().display()))
+    .arg("--eval")
+    .arg("(kill-emacs (if init-file-had-error 1 0))")
+    .output()
+    .unwrap();
+    assert_exit(&boot, 0);
+}
+
+/// An Emacs daemon, killed when dropped.
+struct Daemon(std::process::Child);
+
+impl Drop for Daemon {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
+/// Builds this repo's Emacs, starts a daemon on it with the real init, then
+/// rolls back from a second generation of the same build. The rollback
+/// reloads that daemon through the real `emacsclient` and emx-reload.
+#[test]
+#[ignore = "builds emx's Emacs with Nix; run with `cargo test -- --ignored`"]
+fn reloads_a_real_running_emacs() {
+    let state = tempfile::tempdir().unwrap();
+    let bin = tempfile::tempdir().unwrap();
+    let runtime = tempfile::tempdir().unwrap();
+    sync_this_repo(state.path(), bin.path(), runtime.path());
+    let profiles = state.path().join("emx");
+    symlink(
+        fs::read_link(profiles.join("profile-1-link")).unwrap(),
+        profiles.join("profile-2-link"),
+    )
+    .unwrap();
+    fs::remove_file(profiles.join("profile")).unwrap();
+    symlink("profile-2-link", profiles.join("profile")).unwrap();
+
+    let home = emacs_home();
+    let socket = runtime.path().join("emacs/server");
+    let _daemon = Daemon(
+        in_home(
+            own_server(
+                &mut Command::new(profiles.join("profile/bin/emacs")),
+                runtime.path(),
+            ),
+            home.path(),
+        )
+        .env("XDG_STATE_HOME", state.path())
+        .env_remove("NOTIFY_SOCKET")
+        .arg("--fg-daemon")
+        .arg(format!("--init-directory={}", this_repo().display()))
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .unwrap(),
+    );
+    // The server can answer before init finishes, so wait for both.
+    let initialised = || {
+        Command::new(profiles.join("profile/bin/emacsclient"))
+            .arg(format!("--socket-name={}", socket.display()))
+            .args(["--eval", "(and after-init-time t)"])
+            .output()
+            .is_ok_and(|output| text(&output.stdout) == "t\n")
+    };
+    let started = std::time::Instant::now();
+    while !(socket.exists() && initialised()) {
+        assert!(
+            started.elapsed() < std::time::Duration::from_secs(120),
+            "the daemon didn't finish starting at {}",
+            socket.display()
+        );
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+
+    let output = real_emx(state.path(), bin.path(), runtime.path())
+        .arg("rollback")
         .output()
         .unwrap();
-    assert_exit(&boot, 0);
+    assert_exit(&output, 0);
+    let stdout = text(&output.stdout);
+    assert!(stdout.contains("back at generation 1"), "{stdout}");
+    assert!(
+        stdout.contains("emx-reload: packages: same generation; configuration loaded"),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("restart"), "{stdout}");
 }

@@ -21,7 +21,8 @@ pub struct Cli {
 pub enum Command {
     /// Build the emx repo's Emacs and packages, as its lock pins them, and make
     /// the result the current generation of emx's profile. The sync that creates
-    /// the profile also starts the Emacs daemon, if its service is enabled.
+    /// the profile also starts the Emacs daemon, if its service is enabled; a
+    /// later one reloads a running Emacs into the new generation.
     Sync(SyncArgs),
 
     /// Move packages in the emx repo's lock to their newest versions, then sync.
@@ -30,7 +31,8 @@ pub enum Command {
     /// reached keeps its pin: the rest still move, then emx names it and exits 1.
     Upgrade(UpgradeArgs),
 
-    /// Return emx's profile to its previous generation. lock/ stays as it is.
+    /// Return emx's profile to its previous generation, and reload a running
+    /// Emacs into it. lock/ stays as it is.
     Rollback,
 }
 

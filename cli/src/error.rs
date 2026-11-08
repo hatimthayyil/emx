@@ -4,6 +4,8 @@ use std::io;
 use std::path::PathBuf;
 use std::process::ExitStatus;
 
+use crate::reload::ReloadError;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("no emx repo given: pass --src DIR or set EMX_SRC")]
@@ -84,9 +86,29 @@ pub enum Error {
     #[error("emx's profile has no generation to return to: run `emx sync` first")]
     NoGeneration,
 
+    #[error("emx's profile is switched, but {}", match .0 {
+        timed_out @ ReloadError::TimedOut => format!("{timed_out}. If it stays stuck, restart Emacs"),
+        err => format!(
+            "the running Emacs didn't reload: {err}. Restart Emacs to load the new generation"
+        ),
+    })]
+    Reload(#[from] ReloadError),
+
     #[error("not switched: {}", match generation {
         Some(number) => format!("emx's profile stays at generation {number}"),
         None => "emx's profile stays empty".to_owned(),
     })]
     Declined { generation: Option<u64> },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn says_emacs_may_still_be_reloading_when_it_takes_too_long() {
+        let message = Error::Reload(ReloadError::TimedOut).to_string();
+        assert!(message.contains("may still be reloading"), "{message}");
+        assert!(!message.contains("didn't reload"), "{message}");
+    }
 }

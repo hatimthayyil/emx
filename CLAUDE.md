@@ -14,9 +14,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## BUILD/LINT/TEST COMMANDS
 - Dev environment: `devenv shell` (Rust toolchain, treefmt, commit hooks)
 - CLI tests: `cargo test` (or `devenv test`); `cargo test -- --ignored` also builds emx's Emacs with Nix into a temporary profile and boots it (extra `nix build` arguments in `EMX_TEST_NIX_ARGS`)
-- Build Emacs into emx's profile: `emx sync` (extra `nix build` arguments after `--`). It shows what changes and asks before switching; without a terminal, such as from an agent, pass `--yes`. The sync that creates the profile starts `emacs.service` if it is enabled; later syncs leave the daemon running
-- Upgrade packages: `emx upgrade [PACKAGE...]` moves pins in `lock/` to upstream's newest, then syncs (`--yes` and extra Nix arguments after `--`, as for `emx sync`). With names it moves those git packages; with none it moves every package. ELPA packages move only together, so naming one is refused. A source Nix can't reach keeps its pin: the rest still move and sync, then emx names it and exits 1. The new pins stay uncommitted: commit them, or undo them with `git restore lock`. A running Emacs loads a new generation on `systemctl --user restart emacs`
-- Roll back: `emx rollback` returns emx's profile to its previous generation; `lock/` stays, so the next sync builds its pins again
+- Build Emacs into emx's profile: `emx sync` (extra `nix build` arguments after `--`). It shows what changes and asks before switching; without a terminal, such as from an agent, pass `--yes`. The sync that creates the profile starts `emacs.service` if it is enabled; later syncs reload a running Emacs into the new generation with `emx-reload` (`lisp/emx-reload.el`), and say when it needs a restart. A switch whose reload fails stays switched and exits 1
+- Upgrade packages: `emx upgrade [PACKAGE...]` moves pins in `lock/` to upstream's newest, then syncs (`--yes` and extra Nix arguments after `--`, as for `emx sync`). With names it moves those git packages; with none it moves every package. ELPA packages move only together, so naming one is refused. A source Nix can't reach keeps its pin: the rest still move and sync, then emx names it and exits 1. The new pins stay uncommitted: commit them, or undo them with `git restore lock`. A running Emacs is reloaded as after `emx sync`
+- Roll back: `emx rollback` returns emx's profile to its previous generation and reloads a running Emacs into it; `lock/` stays, so the next sync builds its pins again
+- Reload by hand: `M-x emx-reload` loads the profile's current generation and the config again. A restart is still needed for a different Emacs, a generation without `share/emx/manifest.json`, or to drop what was removed
 - Build: `nix build .#emacs`, `nix build .#emx`
 - Check (boots the real init and loads every package, checks the home-manager module): `nix flake check`
 - Throttle local builds: `--max-jobs 2 --cores 4`
@@ -37,7 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Rust
 - The CLI drives Nix through its command line (`cli/src/nix.rs`)
-- Tests never touch the real state directory or daemon: point `XDG_STATE_HOME` at a temporary directory, and put a fake `systemctl` on `PATH`
+- Tests never touch the real state directory, daemon or Emacs server: point `XDG_STATE_HOME` and `XDG_RUNTIME_DIR` at temporary directories, unset `EMACS_SOCKET_NAME`, put a fake `systemctl` on `PATH`, and give the fake build a fake `bin/emacsclient`, since the CLI runs the `emacsclient` of the generation it switched to
 
 ### Module Design
 - Keep Nix as non-intrusive as possible to Emacs workflow
