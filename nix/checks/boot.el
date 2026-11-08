@@ -52,6 +52,37 @@ and ws-butler exempts `markdown-mode' by default.")
 (defconst emx-boot-check-prose-files '("note.txt" "note.org" "note.md")
   "Files that vale must lint.")
 
+(defconst emx-boot-check-prose
+  "This is is a repeated word.\nThe café is is closed.\n"
+  "The text of each file the boot check opens.
+The second line's \"é\" is one character to vale and to Flycheck alike.")
+
+(defconst emx-boot-check-vale-styles "Vale, write-good"
+  "The styles the boot check's .vale.ini is based on.")
+
+(defconst emx-boot-check-vale-alerts
+  '(("Vale.Repetition" . error)
+    ("write-good.Illusions" . warning)
+    ("write-good.E-Prime" . info))
+  "Checks vale must report on the boot check's prose, with each one's level.
+Vale's style makes each repeated \"is is\" an error, and write-good's
+Illusions rule a warning.  write-good's E-Prime rule is a suggestion, and it
+flags each \"is\".")
+
+(defconst emx-boot-check-vale-repetitions '((1 6 11) (2 10 15))
+  "The line, column and end column of each \"is is\" in `emx-boot-check-prose'.
+Flycheck's end column is the first one past the alert.")
+
+(defconst emx-boot-check-vale-stray
+  "W101 'FooBar' isn't a section option; Vale is ignoring it."
+  "What vale 3.25.1 prints on stderr for an unknown key in .vale.ini.
+It still lints, and prints its report after this line.")
+
+(defconst emx-boot-check-vale-failure
+  '(:Line 0 :Path "" :Text "unclosed section: [*\n" :Code "E100" :Span 0)
+  "The error object vale 3.25.1 prints on stderr for an unclosed section.
+It lints nothing and exits 2.")
+
 (defconst emx-boot-check-after-load
   '((pdf-loader . (assoc pdf-loader--auto-mode-alist-item auto-mode-alist))
     (org . (and (fboundp 'org-babel-execute:gptel)
@@ -112,17 +143,123 @@ A name in `emx-modules' that is also a library is a failure too."
         (push (format "%s: module has the name of %s" module library) failures)))
     failures))
 
+(defun emx-boot-check--run-vale ()
+  "Run Flycheck's vale checker on the current buffer and wait for it."
+  (let ((checker (flycheck-get-checker-for-buffer)))
+    (unless (eq checker 'vale)
+      (error "Flycheck chose %s" checker)))
+  (flycheck-buffer)
+  (while (flycheck-running-p)
+    (accept-process-output nil 0.1)))
+
+(defun emx-boot-check--fake-vale (dir before report after status)
+  "Return a fake vale in DIR, which prints BEFORE, REPORT, AFTER and exits STATUS.
+BEFORE and AFTER, unless nil, are lines it prints on stderr.  Unless REPORT is
+nil, it prints between them a report giving REPORT's alerts, plists in vale's
+fields, for the file it lints."
+  (let ((vale (make-temp-file
+               (expand-file-name "vale" dir) nil nil
+               (concat "#!/bin/sh\n"
+                       (when before
+                         (format "printf '%%s\\n' %s >&2\n"
+                                 (shell-quote-argument before)))
+                       (when report
+                         (format "printf '{\"%%s\": %%s}\\n' \"$2\" %s\n"
+                                 (shell-quote-argument
+                                  (json-serialize (vconcat report)))))
+                       (when after
+                         (format "printf '%%s\\n' %s >&2\n"
+                                 (shell-quote-argument after)))
+                       (format "exit %d\n" status)))))
+    (set-file-modes vale #o755)
+    vale))
+
+(defun emx-boot-check--vale-output (dir)
+  "Signal an error unless the vale checker reads what vale prints beside a report.
+In a directory under DIR, a fake vale that prints `emx-boot-check-vale-stray'
+on stderr before its report, or after it, must leave the check `finished'
+with the report's alert and that line as a warning on line 1.  One that
+prints only `emx-boot-check-vale-failure' must leave it `errored', naming the
+object's text."
+  (let* ((dir (expand-file-name "fake-vale" dir))
+         (file (expand-file-name "note.txt" dir))
+         (alert '(:Check "Vale.Repetition" :Line 1 :Span [6 10]
+                         :Message "'is' is repeated!" :Severity "error"))
+         (expected `((1 error "'is' is repeated!")
+                     (1 warning ,emx-boot-check-vale-stray))))
+    (make-directory dir)
+    (write-region "" nil (expand-file-name ".vale.ini" dir))
+    (write-region "This is is a repeated word.\n" nil file)
+    (with-current-buffer (find-file-noselect file)
+      (pcase-dolist (`(,where ,before ,after)
+                     `(("before" ,emx-boot-check-vale-stray nil)
+                       ("after" nil ,emx-boot-check-vale-stray)))
+        (setq-local flycheck-vale-executable
+                    (emx-boot-check--fake-vale dir before (list alert) after 1))
+        (emx-boot-check--run-vale)
+        (let ((failure flycheck--last-failure)
+              (errors (mapcar (lambda (err)
+                                (list (flycheck-error-line err)
+                                      (flycheck-error-level err)
+                                      (flycheck-error-message err)))
+                              flycheck-current-errors)))
+          (when (or failure (not (eq flycheck-last-status-change 'finished)))
+            (error "With a warning on stderr %s the report, vale's check ended %s: %s"
+                   where (if failure (nth 1 failure) flycheck-last-status-change)
+                   (nth 2 failure)))
+          (unless (seq-set-equal-p errors expected)
+            (error "With a warning on stderr %s the report, vale's check found %S, not %S"
+                   where errors expected))))
+      (setq-local flycheck-vale-executable
+                  (emx-boot-check--fake-vale
+                   dir (json-serialize emx-boot-check-vale-failure) nil nil 2))
+      ;; Flycheck reports the failure this case expects with `message'.
+      (let ((inhibit-message t))
+        (emx-boot-check--run-vale))
+      (let ((failure flycheck--last-failure)
+            (expected '(vale errored "vale: unclosed section: [*")))
+        (unless (equal failure expected)
+          (error "With vale's error object, the check's failure was %S, not %S"
+                 failure expected))))))
+
 (defun emx-boot-check--vale (file)
-  "Signal an error unless vale reports the repeated word in FILE's buffer."
+  "Signal an error unless vale's check of FILE's buffer finishes as expected.
+The check must end `finished', not `errored' or `suspicious', report each
+check in `emx-boot-check-vale-alerts' at its level and no other, and place
+each repetition at `emx-boot-check-vale-repetitions'."
   (with-current-buffer (find-buffer-visiting file)
-    (let ((checker (flycheck-get-checker-for-buffer)))
-      (unless (eq checker 'vale)
-        (error "Flycheck chose %s" checker)))
-    (flycheck-buffer)
-    (while (flycheck-running-p)
-      (accept-process-output nil 0.1))
-    (unless flycheck-current-errors
-      (error "vale reported nothing"))))
+    (emx-boot-check--run-vale)
+    ;; A `suspicious' check still finishes, so its failure is the only trace.
+    (let ((failure flycheck--last-failure))
+      (when (or failure (not (eq flycheck-last-status-change 'finished)))
+        (error "vale's check ended %s: %s"
+               (if failure (nth 1 failure) flycheck-last-status-change)
+               (let ((output (string-trim (format "%s" (nth 2 failure)))))
+                 (truncate-string-to-width
+                  (string-replace "\n" " " output) 300)))))
+    (pcase-dolist (`(,id . ,level) emx-boot-check-vale-alerts)
+      (let ((levels (seq-uniq
+                     (mapcar #'flycheck-error-level
+                             (seq-filter (lambda (err)
+                                           (equal (flycheck-error-id err) id))
+                                         flycheck-current-errors)))))
+        (cond ((null levels)
+               (error "vale reported no %s" id))
+              ((not (equal levels (list level)))
+               (error "vale reported %s at %s, not %s"
+                      id (mapconcat #'symbol-name levels ", ") level)))))
+    (let ((spans (sort (mapcar (lambda (err)
+                                 (list (flycheck-error-line err)
+                                       (flycheck-error-column err)
+                                       (flycheck-error-end-column err)))
+                               (seq-filter (lambda (err)
+                                             (equal (flycheck-error-id err)
+                                                    "Vale.Repetition"))
+                                           flycheck-current-errors))
+                       #'value<)))
+      (unless (equal spans emx-boot-check-vale-repetitions)
+        (error "vale placed Vale.Repetition at %S, not %S"
+               spans emx-boot-check-vale-repetitions)))))
 
 (defun emx-boot-check--triggers ()
   "Return a failure for each thing a booted Emacs has not turned on."
@@ -140,11 +277,13 @@ A name in `emx-modules' that is also a library is a failure too."
     (dolist (mode emx-boot-check-global-modes)
       (unless (and (boundp mode) (symbol-value mode))
         (push (format "%s: off after boot" mode) failures)))
-    (write-region "[*]\nBasedOnStyles = Vale\n" nil
-                  (expand-file-name ".vale.ini" dir))
+    (write-region (format "[*]\nBasedOnStyles = %s\n"
+                          emx-boot-check-vale-styles)
+                  nil (expand-file-name ".vale.ini" dir))
     (dolist (entry emx-boot-check-file-modes)
       (let ((file (expand-file-name (car entry) dir)))
-        (write-region "This is is a repeated word.\n" nil file)
+        (let ((coding-system-for-write 'utf-8-unix))
+          (write-region emx-boot-check-prose nil file))
         (with-current-buffer (find-file-noselect file)
           (dolist (mode (cdr entry))
             (unless (and (boundp mode) (symbol-value mode))
@@ -153,6 +292,10 @@ A name in `emx-modules' that is also a library is a failure too."
       (condition-case err
           (emx-boot-check--vale (expand-file-name name dir))
         (error (push (format "%s: %s" name (error-message-string err)) failures))))
+    (condition-case err
+        (emx-boot-check--vale-output dir)
+      (error (push (format "vale output: %s" (error-message-string err))
+                   failures)))
     (dolist (entry emx-boot-check-after-load)
       (require (car entry))
       (unless (eval (cdr entry) t)
