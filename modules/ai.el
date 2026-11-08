@@ -68,11 +68,12 @@ Run it after changing a key in pass."
   ;;; ================ Language models
   ;;;
 
-  ;; OpenAI
-  (setq gptel-api-key (emx-pass-key "api.openai.com"))
+  ;; OpenAI.  The key is the backend's own, not `gptel-api-key': when a key
+  ;; can't be read, `M-x gptel' and gptel-menu prompt for one and store the
+  ;; answer in `gptel-api-key'.
   (gptel-make-openai "ChatGPT"
     :stream t
-    :key 'gptel-api-key)
+    :key (emx-pass-key "api.openai.com"))
 
   ;; OpenRouter
   (gptel-make-openai "OpenRouter"

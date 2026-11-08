@@ -187,7 +187,9 @@ A name in `emx-modules' that is also a library is a failure too."
   "Signal an error unless gptel reads its API keys from `pass' on demand.
 Each entry must be read once a session, a failed read must be tried again, and
 after `emx-pass-key-forget' the next call must read again.  With no `pass' to
-run, a read must signal an error naming its entry.
+run, a read must signal an error naming its entry.  ChatGPT must have a key
+function of its own, not `gptel-api-key', which `gptel' sets to what the user
+types when a key fails.
 The `pass' on PATH here logs each call to the file $EMX_PASS_LOG and prints a
 key and a second line.  It warns on stderr first for the entry \"noisy\", exits
 1 after a line for \"missing\", and prints nothing for \"empty\"."
@@ -229,7 +231,10 @@ key and a second line.  It warns on stderr first for the entry \"noisy\", exits
   (let ((count (emx-boot-check--pass-reads "noisy")))
     (unless (= count 2)
       (error "After emx-pass-key-forget, pass read noisy %d times in all, not 2"
-             count))))
+             count)))
+  (let ((key (gptel-backend-key (gptel-get-backend "ChatGPT"))))
+    (unless (and (functionp key) (not (symbolp key)))
+      (error "ChatGPT's key is %S, not a function of its own" key))))
 
 (defun emx-boot-check--pass-reads (entry)
   "Return how many times the logging `pass' was asked for ENTRY."
