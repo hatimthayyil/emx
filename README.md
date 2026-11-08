@@ -2,6 +2,10 @@
 
 An Emacs distribution: Nix builds and pins Emacs and its packages, and the Elisp loads live from this repo.
 
+## Opening Emacs
+
+With `services.emacs.enable`, the EMX menu entry opens a window on the Emacs daemon. While no daemon answers, including while one is still starting, the entry starts `emacs.service` and waits for it; only if systemd can't start it does the entry start a plain Emacs, which runs the server itself. Without `services.emacs.enable`, the entry starts a plain Emacs. The Emacs holding the server is the one emx reloads after a sync, upgrade or rollback. A second plain Emacs, started beside it, runs no server and isn't reloaded.
+
 ## Upgrading packages
 
 ```

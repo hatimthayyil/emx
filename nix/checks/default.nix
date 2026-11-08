@@ -39,7 +39,9 @@ let
     pkgs.lib.concatLines (builtins.attrNames emacs.packageInputs)
   );
 
-  home = homeManager.lib.homeManagerConfiguration {
+  # A home-manager configuration using the module, with services.emacs set to
+  # `emacsService`.
+  homeWith = emacsService: homeManager.lib.homeManagerConfiguration {
     inherit pkgs;
     modules = [
       homeModule
@@ -53,10 +55,27 @@ let
           enable = true;
           src = "/home/emx/code/emx";
         };
-        services.emacs.enable = true;
+        services.emacs = emacsService;
       }
     ];
   };
+
+  home = homeWith { enable = true; };
+
+  homeWithoutDaemon = homeWith { enable = false; };
+
+  # Whether the module refuses services.emacs.socketActivation. home-manager
+  # throws for a failed assertion once the configuration is read.
+  refusesSocketActivation = !(builtins.tryEval (homeWith {
+    enable = true;
+    socketActivation.enable = true;
+  }).config.home.username).success;
+
+  # The EMX menu entry of a home-manager configuration.
+  menuEntry = h: "${h.config.home.path}/share/applications/emx.desktop";
+
+  # The emx package a home-manager configuration installs.
+  emxOf = h: h.config.services.emacs.package;
 in
 {
   # Boots with emx's real init through bootInit's shims, then loads every
@@ -96,8 +115,10 @@ in
 
   # Builds a home-manager configuration using the module, and fails if its
   # closure holds emx's package set or Emacs, which only `emx sync` builds, if
-  # it lacks the desktop entry's icon, or if the daemon's service would fail
-  # rather than skip before the first sync.
+  # it lacks the desktop entry's icon, if the daemon's service would fail
+  # rather than skip before the first sync, if the EMX menu entry opens a
+  # standalone Emacs while the daemon runs or starts, or if the module allows
+  # socket activation.
   home-module =
     pkgs.runCommandLocal "emx-home-module-check"
       {
@@ -123,6 +144,30 @@ in
           echo "emacs.service does not wait for emx's profile"
           exit 1
         fi
+        if ! grep -qxF "Exec=${emxOf home}/bin/emacsclient --create-frame --alternate-editor=${emxOf home}/libexec/emx/open-on-daemon %F" \
+            ${menuEntry home}; then
+          echo "with the daemon, the EMX menu entry does not open a window on it"
+          exit 1
+        fi
+        fallback=${emxOf home}/libexec/emx/open-on-daemon
+        if ! grep -qxF "if systemctl --user start emacs.service; then" $fallback ||
+            ! grep -qF "exec ${emxOf home}/bin/emacsclient --create-frame" $fallback ||
+            ! grep -qF "exec ${emxOf home}/bin/emacs " $fallback; then
+          echo "the EMX menu entry's fallback does not start the daemon before opening a window on it"
+          exit 1
+        fi
+        if ! grep -qxF "Exec=${emxOf homeWithoutDaemon}/bin/emacs %F" ${menuEntry homeWithoutDaemon}; then
+          echo "without the daemon, the EMX menu entry does not start Emacs"
+          exit 1
+        fi
+        if ! grep -qxF StartupWMClass=emacs ${menuEntry home}; then
+          echo "the EMX menu entry does not name Emacs's window class"
+          exit 1
+        fi
+        ${pkgs.lib.optionalString (!refusesSocketActivation) ''
+          echo "the module allows services.emacs.socketActivation, which would start the daemon on every sync"
+          exit 1
+        ''}
         touch $out
       '';
 

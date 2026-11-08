@@ -1,6 +1,9 @@
 # Installs emx once: one `emx` package holding the CLI, `emacs` and
 # `emacsclient` launchers that run Emacs from emx's profile, and Emacs's icons;
-# and the init shims in ~/.config/emx that load the Elisp from the emx repo.
+# an EMX menu entry, which opens a window on the daemon (starting it through
+# libexec/emx/open-on-daemon when no server answers) or, without the daemon,
+# runs plain `emacs`; and the init shims in ~/.config/emx that load the Elisp
+# from the emx repo.
 # `emx sync` builds Emacs, its packages and the tools its modules call into the
 # profile, so home-manager never builds them and an update needs no switch.
 { self }:
@@ -39,6 +42,25 @@ let
       '';
     });
 
+  # home-manager's unit for the Emacs daemon.
+  daemonUnit = "emacs.service";
+
+  # The EMX menu entry's fallback when no Emacs server answers. A daemon's
+  # server appears only once its init finishes, so a plain Emacs started while
+  # the daemon starts would take the server, and the daemon would exit when
+  # its init ends. Starting the unit instead waits until the daemon is ready
+  # (it is Type=notify), or does nothing if it runs. The @…@ paths are the
+  # launchers of the package this is installed into.
+  openOnDaemon = pkgs.writeShellApplication {
+    name = "open-on-daemon";
+    text = ''
+      if systemctl --user start ${daemonUnit}; then
+        exec @emacsclient@ --create-frame "$@"
+      fi
+      exec @emacs@ "$@"
+    '';
+  };
+
   emacs = self.packages.${system}.emacs.emacs;
 
   # The launchers and Emacs's application icons are copied in, so the closure
@@ -54,6 +76,10 @@ let
       --set-default EMX_SRC ${lib.escapeShellArg src}
     install -m555 ${launcher "emacs" "--init-directory ${lib.escapeShellArg initDirectory}"} $out/bin/emacs
     install -m555 ${launcher "emacsclient" ""} $out/bin/emacsclient
+    install -Dm555 ${lib.getExe openOnDaemon} $out/libexec/emx/open-on-daemon
+    substituteInPlace $out/libexec/emx/open-on-daemon \
+      --subst-var-by emacsclient $out/bin/emacsclient \
+      --subst-var-by emacs $out/bin/emacs
 
     cd ${emacs}/share/icons
     find hicolor -path '*/apps/emacs.png' -o -path '*/apps/emacs.svg' |
@@ -87,17 +113,38 @@ in
       Unit.ConditionPathExists = "${config.xdg.stateHome}/emx/profile/bin/emacs";
     };
 
+    assertions = [{
+      assertion = !(config.services.emacs.enable && config.services.emacs.socketActivation.enable);
+      message = ''
+        programs.emx: turn off services.emacs.socketActivation. emx finds a
+        running Emacs by connecting to its server socket, so socket activation
+        would start the daemon on every emx sync.
+      '';
+    }];
+
+    # With the daemon, windows open on it, where the server socket `emx sync`
+    # reloads through also lives. With no server answering, open-on-daemon
+    # starts the daemon and opens the window there, and starts a plain Emacs
+    # only if systemd can't. An empty --alternate-editor would start a second
+    # daemon that systemd does not manage.
     xdg.desktopEntries.emx = {
       name = "EMX";
       genericName = "Text Editor";
       comment = "Edit text";
-      exec = "${emx}/bin/emacs %F";
+      exec =
+        if config.services.emacs.enable
+        then "${emx}/bin/emacsclient --create-frame --alternate-editor=${emx}/libexec/emx/open-on-daemon %F"
+        else "${emx}/bin/emacs %F";
       terminal = false;
       type = "Application";
       icon = "emacs";
       categories = [ "Development" "TextEditor" ];
       mimeType = [ "text/plain" ];
       startupNotify = true;
+      # The Wayland app_id pgtk Emacs gives its windows, a daemon's included,
+      # so the task manager matches them to this entry. Upstream's
+      # emacs.desktop names X11's class, Emacs.
+      settings.StartupWMClass = "emacs";
     };
 
     xdg.configFile = lib.mapAttrs'
