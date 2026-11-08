@@ -49,8 +49,15 @@
   (require 'benchmark-init)
   (add-hook 'after-init-hook #'benchmark-init/deactivate))
 
+;; Before the configuration queues anything, so a reload can take it back.
+(autoload 'emx-reload-track-queue (expand-file-name "lisp/emx-reload" emx-source-dir))
+(emx-reload-track-queue)
+
 ;; Load EmX init shim
 (load (expand-file-name "lisp/emx.el" emx-source-dir))
+
+(autoload 'emx-reload (expand-file-name "lisp/emx-reload" emx-source-dir)
+  "Bring this Emacs up to date with emx's profile and configuration." t)
 
 (progn					;     startup
   (message "Loading early birds...done (%.3fs)"

@@ -52,6 +52,16 @@ in
     _: prev: {
       elispPackages = prev.elispPackages.overrideScope (import ./overrides.nix { inherit pkgs; });
 
+      # The manifest of this build, at a path that stays put in emx's profile:
+      # emx-reload (lisp/emx-reload.el) reads it from the generation a sync made
+      # current.
+      emacsWrapper = prev.emacsWrapper.overrideAttrs (old: {
+        buildCommand = old.buildCommand + ''
+          mkdir -p $out/share/emx
+          ln -s "$elispManifestPath" $out/share/emx/manifest.json
+        '';
+      });
+
       # Emacs's wrapper prefixes these to PATH, so Emacs and the processes it
       # starts find them and the user's shell does not.
       executablePackages = [

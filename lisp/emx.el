@@ -17,11 +17,11 @@
 ;; Some features that are not represented as packages can be found in
 ;; `features', but this can be inconsistent. The following enforce consistency:
 (if (fboundp #'json-parse-string)
-    (push 'jansson features))
+    (add-to-list 'features 'jansson))
 (if (string-match-p "HARFBUZZ" system-configuration-features) ; no alternative
-    (push 'harfbuzz features))
+    (add-to-list 'features 'harfbuzz))
 (if (bound-and-true-p module-file-suffix)
-    (push 'dynamic-modules features))
+    (add-to-list 'features 'dynamic-modules))
 
 ;; no-littering
 ;;
@@ -375,6 +375,9 @@
 (use-package compat)
 
 ;; start server
-(server-start)
+;; `emx-reload' loads this file again: restarting a running server would drop
+;; its clients, or prompt.
+(unless (bound-and-true-p server-process)
+  (server-start))
 
 (provide 'emx-init)

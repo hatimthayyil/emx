@@ -20,12 +20,12 @@ let
 
   inherit (import ../init-files.nix { inherit (pkgs) lib; }) elispString initFiles;
 
-  # The init directory the boot check starts Emacs from: the init files
-  # nix/home-module.nix writes to ~/.config/emx, whose early-init first records
-  # warnings, with lisp/emx-warnings.el's filter. Emacs loads site-start before
-  # any early-init, so the check starts it with --no-site-file and the
-  # early-init loads site-start after the recording begins, just before emx's
-  # early-init as Emacs would.
+  # The init directory the boot and reload checks start Emacs from: the init
+  # files nix/home-module.nix writes to ~/.config/emx, whose early-init first
+  # records warnings, with lisp/emx-warnings.el's filter. Emacs loads
+  # site-start before any early-init, so the checks start it with
+  # --no-site-file and the early-init loads site-start after the recording
+  # begins, just before emx's early-init as Emacs would.
   bootInit = pkgs.linkFarm "emx-boot-init" (pkgs.lib.mapAttrs pkgs.writeText (initFiles {
     src = "${src}";
     prelude = ''
@@ -75,6 +75,22 @@ in
     mkdir -p $HOME/Documents/org
     ${emacs}/bin/emacs --batch --no-site-file -u "" --init-directory=${bootInit} \
       -l ${./boot.el}
+    touch $out
+  '';
+
+  # Boots like `boot`, then has emx-reload bring the running Emacs up to date:
+  # with its own generation, with a made-up one that moves packages, tools,
+  # native code and manuals, and with one running a different Emacs.
+  reload = pkgs.runCommandLocal "emx-reload-check"
+    {
+      EMX_EMACS = "${emacs}";
+      nativeBuildInputs = [ fakePass pkgs.git ];
+    } ''
+    export HOME=$TMPDIR
+    export EMX_PASS_LOG=$TMPDIR/pass.log
+    mkdir -p $HOME/Documents/org
+    ${emacs}/bin/emacs --batch --no-site-file -u "" --init-directory=${bootInit} \
+      -l ${./reload.el}
     touch $out
   '';
 

@@ -1,6 +1,6 @@
 # The init files of an Emacs init directory that runs emx: early-init.el and
 # init.el load emx's own from the emx repo. The home-manager module writes them
-# to ~/.config/emx, and the boot check boots from them.
+# to ~/.config/emx, and the boot and reload checks boot from them.
 { lib }:
 rec {
   # S as an Elisp string literal.
