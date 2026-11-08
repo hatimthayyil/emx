@@ -1073,22 +1073,6 @@
         "type": "github"
       }
     },
-    "magit-stgit": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1739658206,
-        "narHash": "sha256-TnkquKVPucs+nAfBB3EnhGRb+EJQc6PbLoYbVOI7FIM=",
-        "owner": "stacked-git",
-        "repo": "magit-stgit",
-        "rev": "b19d96f8f62bd4def83eb1c09e9cd2582856351e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "stacked-git",
-        "repo": "magit-stgit",
-        "type": "github"
-      }
-    },
     "magit-todos": {
       "flake": false,
       "locked": {
@@ -1606,7 +1590,6 @@
         "magit-imerge": "magit-imerge",
         "magit-popup": "magit-popup",
         "magit-section": "magit-section",
-        "magit-stgit": "magit-stgit",
         "magit-todos": "magit-todos",
         "marginalia": "marginalia",
         "markdown-mode": "markdown-mode",

@@ -1352,33 +1352,6 @@
     },
     "version": "4.7.1"
   },
-  "magit-stgit": {
-    "author": "Lluís Vilanova <vilanova@ac.upc.edu>",
-    "meta": {
-      "description": "StGit extension for Magit",
-      "license": {
-        "deprecated": false,
-        "free": true,
-        "fullName": "GNU General Public License v3.0 or later",
-        "licenseType": "simple",
-        "redistributable": true,
-        "shortName": "gpl3Plus",
-        "spdxId": "GPL-3.0-or-later",
-        "url": "https://spdx.org/licenses/GPL-3.0-or-later.html"
-      },
-      "maintainers": [
-        "Peter Grayson <pete@jpgrayson.net>"
-      ]
-    },
-    "narHash": "sha256-TnkquKVPucs+nAfBB3EnhGRb+EJQc6PbLoYbVOI7FIM=",
-    "packageRequires": {
-      "emacs": "27.1",
-      "llama": "0.6.0",
-      "magit": "4.3.0",
-      "transient": "0.8.4"
-    },
-    "version": null
-  },
   "magit-todos": {
     "author": "Adam Porter <adam@alphapapa.net>",
     "meta": {

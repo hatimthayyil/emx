@@ -399,12 +399,6 @@
       repo = "magit";
       type = "github";
     };
-    magit-stgit = {
-      flake = false;
-      owner = "stacked-git";
-      repo = "magit-stgit";
-      type = "github";
-    };
     magit-todos = {
       flake = false;
       owner = "alphapapa";

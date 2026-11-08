@@ -9,7 +9,8 @@
 ;; package named in the file $EMX_PACKAGES loads without an error from its
 ;; configuration, the native parts are in place, and Emacs finds the tools its
 ;; modules call.  The build sandbox has none of them, so they can only come
-;; from Emacs's wrapper.  It also fails if loading gptel reads an API key.
+;; from Emacs's wrapper.  It also fails if loading gptel reads an API key, or
+;; if a Transient menu names a command that nothing defines.
 ;;
 ;; Under `use-package-always-defer' a form with no trigger never loads its
 ;; package and nothing says so.  The modes are therefore checked first, before
@@ -68,6 +69,11 @@ and ws-butler exempts `markdown-mode' by default.")
     ("C-c C" . claude-code-ide-menu)
     ("C-c q" . gptel-quick))
   "Global keys, and the commands they must reach.")
+
+(defconst emx-boot-check-menus '(magit-dispatch)
+  "Transient menus, each of whose suffixes must be defined or autoloaded.
+A package's autoloads can add a suffix whose command nothing loads, and the
+menu then fails to open.")
 
 (defconst emx-boot-check-api-keys
   '(("ChatGPT" . "api.openai.com")
@@ -171,6 +177,20 @@ A name in `emx-modules' that is also a library is a failure too."
             (unless (commandp command)
               (error "Not a command")))
         (error (push (format "%s: %s" key (error-message-string err)) failures))))
+    failures))
+
+(defun emx-boot-check--menus ()
+  "Return a failure for each menu in `emx-boot-check-menus' that cannot open.
+It runs before the check loads every package, so a suffix whose package nothing
+has loaded yet must still resolve, as when a fresh session opens the menu."
+  (let ((failures '()))
+    (dolist (prefix emx-boot-check-menus)
+      (condition-case err
+          (progn
+            (autoload-do-load (symbol-function prefix) prefix)
+            (transient-suffixes prefix))
+        (error (push (format "%s: %s" prefix (error-message-string err))
+                     failures))))
     failures))
 
 (defun emx-boot-check--parinfer ()
@@ -358,6 +378,7 @@ afterwards, and Emacs itself, must keep the value Emacs inherited."
       (setq failures (nconc (emx-boot-check--modules)
                             (emx-boot-check--triggers)
                             (emx-boot-check--keys)
+                            (emx-boot-check--menus)
                             failures))
     (error (push (format "boot: %s" (error-message-string err)) failures)))
   (dolist (package packages)

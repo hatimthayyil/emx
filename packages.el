@@ -56,7 +56,6 @@
 (use-package transient :ensure t)
 (use-package magit :ensure t)
 (use-package magit-todos :ensure t)
-(use-package magit-stgit :ensure t)
 (use-package magit-imerge :ensure t)
 (use-package forge :ensure t)
 (use-package git-modes :ensure t)
