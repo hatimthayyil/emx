@@ -509,6 +509,33 @@ The configuration's theme stays, and the report names the theme."
     (emx-reload-check--expect (not (eq (car custom-enabled-themes) 'emx-check))
                               (format "gone theme: the themes are %S" custom-enabled-themes))))
 
+;;;; Fontaine's faces
+
+(defvar fontaine-current-preset)
+
+(defun emx-reload-check--fontaine ()
+  "Check that a theme enabled after Fontaine's preset doesn't override it.
+Both set the weight of `bold', and the theme applied last wins.  Fontaine
+refuses to set a preset without a window system, which batch Emacs lacks,
+so the check binds one.  The hook that sets the preset again must be there
+once, however often Emacs reloads."
+  (let ((window-system 'x)
+        (fontaine-current-preset fontaine-current-preset))
+    (fontaine-set-preset 'regular)
+    (load-theme 'modus-vivendi t)
+    (let ((themes (mapcar #'car (get 'bold 'theme-face))))
+      (emx-reload-check--expect
+       (and (memq 'fontaine themes) (memq 'modus-vivendi themes)
+            (< (cl-position 'fontaine themes) (cl-position 'modus-vivendi themes)))
+       (format "fontaine: bold's themes are %S, so a later theme overrides Fontaine"
+               themes))))
+  (let ((count (cl-count #'emx-fontaine-reapply-preset
+                         (default-value 'enable-theme-functions))))
+    (emx-reload-check--expect (= count 1)
+                              (format "fontaine: enable-theme-functions holds \
+emx-fontaine-reapply-preset %d times"
+                                      count))))
+
 ;; Batch Emacs exits before it reaches this hook.
 (run-hooks 'emacs-startup-hook)
 
@@ -524,7 +551,7 @@ The configuration's theme stays, and the report names the theme."
                  emx-reload-check--removals emx-reload-check--swap
                  emx-reload-check--other-emacs emx-reload-check--report-file
                  emx-reload-check--choices emx-reload-check--choices-moved
-                 emx-reload-check--gone-theme))
+                 emx-reload-check--gone-theme emx-reload-check--fontaine))
   (condition-case err
       (funcall check)
     (error (push (format "%s: %s" check (error-message-string err))

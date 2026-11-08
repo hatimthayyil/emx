@@ -89,10 +89,19 @@
   (setq spacious-padding-subtle-mode-line nil))
 
 ;; fontaine.el -- Font configurations
+(defun emx-fontaine-reapply-preset (theme)
+  "Set the current Fontaine preset again once THEME is enabled.
+Fontaine keeps its faces in a theme of its own.  For a face attribute that
+two themes both set, such as the weight of `bold', the theme whose settings
+were applied last wins, so loading or rotating a theme, or reloading emx,
+would otherwise drop the preset's attributes."
+  (when (and (bound-and-true-p fontaine-current-preset)
+             (not (memq theme '(user fontaine))))
+    (fontaine-set-preset fontaine-current-preset)))
+
 (use-package fontaine
   :hook
-  ;; Persist the latest font preset when closing/starting Emacs and
-  ;; while switching between themes.
+  ;; Persist the latest font preset across restarts.
   ((after-init . fontaine-mode)
    (after-init . (lambda ()
                    ;; Set last preset or fall back to desired style from `fontaine-presets'.
@@ -103,6 +112,7 @@
   :bind (("C-c f" . fontaine-set-preset)
          ("C-c F" . fontaine-toggle-preset))
   :config
+  (add-hook 'enable-theme-functions #'emx-fontaine-reapply-preset)
   (setq fontaine-presets
         '((small
            :default-height 100)
