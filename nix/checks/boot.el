@@ -247,7 +247,16 @@ key and a second line.  It warns on stderr first for the entry \"noisy\", exits
              count)))
   (let ((key (gptel-backend-key (gptel-get-backend "ChatGPT"))))
     (unless (and (functionp key) (not (symbolp key)))
-      (error "ChatGPT's key is %S, not a function of its own" key))))
+      (error "ChatGPT's key is %S, not a function of its own" key)))
+  (let* ((gptel-backend (gptel-get-backend "Claude-thinking"))
+         (headers (condition-case err
+                      (funcall (gptel-backend-header gptel-backend)
+                               (list :backend gptel-backend))
+                    (error (error "Claude-thinking's header, called with the \
+request's info as gptel calls it, fails: %s" (error-message-string err))))))
+    (unless (equal (alist-get "x-api-key" headers nil nil #'equal)
+                   "key for api.anthropic.com")
+      (error "Claude-thinking's headers are %S" headers))))
 
 (defun emx-boot-check--pass-reads (entry)
   "Return how many times the logging `pass' was asked for ENTRY."
