@@ -1,21 +1,20 @@
 //! `emx upgrade`: moves packages in the emx repo's `lock/` to their newest
 //! versions, then syncs. The moved pins stay uncommitted in the work tree: a
-//! commit keeps them, and `git restore lock` undoes them.
+//! commit keeps them, and `git restore lock` undoes them. Nix keeps a pin it
+//! couldn't refresh without failing, so the upgrade then asks upstream itself
+//! (upstream.rs) and fails naming what didn't reach upstream's newest.
 
-use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::{Path, PathBuf};
-
-use serde::Deserialize;
-use serde::de::{DeserializeOwned, IgnoredAny};
 
 use crate::cli::UpgradeArgs;
 use crate::error::Error;
+use crate::lock::{self, ArchiveLock, FlakeLock};
 use crate::nix;
 use crate::profile::Profile;
 use crate::prompt;
 use crate::source::Source;
 use crate::sync;
+use crate::upstream;
 
 /// The flake app that refreshes `lock/metadata.json` and leaves ELPA packages
 /// where they are.
@@ -25,83 +24,28 @@ const LOCK_APP: &str = "lock";
 /// package to its newest release.
 const UPDATE_APP: &str = "update";
 
-/// `lock/flake.lock`, whose root node has one input per git package.
-#[derive(Deserialize)]
-struct FlakeLock {
-    nodes: Nodes,
-}
-
-#[derive(Deserialize)]
-struct Nodes {
-    root: Root,
-    #[serde(flatten)]
-    inputs: BTreeMap<String, Input>,
-}
-
-#[derive(Deserialize)]
-struct Root {
-    inputs: BTreeMap<String, IgnoredAny>,
-}
-
-#[derive(Deserialize)]
-struct Input {
-    original: Origin,
-}
-
-/// Where a flake input comes from.
-#[derive(Deserialize)]
-#[serde(tag = "type", rename_all = "lowercase")]
-enum Origin {
-    Git {
-        url: String,
-    },
-    Github {
-        owner: String,
-        repo: String,
-    },
-    #[serde(other)]
-    Other,
-}
-
-impl Origin {
-    /// Whether Nix means this origin when its log names `location`: a Git
-    /// repository by its URL, a GitHub one by the API call for its newest
-    /// commit.
-    fn is_at(&self, location: &str) -> bool {
-        match self {
-            Self::Git { url } => url == location,
-            Self::Github { owner, repo } => location.contains(&format!("/repos/{owner}/{repo}/")),
-            Self::Other => false,
-        }
-    }
-}
-
 pub fn run(src: Option<PathBuf>, args: &UpgradeArgs) -> Result<(), Error> {
     let source = Source::open(src)?;
     let profile = Profile::from_env()?;
     prompt::ensure_answerable(args.sync.yes)?;
-    check_packages(&source.lock_dir(), &args.packages)?;
+    let lock_dir = source.lock_dir();
+    check_packages(&lock_dir, &args.packages)?;
 
     let nix_args = &args.sync.nix_args;
     eprintln!("emx: fetching the newest versions");
-    let mut failed = nix::run_noting_failed_fetches(
+    nix::run_in(
         source.root(),
-        &nix::update_inputs(&source.lock_dir(), &args.packages, nix_args),
+        &nix::update_inputs(&lock_dir, &args.packages, nix_args),
     )?;
-    let app = if args.packages.is_empty() {
-        UPDATE_APP
-    } else {
-        LOCK_APP
-    };
+    let moves_archives = args.packages.is_empty();
+    let app = if moves_archives { UPDATE_APP } else { LOCK_APP };
     // The app writes to `lock/` relative to where it runs.
-    let synced = nix::run_noting_failed_fetches(
+    let locked = nix::run_in(
         source.root(),
-        &nix::run_app(&source.installable(app), nix_args),
-    )
-    .and_then(|failed_by_app| {
-        failed.extend(failed_by_app);
-        sync::apply(&source, &profile, &args.sync)
-    });
+        &nix::run_app(&source.installable(app), moves_archives, nix_args),
+    );
+    let report = compare_with_upstream(&lock_dir, &args.packages, locked.is_ok())?;
+    let synced = locked.and_then(|()| sync::apply(&source, &profile, &args.sync));
 
     if synced.is_err() {
         eprintln!(
@@ -110,40 +54,39 @@ pub fn run(src: Option<PathBuf>, args: &UpgradeArgs) -> Result<(), Error> {
         );
     }
     let synced = synced.and_then(|outcome| sync::reload_if_switched(&profile, outcome));
-    if failed.is_empty() {
+    if report.is_current() {
         return synced;
     }
-    let not_refreshed = Error::NotRefreshed {
-        names: names_at(&source.lock_dir(), &failed)?,
-    };
+    let not_current = Error::NotCurrent(report);
     match synced {
-        Ok(_) => Err(not_refreshed),
+        Ok(()) => Err(not_current),
         Err(err) => {
-            eprintln!("emx: {not_refreshed}");
+            eprintln!("emx: {not_current}");
             Err(err)
         }
     }
 }
 
-/// The flake inputs fetched from each of `locations`. A location no input
-/// comes from, such as a package archive, stands for itself.
-fn names_at(lock_dir: &Path, locations: &BTreeSet<String>) -> Result<Vec<String>, Error> {
-    let flake: FlakeLock = read_json(&lock_dir.join("flake.lock"))?;
-    let mut names = BTreeSet::new();
-    for location in locations {
-        let mut inputs: Vec<String> = flake
-            .nodes
-            .inputs
-            .iter()
-            .filter(|(_, input)| input.original.is_at(location))
-            .map(|(name, _)| name.clone())
-            .collect();
-        if inputs.is_empty() {
-            inputs.push(location.clone());
-        }
-        names.extend(inputs);
-    }
-    Ok(names.into_iter().collect())
+/// How the pins of the packages this upgrade moved compare with upstream:
+/// the named git packages, or with no names every git package and, once the
+/// update app has moved them, every ELPA package.
+fn compare_with_upstream(
+    lock_dir: &Path,
+    packages: &[String],
+    archives_moved: bool,
+) -> Result<upstream::Report, Error> {
+    let inputs: Vec<lock::Input> = FlakeLock::read(lock_dir)?
+        .inputs()
+        .into_iter()
+        .filter(|input| packages.is_empty() || packages.contains(&input.name))
+        .collect();
+    let archive = if packages.is_empty() && archives_moved {
+        lock::read_archive(lock_dir)?
+    } else {
+        ArchiveLock::new()
+    };
+    eprintln!("emx: checking each package against upstream");
+    Ok(upstream::check(&inputs, &archive))
 }
 
 /// Refuses what `nix flake update` cannot move: ELPA packages are no flake
@@ -152,32 +95,23 @@ fn check_packages(lock_dir: &Path, packages: &[String]) -> Result<(), Error> {
     if packages.is_empty() {
         return Ok(());
     }
-    let archive: BTreeMap<String, IgnoredAny> = read_json(&lock_dir.join("archive.lock"))?;
-    let flake: FlakeLock = read_json(&lock_dir.join("flake.lock"))?;
+    let archive = lock::archive_names(lock_dir)?;
+    let flake = FlakeLock::read(lock_dir)?;
     for name in packages {
-        if archive.contains_key(name) {
+        if archive.contains(name) {
             return Err(Error::ArchivePackage { name: name.clone() });
         }
-        if !flake.nodes.root.inputs.contains_key(name) {
+        if !flake.has_input(name) {
             return Err(Error::UnknownPackage { name: name.clone() });
         }
     }
     Ok(())
 }
 
-fn read_json<T: DeserializeOwned>(path: &Path) -> Result<T, Error> {
-    let text = fs::read_to_string(path).map_err(|source| Error::ReadLock {
-        path: path.to_owned(),
-        source,
-    })?;
-    serde_json::from_str(&text).map_err(|source| Error::ParseLock {
-        path: path.to_owned(),
-        source,
-    })
-}
-
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use super::*;
 
     fn lock_dir() -> tempfile::TempDir {
@@ -185,7 +119,8 @@ mod tests {
         fs::write(dir.path().join("archive.lock"), r#"{"denote": {}}"#).unwrap();
         fs::write(
             dir.path().join("flake.lock"),
-            r#"{"nodes": {"root": {"inputs": {"gptel": "gptel"}}}}"#,
+            r#"{"nodes": {"root": {"inputs": {"gptel": "gptel"}},
+                "gptel": {"original": {"type": "github", "owner": "karthink", "repo": "gptel"}}}}"#,
         )
         .unwrap();
         dir
@@ -219,39 +154,6 @@ mod tests {
             check_packages(lock_dir().path(), &names(&["gptl"])),
             Err(Error::UnknownPackage { name }) if name == "gptl"
         ));
-    }
-
-    #[test]
-    fn names_the_inputs_behind_failed_locations() {
-        let dir = tempfile::tempdir().unwrap();
-        fs::write(
-            dir.path().join("flake.lock"),
-            r#"{"nodes": {
-                "root": {"inputs": {}},
-                "forge": {"original": {"type": "github", "owner": "magit", "repo": "forge"}},
-                "magit": {"original": {"type": "github", "owner": "magit", "repo": "magit"}},
-                "ws-butler": {"original": {"type": "git", "url": "https://nongnu.git", "ref": "a"}},
-                "yasnippet": {"original": {"type": "git", "url": "https://nongnu.git", "ref": "b"}},
-                "local": {"original": {"type": "path", "path": "/src"}}
-            }}"#,
-        )
-        .unwrap();
-        let locations = [
-            "https://api.github.com/repos/magit/magit/commits/HEAD",
-            "https://elpa.gnu.org/packages/archive-contents",
-            "https://nongnu.git",
-        ]
-        .map(str::to_owned);
-
-        assert_eq!(
-            names_at(dir.path(), &BTreeSet::from(locations)).unwrap(),
-            [
-                "https://elpa.gnu.org/packages/archive-contents",
-                "magit",
-                "ws-butler",
-                "yasnippet",
-            ]
-        );
     }
 
     #[test]

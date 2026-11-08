@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::process::ExitStatus;
 
 use crate::reload::ReloadError;
+use crate::upstream::Report;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -77,11 +78,8 @@ pub enum Error {
     #[error("{name} is not locked: add it to packages.el, then run `nix run --impure .#lock`")]
     UnknownPackage { name: String },
 
-    #[error(
-        "could not refresh {}: pins stay as they were, and Nix's output above says why",
-        names.join(", ")
-    )]
-    NotRefreshed { names: Vec<String> },
+    #[error("{0}")]
+    NotCurrent(Report),
 
     #[error("emx's profile has no generation to return to: run `emx sync` first")]
     NoGeneration,

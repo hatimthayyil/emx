@@ -1,5 +1,7 @@
 # The emx CLI (../cli), which builds emx's Emacs into emx's profile.
-{ lib
+{ curl
+, git
+, lib
 , makeWrapper
 , nix-output-monitor
 , pkg-config
@@ -24,9 +26,12 @@ rustPlatform.buildRustPackage {
   nativeBuildInputs = [ makeWrapper pkg-config ];
   # dix reads the Nix store database through SQLite.
   buildInputs = [ sqlite ];
-  # `emx sync` renders build logs with nom.
+  # The tests give each package a local upstream.
+  nativeCheckInputs = [ curl git ];
+  # `emx sync` renders build logs with nom; `emx upgrade` asks upstream with
+  # git and curl.
   postInstall = ''
-    wrapProgram $out/bin/emx --prefix PATH : ${lib.makeBinPath [ nix-output-monitor ]}
+    wrapProgram $out/bin/emx --prefix PATH : ${lib.makeBinPath [ curl git nix-output-monitor ]}
   '';
   meta = {
     inherit (manifest) description;

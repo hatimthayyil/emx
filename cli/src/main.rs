@@ -12,8 +12,10 @@ mod cli;
 mod daemon;
 mod diff;
 mod error;
+mod lock;
 mod manifest;
 mod nix;
+mod process;
 mod profile;
 mod prompt;
 mod reload;
@@ -21,6 +23,7 @@ mod rollback;
 mod source;
 mod sync;
 mod upgrade;
+mod upstream;
 
 use std::process::ExitCode;
 

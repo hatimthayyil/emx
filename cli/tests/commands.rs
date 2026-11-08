@@ -3,24 +3,29 @@
 //! profile, and a fake `systemctl` records its calls and answers as told, so
 //! these tests need neither Nix nor the user's state directory or daemon. An
 //! Emacs server is a socket the test listens on in its own runtime directory,
-//! and a generation's fake `emacsclient` answers its reload as told.
+//! and a generation's fake `emacsclient` answers its reload as told. Each
+//! package's upstream is local: a bare Git repository that Git's `insteadOf`
+//! puts in place of its URL, and an ELPA archive's `archive-contents` file.
 //! Their stdin is not a terminal, so emx never asks and needs `--yes`.
 
 use std::ffi::OsString;
 use std::fs;
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::os::unix::net::UnixListener;
+use std::os::unix::process::{CommandExt, ExitStatusExt};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use tempfile::TempDir;
 
+/// Hands each call whose verb is in `REAL_NIX_VERBS`, a space-separated list,
+/// to the Nix at `REAL_NIX`.
 const FAKE_NIX: &str = r#"#!/bin/sh
 printf '%s\n' "$@" -- >> "$FAKE_NIX_ARGS"
 pwd >> "$FAKE_NIX_DIRS"
-[ "$1" != flake ] || [ -z "$REAL_NIX" ] || exec "$REAL_NIX" "$@"
-[ "$1" != flake ] || [ -z "$FAKE_NIX_UPDATE_LOG" ] || echo "$FAKE_NIX_UPDATE_LOG" >&2
-[ "$1" != run ] || [ -z "$FAKE_NIX_RUN_LOG" ] || echo "$FAKE_NIX_RUN_LOG" >&2
+case " $REAL_NIX_VERBS " in *" $1 "*) exec "$REAL_NIX" "$@" ;; esac
 [ "${FAKE_NIX_STATUS:-0}" = 0 ] || exit "$FAKE_NIX_STATUS"
 [ "$1" != build ] || [ "${FAKE_NIX_BUILD_STATUS:-0}" = 0 ] || exit "$FAKE_NIX_BUILD_STATUS"
 link= profile= target= rollback=
@@ -110,38 +115,131 @@ fn path_with(dir: &Path) -> OsString {
     .unwrap()
 }
 
+/// Creates a bare Git repository at `$1` whose `main` holds one commit.
+const CREATE_UPSTREAM: &str = r#"
+set -e
+git init --quiet --bare --initial-branch=main "$1"
+cd "$1"
+tree=$(git hash-object -w -t tree /dev/null)
+commit=$(git -c user.name=emx -c user.email=emx@example.org commit-tree -m one "$tree")
+git update-ref refs/heads/main "$commit"
+"#;
+
+/// Creates a bare Git repository at `$1` whose `main` holds one commit with
+/// `foo.el`, the main file of a package named foo.
+const CREATE_PACKAGE_UPSTREAM: &str = r#"
+set -e
+git init --quiet --bare --initial-branch=main "$1"
+cd "$1"
+blob=$(printf ';;; foo.el --- Foo  -*- lexical-binding: t -*-\n;; Version: 1.0\n(provide (quote foo))\n' | git hash-object -w --stdin)
+tree=$(printf '100644 blob %s\tfoo.el\n' "$blob" | git mktree)
+commit=$(git -c user.name=emx -c user.email=emx@example.org commit-tree -m one "$tree")
+git update-ref refs/heads/main "$commit"
+"#;
+
+/// Adds a commit to `main` in the bare repository `$1`, with the same files.
+const ADVANCE_UPSTREAM: &str = r#"
+set -e
+cd "$1"
+commit=$(git -c user.name=emx -c user.email=emx@example.org commit-tree -m next -p main 'main^{tree}')
+git update-ref refs/heads/main "$commit"
+"#;
+
+/// Runs `script` with `repo` as `$1` and Git's own defaults, and returns
+/// `repo`'s commit on `main` after it.
+fn git_script(script: &str, repo: &Path) -> String {
+    let ran = Command::new("sh")
+        .args(["-c", script, "sh"])
+        .arg(repo)
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .output()
+        .unwrap();
+    assert_exit(&ran, 0);
+    let head = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(["rev-parse", "main"])
+        .output()
+        .unwrap();
+    assert_exit(&head, 0);
+    text(&head.stdout).trim().to_owned()
+}
+
 struct Fixture {
     root: TempDir,
 }
 
 impl Fixture {
+    /// An emx repo pinning `gptel` from GitHub, `magit` from a Git URL and
+    /// `denote` from an ELPA archive, each at what its upstream has.
     fn new() -> Self {
         let root = tempfile::tempdir().unwrap();
+        let gptel = git_script(
+            CREATE_UPSTREAM,
+            &root.path().join("github/karthink/gptel.git"),
+        );
+        let magit = git_script(CREATE_UPSTREAM, &root.path().join("example/magit.git"));
+        fs::create_dir(root.path().join("elpa")).unwrap();
         let src = root.path().join("emx");
         fs::create_dir(&src).unwrap();
         fs::write(src.join("flake.nix"), "").unwrap();
         fs::write(src.join("packages.el"), "").unwrap();
         fs::create_dir(src.join("lock")).unwrap();
-        fs::write(src.join("lock/archive.lock"), r#"{"denote": {}}"#).unwrap();
         fs::write(
-            src.join("lock/flake.lock"),
-            r#"{"nodes": {
-                "root": {"inputs": {"gptel": "gptel", "magit": "magit"}},
-                "gptel": {"original": {"type": "github", "owner": "karthink", "repo": "gptel"}},
-                "magit": {"original": {"type": "git", "url": "https://example.org/magit.git"}}
-            }}"#,
+            src.join("lock/archive.lock"),
+            format!(
+                r#"{{"denote": {{"version": "4.0.0",
+                    "inventory": {{"type": "archive", "url": "file://{}/elpa/"}}}}}}"#,
+                root.path().display()
+            ),
         )
         .unwrap();
-        let bin = root.path().join("bin");
+        fs::write(
+            src.join("lock/flake.lock"),
+            format!(
+                r#"{{"nodes": {{
+                "root": {{"inputs": {{"gptel": "gptel", "magit": "magit"}}}},
+                "gptel": {{"original": {{"type": "github", "owner": "karthink", "repo": "gptel"}},
+                          "locked": {{"type": "github", "rev": "{gptel}"}}}},
+                "magit": {{"original": {{"type": "git", "url": "https://example.org/magit.git"}},
+                          "locked": {{"type": "git", "rev": "{magit}"}}}}
+            }}}}"#
+            ),
+        )
+        .unwrap();
+        let fixture = Self { root };
+        fixture.release_denote("4 0 0");
+        let bin = fixture.path("bin");
         fs::create_dir(&bin).unwrap();
         write_executable(&bin.join("nix"), FAKE_NIX);
         write_executable(&bin.join("systemctl"), FAKE_SYSTEMCTL);
-        fs::create_dir(root.path().join("state")).unwrap();
-        Self { root }
+        fs::create_dir(fixture.path("state")).unwrap();
+        fixture
     }
 
     fn path(&self, name: &str) -> PathBuf {
         self.root.path().join(name)
+    }
+
+    /// Makes `version`, Elisp integers, denote's newest release in the
+    /// archive.
+    fn release_denote(&self, version: &str) {
+        fs::write(
+            self.path("elpa/archive-contents"),
+            format!("(1 (denote . [({version}) nil \"Simple notes\" tar nil]))"),
+        )
+        .unwrap();
+    }
+
+    /// Adds a commit upstream of `gptel` or `magit`.
+    fn advance(&self, package: &str) {
+        let repo = match package {
+            "gptel" => "github/karthink/gptel.git",
+            "magit" => "example/magit.git",
+            _ => panic!("no upstream for {package}"),
+        };
+        git_script(ADVANCE_UPSTREAM, &self.path(repo));
     }
 
     fn state(&self, name: &str) -> PathBuf {
@@ -150,9 +248,24 @@ impl Fixture {
 
     /// `emx` with an environment that reaches only the fixture's directories,
     /// building `store-emacs`, with no `emacs.service` and no Emacs server.
+    /// Git config in the environment, which emx leaves in place, sends each
+    /// upstream URL to the fixture's repositories.
     fn emx(&self) -> Command {
         let mut command = Command::new(env!("CARGO_BIN_EXE_emx"));
+        let rewrites = [
+            ("github", "https://github.com/"),
+            ("example", "https://example.org/"),
+        ];
+        for (n, (dir, url)) in rewrites.iter().enumerate() {
+            command
+                .env(
+                    format!("GIT_CONFIG_KEY_{n}"),
+                    format!("url.file://{}/.insteadOf", self.path(dir).display()),
+                )
+                .env(format!("GIT_CONFIG_VALUE_{n}"), url);
+        }
         command
+            .env("GIT_CONFIG_COUNT", rewrites.len().to_string())
             .env_remove("EMX_SRC")
             .env_remove("EMACS_SOCKET_NAME")
             .env("PATH", path_with(&self.path("bin")))
@@ -702,21 +815,6 @@ fn nix_verbs(fixture: &Fixture) -> Vec<String> {
         .collect()
 }
 
-/// What the real Nix logs when it can't refresh `magit`, a Git input.
-const GIT_FETCH_FAILED: &str = "warning: could not update local clone of Git repository \
-                                'https://example.org/magit.git'; \
-                                continuing with the most recent version";
-
-/// What the real Nix logs when it can't refresh `gptel`, a GitHub input.
-const GITHUB_FETCH_FAILED: &str = "warning: unable to download \
-                                   'https://api.github.com/repos/karthink/gptel/commits/HEAD': \
-                                   HTTP error 500; using cached version";
-
-/// What the real Nix logs when a package archive can't be read.
-const ARCHIVE_FETCH_FAILED: &str = "warning: unable to download \
-                                    'https://elpa.gnu.org/packages/archive-contents': \
-                                    HTTP error 500; using cached version";
-
 /// A profile whose current generation is `store-old`, as after a first sync.
 fn synced_fixture() -> Fixture {
     let fixture = Fixture::new();
@@ -747,6 +845,7 @@ fn upgrades_every_package_with_the_update_app() {
     assert_eq!(calls[0].last().unwrap(), src.join("lock").to_str().unwrap());
     assert!(calls[1].contains(&format!("{}#update", src.display())));
     assert!(calls[1].contains(&"--impure".to_owned()));
+    assert!(calls[1].contains(&"--refresh".to_owned()));
     assert!(calls[2].contains(&format!("{}#emacs", src.display())));
     assert_eq!(nix_verbs(&fixture)[..3], ["update", "run", "build"]);
     assert_eq!(fixture.nix_dirs()[1].canonicalize().unwrap(), src);
@@ -766,6 +865,7 @@ fn upgrades_named_packages_with_the_lock_app() {
     let src = fixture.path("emx").canonicalize().unwrap();
     assert_eq!(calls[0][calls[0].len() - 2..], ["gptel", "magit"]);
     assert!(calls[1].contains(&format!("{}#lock", src.display())));
+    assert!(!calls[1].contains(&"--refresh".to_owned()));
     assert_eq!(fixture.nix_dirs()[1].canonicalize().unwrap(), src);
 }
 
@@ -900,19 +1000,15 @@ fn stops_when_the_lock_cannot_move() {
     assert_eq!(fixture.nix_calls().len(), 1);
 }
 
+/// Upstream moved past every pin, and the fake Nix moves none, as the real
+/// one does when it can't fetch and keeps what it has.
 #[test]
 fn finishes_the_upgrade_then_fails_naming_what_it_could_not_refresh() {
     let fixture = synced_fixture();
-    let output = fixture
-        .upgrade()
-        .arg("--yes")
-        .env(
-            "FAKE_NIX_UPDATE_LOG",
-            format!("{GIT_FETCH_FAILED}\n{GITHUB_FETCH_FAILED}"),
-        )
-        .env("FAKE_NIX_RUN_LOG", ARCHIVE_FETCH_FAILED)
-        .output()
-        .unwrap();
+    fixture.advance("gptel");
+    fixture.advance("magit");
+    fixture.release_denote("4 1 0");
+    let output = fixture.upgrade().arg("--yes").output().unwrap();
     assert_exit(&output, 1);
 
     assert_eq!(nix_verbs(&fixture)[..3], ["update", "run", "build"]);
@@ -921,33 +1017,257 @@ fn finishes_the_upgrade_then_fails_naming_what_it_could_not_refresh() {
         Path::new("profile-2-link")
     );
     let stderr = text(&output.stderr);
-    for shown in [GIT_FETCH_FAILED, GITHUB_FETCH_FAILED, ARCHIVE_FETCH_FAILED] {
-        assert!(stderr.contains(shown), "{stderr}");
-    }
     assert!(
-        stderr.contains(
-            "could not refresh gptel, https://elpa.gnu.org/packages/archive-contents, magit: \
-             pins stay as they were"
-        ),
+        stderr.contains("not refreshed: denote, gptel, magit. Upstream has moved past their pins"),
         "{stderr}"
     );
+    assert!(
+        stderr.contains("running `emx upgrade` again clears this"),
+        "{stderr}"
+    );
+    assert!(!stderr.contains("couldn't check"), "{stderr}");
 }
 
 #[test]
 fn names_what_it_could_not_refresh_when_the_build_fails_too() {
     let fixture = synced_fixture();
+    fixture.advance("magit");
     let output = fixture
         .upgrade()
         .arg("--yes")
-        .env("FAKE_NIX_UPDATE_LOG", GIT_FETCH_FAILED)
         .env("FAKE_NIX_BUILD_STATUS", "3")
         .output()
         .unwrap();
     assert_exit(&output, 1);
     let stderr = text(&output.stderr);
-    assert!(stderr.contains("could not refresh magit"), "{stderr}");
+    assert!(stderr.contains("not refreshed: magit."), "{stderr}");
     assert!(stderr.contains("nix failed"), "{stderr}");
     assert!(stderr.contains("`git restore lock`"), "{stderr}");
+}
+
+#[test]
+fn finishes_the_upgrade_then_fails_naming_what_it_could_not_check() {
+    let fixture = synced_fixture();
+    fs::remove_dir_all(fixture.path("example/magit.git")).unwrap();
+    fs::remove_file(fixture.path("elpa/archive-contents")).unwrap();
+    let output = fixture.upgrade().arg("--yes").output().unwrap();
+    assert_exit(&output, 1);
+
+    assert_eq!(
+        fs::read_link(fixture.state("profile")).unwrap(),
+        Path::new("profile-2-link")
+    );
+    let stderr = text(&output.stderr);
+    assert!(
+        stderr.contains("couldn't check denote: curl file://"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("couldn't check magit: git ls-remote https://example.org/magit.git failed"),
+        "{stderr}"
+    );
+    assert!(!stderr.contains("not refreshed"), "{stderr}");
+    assert!(!stderr.contains("gptel"), "{stderr}");
+}
+
+#[test]
+fn asks_upstream_only_about_the_named_packages() {
+    let fixture = synced_fixture();
+    fixture.advance("magit");
+    fixture.release_denote("4 1 0");
+    let output = fixture.upgrade().args(["gptel", "--yes"]).output().unwrap();
+    assert_exit(&output, 0);
+    assert!(!text(&output.stderr).contains("refreshed"));
+}
+
+/// A user's Git config could send emx's questions over SSH, or ask for
+/// credentials, so emx asks without it.
+#[test]
+fn asks_upstream_without_the_users_git_config() {
+    let fixture = synced_fixture();
+    let config = fixture.path("gitconfig");
+    fs::write(&config, "[protocol \"file\"]\n\tallow = never\n").unwrap();
+    let output = fixture
+        .upgrade()
+        .arg("--yes")
+        .env("GIT_CONFIG_GLOBAL", &config)
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+}
+
+/// A repository whose config sends gptel's upstream elsewhere.
+fn misdirecting_repo(fixture: &Fixture) -> PathBuf {
+    let repo = fixture.path("work");
+    let made = Command::new("git")
+        .args(["init", "--quiet"])
+        .arg(&repo)
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .output()
+        .unwrap();
+    assert_exit(&made, 0);
+    fs::write(
+        repo.join(".git/config"),
+        format!(
+            "[url \"file://{}/\"]\n\tinsteadOf = https://github.com/karthink/\n",
+            fixture.path("missing").display()
+        ),
+    )
+    .unwrap();
+    repo
+}
+
+/// A repository emx is started in has config of its own, which emx's
+/// questions don't follow.
+#[test]
+fn asks_upstream_without_the_config_of_the_repository_it_runs_in() {
+    let fixture = synced_fixture();
+    let output = fixture
+        .upgrade()
+        .arg("--yes")
+        .current_dir(misdirecting_repo(&fixture))
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+}
+
+/// A Git hook, `git rebase --exec` or `git bisect run` names its repository
+/// in `GIT_DIR`, whose config emx's questions don't follow either.
+#[test]
+fn asks_upstream_without_the_repository_in_git_dir() {
+    let fixture = synced_fixture();
+    let output = fixture
+        .upgrade()
+        .arg("--yes")
+        .env("GIT_DIR", misdirecting_repo(&fixture).join(".git"))
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+}
+
+/// Each `git ls-remote` emx starts hangs on a `sleep` it started, which writes
+/// its process ID to `FAKE_GIT_PIDS`, as git hangs on a remote helper stuck
+/// on the network. A pipeline, since `sh` starts a `&` job ignoring SIGINT.
+const HANGING_GIT: &str = r#"#!/bin/sh
+sh -c 'echo $$ >> "$FAKE_GIT_PIDS"; exec sleep 300' | cat
+"#;
+
+/// Ctrl-C at a terminal interrupts its foreground process group, which emx
+/// is in and git, in a group of its own, isn't: emx passes it on, so neither
+/// git nor what git started outlives emx.
+#[test]
+fn stops_what_it_asked_upstream_with_when_interrupted() {
+    let fixture = synced_fixture();
+    write_executable(&fixture.path("bin/git"), HANGING_GIT);
+    let pids = fixture.path("git-pids");
+    let mut emx = fixture
+        .upgrade()
+        .args(["gptel", "magit", "--yes"])
+        .env("FAKE_GIT_PIDS", &pids)
+        .process_group(0)
+        .spawn()
+        .unwrap();
+    let started = |count| {
+        fs::read_to_string(&pids)
+            .map(|text| text.lines().count() >= count)
+            .unwrap_or(false)
+    };
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while !started(2) {
+        assert!(Instant::now() < deadline, "emx started no git");
+        thread::sleep(Duration::from_millis(20));
+    }
+    let group = libc::pid_t::try_from(emx.id()).unwrap();
+    // SAFETY: kill only reads its arguments.
+    assert_eq!(unsafe { libc::kill(-group, libc::SIGINT) }, 0);
+    let status = emx.wait().unwrap();
+    assert_eq!(status.signal(), Some(libc::SIGINT), "{status}");
+    for pid in fs::read_to_string(&pids).unwrap().lines() {
+        let pid: libc::pid_t = pid.parse().unwrap();
+        // Its new parent reaps it soon after it dies.
+        let deadline = Instant::now() + Duration::from_secs(5);
+        // SAFETY: signal 0 only checks that the process exists.
+        while unsafe { libc::kill(pid, 0) } == 0 {
+            assert!(Instant::now() < deadline, "sleep {pid} outlived emx");
+            thread::sleep(Duration::from_millis(20));
+        }
+    }
+}
+
+/// Under `nohup`, SIGHUP is ignored, and it stays ignored for emx and for
+/// what emx starts, so closing the terminal stops neither.
+#[test]
+fn keeps_ignoring_the_hangup_nohup_ignores() {
+    let fixture = synced_fixture();
+    write_executable(&fixture.path("bin/git"), HANGING_GIT);
+    let pids = fixture.path("git-pids");
+    let mut upgrade = fixture.upgrade();
+    upgrade
+        .args(["gptel", "magit", "--yes"])
+        .env("FAKE_GIT_PIDS", &pids)
+        .process_group(0);
+    // SAFETY: signal is async-signal-safe, as pre_exec requires.
+    unsafe {
+        upgrade.pre_exec(|| {
+            libc::signal(libc::SIGHUP, libc::SIG_IGN);
+            Ok(())
+        });
+    }
+    let mut emx = upgrade.spawn().unwrap();
+    let started = || {
+        fs::read_to_string(&pids)
+            .map(|text| text.lines().count() >= 2)
+            .unwrap_or(false)
+    };
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while !started() {
+        assert!(Instant::now() < deadline, "emx started no git");
+        thread::sleep(Duration::from_millis(20));
+    }
+    let gits: Vec<libc::pid_t> = fs::read_to_string(&pids)
+        .unwrap()
+        .lines()
+        .map(|pid| pid.parse().unwrap())
+        .collect();
+    let group = libc::pid_t::try_from(emx.id()).unwrap();
+    // SAFETY: kill only reads its arguments.
+    assert_eq!(unsafe { libc::kill(-group, libc::SIGHUP) }, 0);
+    for &pid in &gits {
+        // SAFETY: kill only reads its arguments.
+        assert_eq!(unsafe { libc::kill(pid, libc::SIGHUP) }, 0);
+    }
+    thread::sleep(Duration::from_millis(300));
+    assert!(emx.try_wait().unwrap().is_none(), "emx died of SIGHUP");
+    for &pid in &gits {
+        // SAFETY: signal 0 only checks that the process exists.
+        assert_eq!(
+            unsafe { libc::kill(pid, 0) },
+            0,
+            "sleep {pid} died of SIGHUP"
+        );
+    }
+    // SAFETY: kill only reads its arguments.
+    assert_eq!(unsafe { libc::kill(-group, libc::SIGINT) }, 0);
+    let status = emx.wait().unwrap();
+    assert_eq!(status.signal(), Some(libc::SIGINT), "{status}");
+}
+
+/// A `.curlrc` could send what curl fetches elsewhere, here to /dev/null, so
+/// emx's curl doesn't read one.
+#[test]
+fn reads_archives_without_the_users_curlrc() {
+    let fixture = synced_fixture();
+    let home = fixture.path("curl-home");
+    fs::create_dir(&home).unwrap();
+    fs::write(home.join(".curlrc"), "output = \"/dev/null\"\n").unwrap();
+    let output = fixture
+        .upgrade()
+        .arg("--yes")
+        .env("CURL_HOME", &home)
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
 }
 
 #[test]
@@ -1019,31 +1339,26 @@ fn fails_to_roll_back_without_a_profile() {
     assert!(fixture.nix_calls().is_empty());
 }
 
-/// Moves a real lock with the real Nix while its one input can't be fetched,
-/// so a change in how Nix words that failure fails here.
+/// Moves a real lock with the real Nix and asks the real Git: once while Nix
+/// can fetch the upstream, once while Git lists a commit Nix can't fetch and
+/// Nix keeps its cached clone, and once while the upstream is gone for both.
 #[test]
 #[ignore = "runs the real Nix; run with `cargo test -- --ignored`"]
-fn names_what_the_real_nix_could_not_fetch() {
-    const CREATE_UPSTREAM: &str = r#"
-set -e
-git init --quiet --bare --initial-branch=main "$1"
-cd "$1"
-tree=$(git hash-object -w -t tree /dev/null)
-commit=$(git -c user.name=emx -c user.email=emx@example.org commit-tree -m one "$tree")
-git update-ref refs/heads/main "$commit"
-"#;
+fn names_what_the_real_nix_could_not_refresh() {
     let fixture = synced_fixture();
-    let real_nix = std::env::split_paths(&std::env::var_os("PATH").unwrap())
-        .map(|dir| dir.join("nix"))
-        .find(|nix| nix.exists())
-        .unwrap();
+    let real_nix = real_nix();
     let upstream = fixture.path("upstream.git");
-    let created = Command::new("sh")
-        .args(["-c", CREATE_UPSTREAM, "sh"])
-        .arg(&upstream)
-        .output()
-        .unwrap();
-    assert_exit(&created, 0);
+    git_script(CREATE_UPSTREAM, &upstream);
+    let upgrade = || {
+        fixture
+            .upgrade()
+            .args(["magit", "--yes"])
+            .env("REAL_NIX", &real_nix)
+            .env("REAL_NIX_VERBS", "flake")
+            .env("XDG_CACHE_HOME", fixture.path("cache"))
+            .output()
+            .unwrap()
+    };
 
     let lock_dir = fixture.path("emx/lock");
     fs::write(
@@ -1066,25 +1381,165 @@ git update-ref refs/heads/main "$commit"
         .output()
         .unwrap();
     assert_exit(&locked, 0);
-    let pin = fs::read_to_string(lock_dir.join("flake.lock")).unwrap();
+    let pin = || fs::read_to_string(lock_dir.join("flake.lock")).unwrap();
+    let first = pin();
 
-    // What's left is no repository, so Git's fetch fails and Nix goes on with
-    // its cached clone.
+    // `main` names a commit whose object is missing: Git lists it, and Nix
+    // can't fetch it.
+    let next = git_script(ADVANCE_UPSTREAM, &upstream);
+    let object = upstream.join("objects").join(&next[..2]).join(&next[2..]);
+    fs::rename(&object, fixture.path("object")).unwrap();
+    let output = upgrade();
+    assert_exit(&output, 1);
+    let stderr = text(&output.stderr);
+    assert!(stderr.contains("not refreshed: magit."), "{stderr}");
+    assert_eq!(pin(), first);
+
+    // With the object back, Nix moves the pin to it, and nothing is stale.
+    fs::rename(fixture.path("object"), &object).unwrap();
+    let output = upgrade();
+    assert_exit(&output, 0);
+    assert!(pin().contains(&next), "{}", pin());
+    let moved = pin();
+
+    // What's left is no repository, so Git's fetch fails, Nix goes on with
+    // its cached clone, and ls-remote can't ask.
     fs::rename(upstream.join("HEAD"), fixture.path("HEAD")).unwrap();
-    let output = fixture
-        .upgrade()
-        .arg("--yes")
-        .env("REAL_NIX", &real_nix)
+    let output = upgrade();
+    assert_exit(&output, 1);
+    let stderr = text(&output.stderr);
+    assert!(
+        stderr.contains("couldn't check magit: git ls-remote file://"),
+        "{stderr}"
+    );
+    assert_eq!(pin(), moved);
+}
+
+/// Puts denote `version` in the fixture's ELPA archive as the tarball an
+/// archive serves. `release_denote` then lists it in `archive-contents`.
+const PUBLISH_DENOTE: &str = r#"
+set -e
+dir="$1/denote-$2"
+mkdir "$dir"
+printf ';;; denote.el --- Notes  -*- lexical-binding: t -*-\n;; Version: %s\n(provide (quote denote))\n' "$2" > "$dir/denote.el"
+printf '(define-package "denote" "%s" "Notes" nil)\n' "$2" > "$dir/denote-pkg.el"
+tar -C "$1" -cf "$dir.tar" "denote-$2"
+rm -r "$dir"
+"#;
+
+/// An emx repo's flake reduced to its lock and update apps: twist as this
+/// repo pins it, building `foo` from `recipes/` and `denote` from the ELPA
+/// archive at `{elpa}`.
+const TWIST_FLAKE: &str = r#"{
+  inputs.emx.url = "{emx}";
+  outputs = { emx, ... }:
+    let
+      pkgs = emx.inputs.nixpkgs.legacyPackages.x86_64-linux;
+      env = emx.inputs.twist.lib.makeEnv {
+        inherit pkgs;
+        initFiles = [ ./packages.el ];
+        lockDir = ./lock;
+        initialLibraries = [ ];
+        registries = [
+          { name = "recipes"; type = "melpa"; path = ./recipes; }
+          { name = "elpa"; type = "archive"; url = "file://{elpa}/"; }
+        ];
+      };
+    in
+    {
+      legacyPackages.x86_64-linux = builtins.mapAttrs
+        (name: app: pkgs.writeShellScriptBin name ''exec ${app.program} "$@"'')
+        (env.makeApps { lockDirName = "lock"; });
+    };
+}
+"#;
+
+/// A named upgrade moves only the packages it names: the lock app it runs
+/// keeps denote's ELPA pin, though the archive has a newer release, while the
+/// named git package moves.
+#[test]
+#[ignore = "runs the real Nix; run with `cargo test -- --ignored`"]
+fn keeps_elpa_pins_through_a_named_upgrade() {
+    let fixture = synced_fixture();
+    let real_nix = real_nix();
+    let src = fixture.path("emx");
+    let elpa = fixture.path("elpa");
+    let foo = fixture.path("foo.git");
+    git_script(CREATE_PACKAGE_UPSTREAM, &foo);
+    fs::remove_dir_all(src.join("lock")).unwrap();
+    fs::create_dir(src.join("lock")).unwrap();
+    fs::create_dir(src.join("recipes")).unwrap();
+    fs::write(
+        src.join("recipes/foo"),
+        format!(r#"(foo :fetcher git :url "file://{}")"#, foo.display()),
+    )
+    .unwrap();
+    fs::write(
+        src.join("packages.el"),
+        "(use-package foo :ensure t)\n(use-package denote :ensure t)\n",
+    )
+    .unwrap();
+    fs::write(
+        src.join("flake.nix"),
+        TWIST_FLAKE
+            .replace("{emx}", this_repo().to_str().unwrap())
+            .replace("{elpa}", elpa.to_str().unwrap()),
+    )
+    .unwrap();
+    let publish = |version: &str| {
+        let ran = Command::new("sh")
+            .args(["-c", PUBLISH_DENOTE, "sh"])
+            .arg(&elpa)
+            .arg(version)
+            .output()
+            .unwrap();
+        assert_exit(&ran, 0);
+    };
+    publish("4.0.0");
+    fixture.release_denote("4 0 0");
+    let locked = Command::new(&real_nix)
+        .args(["--extra-experimental-features", "nix-command flakes"])
+        .args(["run", "--impure"])
+        .arg(format!("{}#lock", src.display()))
+        .current_dir(&src)
         .env("XDG_CACHE_HOME", fixture.path("cache"))
         .output()
         .unwrap();
-    assert_exit(&output, 1);
-    let stderr = text(&output.stderr);
-    assert!(stderr.contains("could not refresh magit"), "{stderr}");
-    assert_eq!(
-        fs::read_to_string(lock_dir.join("flake.lock")).unwrap(),
-        pin
+    assert_exit(&locked, 0);
+    let read = |name: &str| fs::read_to_string(src.join("lock").join(name)).unwrap();
+    assert!(
+        read("archive.lock").contains(r#""version": "4.0.0""#),
+        "{}",
+        read("archive.lock")
     );
+
+    publish("4.1.0");
+    fixture.release_denote("4 1 0");
+    let next = git_script(ADVANCE_UPSTREAM, &foo);
+    let output = fixture
+        .upgrade()
+        .args(["foo", "--yes"])
+        .env("REAL_NIX", &real_nix)
+        .env("REAL_NIX_VERBS", "flake run")
+        .env("XDG_CACHE_HOME", fixture.path("cache"))
+        // Nix would otherwise answer with the archive-contents it read for
+        // the first lock.
+        .env("NIX_CONFIG", "tarball-ttl = 0")
+        .output()
+        .unwrap();
+    assert_exit(&output, 0);
+    assert!(read("flake.lock").contains(&next), "{}", read("flake.lock"));
+    let archive = read("archive.lock");
+    assert!(archive.contains(r#""version": "4.0.0""#), "{archive}");
+    assert!(!archive.contains("4.1.0"), "{archive}");
+}
+
+/// The real Nix, the first on PATH.
+fn real_nix() -> PathBuf {
+    std::env::split_paths(&std::env::var_os("PATH").unwrap())
+        .map(|dir| dir.join("nix"))
+        .find(|nix| nix.exists())
+        .unwrap()
 }
 
 /// This repo, which the real-Nix tests build.

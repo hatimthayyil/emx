@@ -10,13 +10,13 @@ use std::fs;
 use std::io;
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, ExitStatus, Stdio};
-use std::thread;
-use std::time::{Duration, Instant};
+use std::process::{Command, ExitStatus, Stdio};
+use std::time::Duration;
 
 use serde::Deserialize;
 
 use crate::daemon;
+use crate::process;
 use crate::profile::Profile;
 
 /// How long Emacs gets to reload. A reload that loads every package again
@@ -112,15 +112,17 @@ pub fn running_emacs(profile: &Profile) -> Result<(), ReloadError> {
         path: emacsclient.clone(),
         source,
     };
-    let mut child = Command::new(&emacsclient)
-        .arg(socket_arg)
-        .arg("--eval")
-        .arg(expression(&file, &profile.manifest())?)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .spawn()
-        .map_err(run_error)?;
-    let status = wait(&mut child, TIMEOUT)
+    let mut child = process::spawn_group(
+        Command::new(&emacsclient)
+            .arg(socket_arg)
+            .arg("--eval")
+            .arg(expression(&file, &profile.manifest())?)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null()),
+    )
+    .map_err(run_error)?;
+    // emacsclient's own `--timeout` doesn't cover an evaluation that never ends.
+    let status = process::wait(&mut child, TIMEOUT)
         .map_err(run_error)?
         .ok_or(ReloadError::TimedOut)?;
     if !status.success() {
@@ -222,24 +224,6 @@ fn elisp_string(text: &str) -> String {
     literal
 }
 
-/// Waits for `child` for up to `timeout`, then kills it. Returns its status,
-/// or `None` when it ran out of time. emacsclient's own `--timeout` doesn't
-/// cover an evaluation that never ends.
-fn wait(child: &mut Child, timeout: Duration) -> io::Result<Option<ExitStatus>> {
-    let deadline = Instant::now() + timeout;
-    loop {
-        if let Some(status) = child.try_wait()? {
-            return Ok(Some(status));
-        }
-        if Instant::now() >= deadline {
-            child.kill()?;
-            child.wait()?;
-            return Ok(None);
-        }
-        thread::sleep(Duration::from_millis(20));
-    }
-}
-
 fn remove(file: &Path) -> Result<(), ReloadError> {
     match fs::remove_file(file) {
         Err(err) if err.kind() != io::ErrorKind::NotFound => Err(ReloadError::RemoveReport {
@@ -325,22 +309,5 @@ mod tests {
             let report: Report = serde_json::from_str(&text).unwrap();
             assert_eq!(report.outcome, outcome);
         }
-    }
-
-    #[test]
-    fn stops_waiting_at_the_timeout() {
-        let mut child = Command::new("sleep").arg("10").spawn().unwrap();
-        let started = Instant::now();
-        assert_eq!(wait(&mut child, Duration::from_millis(100)).unwrap(), None);
-        assert!(started.elapsed() < Duration::from_secs(5));
-        // Killed and reaped.
-        assert!(child.try_wait().unwrap().is_some());
-    }
-
-    #[test]
-    fn returns_the_status_of_a_child_that_finishes() {
-        let mut child = Command::new("true").spawn().unwrap();
-        let status = wait(&mut child, Duration::from_secs(10)).unwrap().unwrap();
-        assert!(status.success());
     }
 }
