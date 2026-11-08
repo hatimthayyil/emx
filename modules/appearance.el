@@ -63,7 +63,6 @@
 
 ;; spacious-padding
 (use-package spacious-padding
-  :if (display-graphic-p)
   :hook (after-init . spacious-padding-mode)
   :bind ("<f8>" . spacious-padding-mode)
   :init
@@ -91,14 +90,16 @@
 
 ;; fontaine.el -- Font configurations
 (use-package fontaine
-  :if (display-graphic-p)
   :hook
   ;; Persist the latest font preset when closing/starting Emacs and
   ;; while switching between themes.
   ((after-init . fontaine-mode)
    (after-init . (lambda ()
                    ;; Set last preset or fall back to desired style from `fontaine-presets'.
-                   (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular)))))
+                   ;; Fontaine sets fonts for a daemon's later frames, but
+                   ;; can't in a terminal, where it only warns.
+                   (when (or (daemonp) (display-graphic-p))
+                     (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular))))))
   :bind (("C-c f" . fontaine-set-preset)
          ("C-c F" . fontaine-toggle-preset))
   :config
@@ -122,7 +123,6 @@
 ;;;; Show Font (preview fonts)
 ;; Read the manual: <https://protesilaos.com/emacs/show-font>
 (use-package show-font
-  :if (display-graphic-p)
   :commands (show-font-select-preview show-font-list)
   :config
   ;; These are the defaults, but I keep them here for easier access.

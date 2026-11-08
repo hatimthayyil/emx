@@ -84,28 +84,27 @@ turned on.")
 ;; icon fonts on Windows. This will increase memory usage.
 (setq inhibit-compacting-font-caches t)
 
- (unless (daemonp)
-   (unless noninteractive
+;; A daemon's frames come later, from emacsclient, and need the same settings.
+(unless noninteractive
 
-     ;; Without this, Emacs will try to resize itself to a specific column size
-     (setq frame-inhibit-implied-resize t)
+  ;; Without this, Emacs will try to resize itself to a specific column size
+  (setq frame-inhibit-implied-resize t)
 
-     ;; Reduce *Message* noise at startup. An empty scratch buffer (or the
-     ;; dashboard) is more than enough, and faster to display.
-     (setq inhibit-startup-screen t)
-     ;; Suppress the vanilla startup screen completely. We've disabled it with
-     ;; `inhibit-startup-screen', but it would still initialize anyway.
-     (advice-add #'display-startup-screen :override #'ignore)
+  ;; Reduce *Message* noise at startup. An empty scratch buffer (or the
+  ;; dashboard) is more than enough, and faster to display.
+  (setq inhibit-startup-screen t)
+  ;; Suppress the vanilla startup screen completely. We've disabled it with
+  ;; `inhibit-startup-screen', but it would still initialize anyway.
+  (advice-add #'display-startup-screen :override #'ignore)
 
-     ;; Ignore X resources
-     ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Resources.html
-     (setq inhibit-x-resources t)
+  ;; Ignore X resources
+  ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Resources.html
+  (setq inhibit-x-resources t)
 
-     ;; Shave seconds off startup time by starting the scratch buffer in
-     ;; `fundamental-mode'
-     (setq initial-major-mode 'fundamental-mode
-           initial-scratch-message nil)
-     ))
+  ;; Shave seconds off startup time by starting the scratch buffer in
+  ;; `fundamental-mode'
+  (setq initial-major-mode 'fundamental-mode
+        initial-scratch-message nil))
 
 ;;; UI Elements
 
