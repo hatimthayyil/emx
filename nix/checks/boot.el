@@ -703,6 +703,27 @@ such a call."
                      (file-relative-name file emx-source-dir))))
         (end-of-file nil)))))
 
+(defvar acm-mode)
+
+(defun emx-boot-check--acm-keys ()
+  "Signal an error unless acm's popup keys win over paredit's while it shows.
+In a Lisp buffer with paredit on, M-d and C-j must reach acm's commands while
+`acm-mode' is on, as it is exactly while the popup shows, and paredit's, RET
+included, while it is off.  Paredit must leave M-s to consult's search keys."
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (paredit-mode 1)
+    (pcase-dolist (`(,popup . ,keys)
+                   '((t ("M-d" . acm-doc-toggle) ("C-j" . acm-complete))
+                     (nil ("M-d" . paredit-forward-kill-word) ("C-j" . paredit-C-j)
+                          ("RET" . paredit-RET) ("M-s l" . consult-line))))
+      (setq-local acm-mode popup)
+      (pcase-dolist (`(,key . ,command) keys)
+        (let ((bound (key-binding (kbd key))))
+          (unless (eq bound command)
+            (error "With acm's popup %s, %s runs %S, not %S"
+                   (if popup "open" "closed") key bound command)))))))
+
 ;; Fail instead of compiling the module when it is missing.
 (setq vterm-always-compile-module nil)
 
@@ -739,7 +760,8 @@ such a call."
   (pcase-dolist (`(,what . ,check)
                  '(("claude-code-ide" . emx-boot-check--claude-code-ide)
                    ("Ef themes" . emx-boot-check--ef-rotation)
-                   ("tabs" . emx-boot-check--tabs)))
+                   ("tabs" . emx-boot-check--tabs)
+                   ("acm popup" . emx-boot-check--acm-keys)))
     (condition-case err
         (funcall check)
       (error (push (format "%s: %s" what (error-message-string err)) failures))))

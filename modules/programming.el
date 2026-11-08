@@ -46,6 +46,9 @@
 ;; https://github.com/manateelazycat/lsp-bridge
 ;;
 ;; Has a number of python deps
+(defvar emx-acm-emulation-alist nil
+  "Gives `acm-mode-map' precedence over minor modes' maps while acm's popup shows.")
+
 (use-package lsp-bridge
   :hook (prog-mode . lsp-bridge-mode)
   :init
@@ -62,8 +65,11 @@
                                         ; it makes acm try to run a missing program
   (setq acm-candidate-match-function 'regexp-quote) ; default, try
                                                     ; 'orderless-flex later
-
-  )
+  ;; `acm-mode' is on exactly while acm's completion popup shows. Listed in
+  ;; `emulation-mode-map-alists', its keys then outrank every minor mode's,
+  ;; paredit's M-d, C-j and RET included, as company's popup keys do.
+  (setq emx-acm-emulation-alist `((acm-mode . ,acm-mode-map)))
+  (add-to-list 'emulation-mode-map-alists 'emx-acm-emulation-alist))
 
 ;;; Lisp programming
 
@@ -93,11 +99,10 @@
 ;; see 'https://karthinks.com/software/a-consistent-structural-editing-interface/'
 (use-package paredit
   :hook ((emacs-lisp-mode lisp-mode scheme-mode clojure-mode) . paredit-mode)
-  ;; M-s stays the prefix for consult's search commands, and RET stays acm's
-  ;; key to accept a completion.
+  ;; M-s stays the prefix for consult's search commands. acm's popup takes its
+  ;; own keys over paredit's while it shows (see lsp-bridge above).
   :bind (:map paredit-mode-map
-         ("M-s" . nil)
-         ("RET" . nil)))
+         ("M-s" . nil)))
 
 ;; geiser
 ;;
