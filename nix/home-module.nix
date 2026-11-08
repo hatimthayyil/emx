@@ -18,7 +18,7 @@ let
 
   initDirectory = "${config.xdg.configHome}/emx";
 
-  elispString = s: "\"" + lib.replaceStrings [ "\\" "\"" ] [ "\\\\" "\\\"" ] s + "\"";
+  inherit (import ./init-files.nix { inherit lib; }) initFiles;
 
   # Runs NAME from emx's profile, which cli/src/profile.rs locates by the same
   # rule: $XDG_STATE_HOME when it is absolute, else ~/.local/state.
@@ -100,17 +100,8 @@ in
       startupNotify = true;
     };
 
-    xdg.configFile = {
-      "emx/early-init.el".text = ''
-        ;;; early-init.el --- Load emx's early-init.el from the emx repo  -*- lexical-binding: t -*-
-        (defvar emx-source-dir (file-name-as-directory ${elispString src})
-          "The emx repo that Emacs loads its configuration from.")
-        (load (expand-file-name "early-init.el" emx-source-dir) nil t)
-      '';
-      "emx/init.el".text = ''
-        ;;; init.el --- Load emx's init.el from the emx repo  -*- lexical-binding: t -*-
-        (load (expand-file-name "init.el" emx-source-dir) nil t)
-      '';
-    };
+    xdg.configFile = lib.mapAttrs'
+      (name: text: lib.nameValuePair "emx/${name}" { inherit text; })
+      (initFiles { inherit src; });
   };
 }

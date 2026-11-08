@@ -14,7 +14,7 @@ emx rollback             # back to the previous build
 
 When a package's source can't be reached and Nix has a cached copy, the package keeps its pin and everything else still moves. `emx upgrade` then names it and exits 1, so run it again later.
 
-Package upgrades and Elisp edits never touch your home-manager or NixOS config. It needs its `emx` input updated only when `cli/`, `Cargo.toml`, `Cargo.lock`, `nix/cli.nix` or `nix/home-module.nix` change, or for a new Emacs major version.
+Package upgrades and Elisp edits never touch your home-manager or NixOS config. It needs its `emx` input updated only when `cli/`, `Cargo.toml`, `Cargo.lock`, `nix/cli.nix`, `nix/home-module.nix` or `nix/init-files.nix` change, or for a new Emacs major version.
 
 ## Licensing
 
