@@ -23,7 +23,6 @@
 ;; Show the dict definition of word at point.
 (use-package dictionary
   :ensure nil 				; built-in
-  :bind ("M-#" . dictionary-lookup-definition)
   :config
   ;; Show dictionary definition on the left
   (add-to-list 'display-buffer-alist
