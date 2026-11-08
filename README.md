@@ -4,7 +4,7 @@ An Emacs distribution: Nix builds and pins Emacs and its packages, and the Elisp
 
 ## Opening Emacs
 
-With `services.emacs.enable`, the EMX menu entry opens a window on the Emacs daemon. While no daemon answers, including while one is still starting, the entry starts `emacs.service` and waits for it; only if systemd can't start it does the entry start a plain Emacs, which runs the server itself. Without `services.emacs.enable`, the entry starts a plain Emacs. The Emacs holding the server is the one emx reloads after a sync, upgrade or rollback. A second plain Emacs, started beside it, runs no server and isn't reloaded.
+With `services.emacs.enable`, the EMX menu entry opens a window on the Emacs daemon. While no daemon answers, including while one is still starting, the entry starts `emacs.service` and waits for it; only if systemd can't start it does the entry start a plain Emacs. The daemon then owns the server: a plain Emacs, however it starts, runs none, so one started while the daemon starts can't take the server from it. While the daemon is down, as after a failed start or `systemctl --user stop emacs`, no Emacs runs the server: `emacsclient` finds none, emx has no Emacs to reload, and after a failed start each EMX click opens another plain Emacs. Without `services.emacs.enable`, the entry starts a plain Emacs, and the first one running holds the server. The Emacs holding the server is the one emx reloads after a sync, upgrade or rollback. A plain Emacs without the server isn't reloaded.
 
 ## Upgrading packages
 

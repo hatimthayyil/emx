@@ -8,12 +8,16 @@ rec {
 
   # Maps each file's name to its text, for the emx repo at SRC. PRELUDE is
   # Elisp that early-init.el runs first, each form on a line of its own.
-  initFiles = { src, prelude ? "" }: {
+  # DAEMONOWNSSERVER says an Emacs daemon owns the server, so a plain Emacs
+  # starts none (`emx-daemon-owns-server', lisp/emx.el).
+  initFiles = { src, prelude ? "", daemonOwnsServer ? false }: {
     "early-init.el" = ''
       ;;; early-init.el --- Load emx's early-init.el from the emx repo  -*- lexical-binding: t -*-
       ${prelude}(defvar emx-source-dir (file-name-as-directory ${elispString src})
         "The emx repo that Emacs loads its configuration from.")
-      (load (expand-file-name "early-init.el" emx-source-dir) nil t)
+      ${lib.optionalString daemonOwnsServer ''
+        (setq emx-daemon-owns-server t)
+      ''}(load (expand-file-name "early-init.el" emx-source-dir) nil t)
     '';
     "init.el" = ''
       ;;; init.el --- Load emx's init.el from the emx repo  -*- lexical-binding: t -*-

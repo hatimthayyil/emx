@@ -149,6 +149,9 @@ in
 
     xdg.configFile = lib.mapAttrs'
       (name: text: lib.nameValuePair "emx/${name}" { inherit text; })
-      (initFiles { inherit src; });
+      (initFiles {
+        inherit src;
+        daemonOwnsServer = config.services.emacs.enable;
+      });
   };
 }

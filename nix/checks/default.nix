@@ -26,10 +26,12 @@ let
   # site-start before any early-init, so the checks start it with
   # --no-site-file and the early-init loads site-start after the recording
   # begins, just before emx's early-init as Emacs would. bootInitWith's
-  # PRELUDE runs after site-start.
-  bootInitWith = { prelude ? "" }:
+  # PRELUDE runs after site-start, and DAEMONOWNSSERVER writes the init files
+  # as the module does when services.emacs runs the daemon.
+  bootInitWith = { prelude ? "", daemonOwnsServer ? false }:
     pkgs.linkFarm "emx-boot-init" (pkgs.lib.mapAttrs pkgs.writeText (initFiles {
       src = "${src}";
+      inherit daemonOwnsServer;
       prelude = ''
         (load ${elispString "${src}/lisp/emx-warnings.el"} nil t)
         (load ${elispString "${./record-warnings.el}"} nil t)
@@ -39,9 +41,10 @@ let
 
   bootInit = bootInitWith { };
 
-  # The init directory of the daemon check's Emacs, which loads daemon.el
-  # first.
-  daemonCheckInit = bootInitWith {
+  # The init directory of the daemon check's Emacs processes, which load
+  # daemon.el first.
+  daemonCheckInit = daemonOwnsServer: bootInitWith {
+    inherit daemonOwnsServer;
     prelude = ''
       (load ${elispString "${./daemon.el}"} nil t)
     '';
@@ -125,8 +128,10 @@ in
     touch $out
   '';
 
-  # Starts a daemon as emacs.service does, through daemon.el, and fails unless
-  # it is set up as a standalone Emacs is.
+  # Starts a daemon as emacs.service does, through daemon.el, and fails if a
+  # plain Emacs started while it initialises takes the server from it, if it
+  # isn't set up as a standalone Emacs is, or if a plain Emacs started beside
+  # it, with no daemon owning the server, starts a server or warns.
   daemon = pkgs.runCommandLocal "emx-daemon-check"
     {
       nativeBuildInputs = [ fakePass pkgs.git ];
@@ -144,13 +149,16 @@ in
     emacs=${emacs}/bin/emacs
     emacsclient=${emacs}/bin/emacsclient
 
-    $emacs --fg-daemon --no-site-file --init-directory=${daemonCheckInit} \
-      > daemon.log 2>&1 &
+    EMX_CHECK_HOLD_DAEMON=1 $emacs --fg-daemon --no-site-file \
+      --init-directory=${daemonCheckInit true} > daemon.log 2>&1 &
     daemon=$!
+    $emacs --batch --no-site-file -u "" --init-directory=${daemonCheckInit true} \
+      -f emx-daemon-check-plain-during-init &
+    plain=$!
     tries=0
     until [ "$($emacsclient --eval '(daemonp)' 2>/dev/null)" = t ]; do
       if ! kill -0 $daemon 2>/dev/null; then
-        echo "the daemon exited as it started:"
+        echo "the daemon exited while a plain Emacs started during its init ran:"
         cat daemon.log
         exit 1
       fi
@@ -163,9 +171,42 @@ in
       sleep 0.2
     done
     $emacsclient --eval '(emx-daemon-check-setup)' > /dev/null
+    touch $EMX_CHECK_DIR/daemon-checked
     failed=
+    wait $plain || failed=1
+    $emacs --batch --no-site-file -u "" --init-directory=${daemonCheckInit false} \
+      -f emx-daemon-check-plain-beside || failed=1
     if [ -s $EMX_CHECK_DIR/setup-failures ]; then
       sed 's/^/The daemon: /' $EMX_CHECK_DIR/setup-failures
+      failed=1
+    fi
+    $emacsclient --eval '(kill-emacs)' > /dev/null
+    wait $daemon
+
+    # A daemon whose init files don't mark it the server's owner, as when
+    # emacs.service runs without the home module's daemon setting.
+    $emacs --fg-daemon --no-site-file \
+      --init-directory=${daemonCheckInit false} > own-server.log 2>&1 &
+    daemon=$!
+    tries=0
+    until [ "$($emacsclient --eval '(daemonp)' 2>/dev/null)" = t ]; do
+      if ! kill -0 $daemon 2>/dev/null; then
+        echo "a daemon not marked the server's owner exited during its start:"
+        cat own-server.log
+        exit 1
+      fi
+      tries=$((tries + 1))
+      if [ $tries -gt 900 ]; then
+        echo "a daemon not marked the server's owner didn't start within three minutes:"
+        cat own-server.log
+        exit 1
+      fi
+      sleep 0.2
+    done
+    $emacsclient --eval '(emx-daemon-check-own-server)' > /dev/null
+    if [ -s $EMX_CHECK_DIR/own-server-failures ]; then
+      sed "s/^/A daemon not marked the server's owner: /" \
+        $EMX_CHECK_DIR/own-server-failures
       failed=1
     fi
     $emacsclient --eval '(kill-emacs)' > /dev/null
@@ -178,8 +219,9 @@ in
   # closure holds emx's package set or Emacs, which only `emx sync` builds, if
   # it lacks the desktop entry's icon, if the daemon's service would fail
   # rather than skip before the first sync, if the EMX menu entry opens a
-  # standalone Emacs while the daemon runs or starts, or if the module allows
-  # socket activation.
+  # standalone Emacs while the daemon runs or starts, if the module allows
+  # socket activation, or if a plain Emacs isn't told to leave the server to
+  # the daemon exactly when services.emacs runs it.
   home-module =
     pkgs.runCommandLocal "emx-home-module-check"
       {
@@ -229,6 +271,11 @@ in
           echo "the module allows services.emacs.socketActivation, which would start the daemon on every sync"
           exit 1
         ''}
+        if ! grep -qxF '(setq emx-daemon-owns-server t)' ${home.activationPackage}/home-files/.config/emx/early-init.el ||
+            grep -qF emx-daemon-owns-server ${homeWithoutDaemon.activationPackage}/home-files/.config/emx/early-init.el; then
+          echo "a plain Emacs is not told to leave the server to the daemon exactly when services.emacs runs it"
+          exit 1
+        fi
         touch $out
       '';
 

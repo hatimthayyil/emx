@@ -375,9 +375,22 @@
 (use-package compat)
 
 ;; start server
-;; `emx-reload' loads this file again: restarting a running server would drop
-;; its clients, or prompt.
-(unless (bound-and-true-p server-process)
+;; A daemon starts its own server once init finishes, and starting one here
+;; as well makes it restart that server, dropping any client that connected in
+;; between.  A plain Emacs started while the daemon initialises sees no server
+;; yet, so one it started would leave the daemon none and make it exit; where
+;; a daemon owns the server, a plain Emacs starts none.  `emx-reload' loads
+;; this file again: restarting a running server would drop its clients, or
+;; prompt.  With another Emacs's server running, such as a daemon's beside a
+;; plain Emacs, `server-start' only warns.
+(defvar emx-daemon-owns-server nil
+  "Non-nil when an Emacs daemon owns the server, so a plain Emacs starts none.
+The init files that nix/home-module.nix writes set it when `services.emacs'
+runs the daemon.")
+
+(require 'server)
+(unless (or (daemonp) emx-daemon-owns-server server-process
+            (eq (server-running-p) t))
   (server-start))
 
 (provide 'emx-init)
