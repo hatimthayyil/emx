@@ -12,7 +12,8 @@
 ;; the home-manager module writes when services.emacs runs the daemon, has
 ;; booted.  That Emacs must leave the server to the daemon, which then starts
 ;; it.  The daemon must have set itself up as a standalone Emacs does, for
-;; the frames emacsclient opens later.  A plain Emacs started beside the
+;; the frames emacsclient opens later, and each Fontaine preset must give its
+;; faces only the font families emx names.  A plain Emacs started beside the
 ;; running daemon, with no daemon owning the server, must start no server and
 ;; give no warning.  A second daemon, booted once the first has gone and with
 ;; init files that don't mark a daemon as the server's owner, must leave the
@@ -94,6 +95,34 @@ server running, and must neither start one nor warn."
   (emx-daemon-check--exit "A plain Emacs started beside the daemon"
                           (emx-daemon-check--server-failures)))
 
+(defun emx-daemon-check--font-failures ()
+  "Return where a Fontaine preset leaves a face to a family emx doesn't name.
+Under each preset, every family Fontaine gives a face must be one of those
+emx's configuration names, listed one per line in the file
+$EMX_FONT_FAMILIES, and the default and fixed-pitch faces must get one, so
+none falls back to Fontaine's or Emacs's generic families."
+  (let ((named (with-temp-buffer
+                 (insert-file-contents (getenv "EMX_FONT_FAMILIES"))
+                 (split-string (buffer-string) "\n" t)))
+        (current fontaine-current-preset)
+        failures)
+    (dolist (preset (delq t (mapcar #'car fontaine-presets)))
+      (fontaine-set-preset preset)
+      (dolist (face fontaine-faces)
+        (let ((family (plist-get (cdar (cadr (assq 'fontaine (get face 'theme-face))))
+                                 :family)))
+          (cond
+           ((and family (not (member family named)))
+            (push (format "under the %s preset, %s's family is %s, which emx doesn't name"
+                          preset face family)
+                  failures))
+           ((and (not family) (memq face '(default fixed-pitch fixed-pitch-serif)))
+            (push (format "under the %s preset, Fontaine gives %s no family"
+                          preset face)
+                  failures))))))
+    (fontaine-set-preset current)
+    (nreverse failures)))
+
 (defun emx-daemon-check-setup ()
   "Write what the daemon didn't set up to the file setup-failures.
 Its frames come later, from emacsclient, so what a standalone Emacs sets up
@@ -118,7 +147,8 @@ for its first frame must already be in place."
         (push what failures)))
     (write-region (mapconcat (lambda (failure) (concat failure "\n"))
                              (append (emx-boot-check-boot-failures)
-                                     (nreverse failures)))
+                                     (nreverse failures)
+                                     (emx-daemon-check--font-failures)))
                   nil (emx-daemon-check--file "setup-failures"))
     t))
 

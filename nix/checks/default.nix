@@ -160,10 +160,13 @@ in
 
   # Starts a daemon as emacs.service does, through daemon.el, and fails if a
   # plain Emacs started while it initialises takes the server from it, if it
-  # isn't set up as a standalone Emacs is, or if a plain Emacs started beside
-  # it, with no daemon owning the server, starts a server or warns.
+  # isn't set up as a standalone Emacs is, if a Fontaine preset gives a face a
+  # font family emx's configuration doesn't name, or none to the default and
+  # fixed-pitch faces, or if a plain Emacs started beside it, with no daemon
+  # owning the server, starts a server or warns.
   daemon = pkgs.runCommandLocal "emx-daemon-check"
     {
+      EMX_FONT_FAMILIES = configFontFamilies;
       nativeBuildInputs = [ fakePass pkgs.git ];
     } ''
     export HOME=$TMPDIR

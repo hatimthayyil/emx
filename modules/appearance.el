@@ -113,11 +113,15 @@ would otherwise drop the preset's attributes."
          ("C-c F" . fontaine-toggle-preset))
   :config
   (add-hook 'enable-theme-functions #'emx-fontaine-reapply-preset)
+  ;; Every preset falls back to t, which Fontaine uses instead of its generic
+  ;; Monospace and Sans families.  Its fixed-pitch families keep monospaced
+  ;; text, such as Org tables and code, monospaced under the quran preset too,
+  ;; whose Amiri isn't.  emx names no proportional family, so variable-pitch
+  ;; keeps Emacs's own.
   (setq fontaine-presets
         '((small
            :default-height 100)
           (regular
-           :default-family "Iosevka Comfy Motion"
            :default-height 110
            :bold-weight extrabold)
           (medium
@@ -128,7 +132,11 @@ would otherwise drop the preset's attributes."
            :default-height 150)
           (quran
            :default-family "Amiri Quran Colored"
-           :default-height 150))))
+           :default-height 150)
+          (t
+           :default-family "Iosevka Comfy Motion"
+           :fixed-pitch-family "Iosevka Comfy Motion"
+           :fixed-pitch-serif-family "Iosevka Comfy Motion"))))
 
 ;;;; Show Font (preview fonts)
 ;; Read the manual: <https://protesilaos.com/emacs/show-font>
