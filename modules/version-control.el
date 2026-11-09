@@ -37,7 +37,7 @@
   (setq ediff-keep-variants nil)
   (setq ediff-make-buffers-readonly-at-startup nil)
   (setq ediff-merge-revisions-with-ancestor t)
-  (setq ediff-show-clashes-only t))
+  (setopt ediff-show-clashes-only t))
 
 ;; diff-mode
 ;;
