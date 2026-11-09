@@ -57,7 +57,7 @@ The DWIM behaviour of this command is as follows:
    (t
     (keyboard-quit))))
 
-(define-key global-map (kbd "C-g") #'emx/keyboard-quit-dwim)
+(bind-key "C-g" #'emx/keyboard-quit-dwim)
 
 
 
