@@ -1,6 +1,6 @@
 [package]
 name = "emx"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "Builds emx's Emacs and its Elisp packages into emx's Nix profile"
 # Linking dix (GPL-3.0-only) makes the compiled binary GPL-3.0-only.
