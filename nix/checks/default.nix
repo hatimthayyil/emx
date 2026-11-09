@@ -126,6 +126,11 @@ in
         touch $out
       '';
 
+  # Every package's pin satisfies the versions the packages that need it ask
+  # for, so a named `emx upgrade`, which keeps the ELPA pins, can't leave a
+  # moved package needing a newer ELPA release.
+  dependencies = emacs.depsCheck;
+
   # initialLibraries must list the libraries of the Emacs being built.
   builtin-libraries = pkgs.runCommandLocal "emx-builtin-libraries-check" { } ''
     if ! diff -u ${../emacs/builtin-libraries.txt} ${emacs.builtinLibraryList}; then
