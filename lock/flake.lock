@@ -67,15 +67,16 @@
     "async": {
       "flake": false,
       "locked": {
-        "lastModified": 1451290400,
-        "narHash": "sha256-5nTkAnB6SOsFg9aXOxI5oON9RBByVO3Lq/vrmqHVgw4=",
+        "lastModified": 1792942738,
+        "narHash": "sha256-222eh5iuKviyCb3ZSDeRlDsnlQKccCaWpX4k8wrmyKo=",
         "owner": "jwiegley",
         "repo": "emacs-async",
-        "rev": "1794ea4955c6eeb62471b232a2d4fd6a6925a2c9",
+        "rev": "93be69563f6f25ee48977878110de3912b1d6d72",
         "type": "github"
       },
       "original": {
         "owner": "jwiegley",
+        "ref": "master",
         "repo": "emacs-async",
         "type": "github"
       }

@@ -28,6 +28,7 @@
     async = {
       flake = false;
       owner = "jwiegley";
+      ref = "master";
       repo = "emacs-async";
       type = "github";
     };

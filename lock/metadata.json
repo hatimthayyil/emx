@@ -49,14 +49,17 @@
   "async": {
     "author": "John Wiegley <jwiegley@gmail.com>",
     "meta": {
-      "description": "Asynchronous processing in Emacs"
+      "description": "Asynchronous processing in Emacs",
+      "homepage": "https://github.com/jwiegley/emacs-async",
+      "maintainers": [
+        "Thierry Volpiatto <thievol@posteo.net>"
+      ]
     },
-    "narHash": "sha256-5nTkAnB6SOsFg9aXOxI5oON9RBByVO3Lq/vrmqHVgw4=",
+    "narHash": "sha256-222eh5iuKviyCb3ZSDeRlDsnlQKccCaWpX4k8wrmyKo=",
     "packageRequires": {
-      "cl-lib": "0.5",
-      "emacs": "24"
+      "emacs": "24.4"
     },
-    "version": "1.6"
+    "version": "2.0"
   },
   "auctex": {
     "author": null,
