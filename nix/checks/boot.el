@@ -668,40 +668,115 @@ themes that <f5> rotates."
       (error "M-<f5> (%s) enabled %s, not an Ef theme"
              command (car custom-enabled-themes)))))
 
-(defun emx-boot-check--load-time-calls (function form)
-  "Return how many times the macroexpanded FORM calls FUNCTION in no set buffer.
-Code `eval-after-load' defers, such as a `use-package' :config, runs in
-whichever buffer is current when its feature loads, so it counts.  A call in
-any other function, such as a hook's, or in another buffer's body does not."
+(defun emx-boot-check--buffer-local-p (variable)
+  "Return non-nil if setting VARIABLE sets only the current buffer's value."
+  (with-temp-buffer
+    (and (symbolp variable) (boundp variable) (local-variable-if-set-p variable))))
+
+(defun emx-boot-check--local-mode-p (function)
+  "Return non-nil if FUNCTION is a minor mode that sets only one buffer's value.
+A global mode sets its variable's default value, even when that variable is
+buffer-local wherever it is set, as `save-place-mode''s is."
+  (and (memq function minor-mode-list)
+       (not (eq (get function 'custom-set) #'custom-set-minor-mode))
+       (emx-boot-check--buffer-local-p function)))
+
+(defun emx-boot-check--load-time-locals (form)
+  "Return what the macroexpanded FORM sets in whichever buffer is current.
+That is each variable it sets with `setq' or `setq-local', or minor mode it
+calls, that is buffer-local wherever it is set.  Code `eval-after-load' defers,
+such as a `use-package' :config, runs in whichever buffer is current when its
+feature loads, so it counts.  A function's body, such as a hook's, another
+buffer's body, and the variables a `let' binds do not."
   (pcase form
     (`(eval-after-load ,_ ,(or `(function (lambda ,_ . ,body)) `(quote ,body)))
-     (emx-boot-check--load-time-calls function body))
-    ((or (pred atom) `(,(or 'quote 'function 'save-current-buffer) . ,_)) 0)
-    (_ (let ((count (if (eq (car form) function) 1 0)))
+     (emx-boot-check--load-time-locals body))
+    ((or (pred atom) `(,(or 'quote 'function 'save-current-buffer) . ,_)) nil)
+    (`(,(or 'let 'let*) ,bindings . ,body)
+     (nconc (mapcan (lambda (binding)
+                      (and (consp binding)
+                           (emx-boot-check--load-time-locals (cdr binding))))
+                    bindings)
+            (emx-boot-check--load-time-locals body)))
+    (`(cond . ,clauses) (mapcan #'emx-boot-check--load-time-locals clauses))
+    ;; `setq-local'
+    (`(setq ,variable (prog1 ,value (make-local-variable (quote ,variable))))
+     (cons variable (emx-boot-check--load-time-locals value)))
+    (`(setq . ,pairs)
+     (let ((found '()))
+       (while pairs
+         (setq found (nconc found
+                            (and (emx-boot-check--buffer-local-p (car pairs))
+                                 (list (car pairs)))
+                            (emx-boot-check--load-time-locals (cadr pairs)))
+               pairs (cddr pairs)))
+       found))
+    (_ (let ((found (and (emx-boot-check--local-mode-p (car form))
+                         (list (car form)))))
          (while (consp form)
-           (setq count (+ count (emx-boot-check--load-time-calls function (car form)))
+           (setq found (nconc found (emx-boot-check--load-time-locals (car form)))
                  form (cdr form)))
-         count))))
+         found))))
 
-(defun emx-boot-check--tabs ()
-  "Signal an error unless emx makes spaces the default, and only the default.
-No emx file may call `indent-tabs-mode' as it loads: that sets tabs in
-whichever buffer loads the file, such as a Makefile's when a reload runs from
-it.  Startup resets the buffer init loads in, so only reading the files shows
-such a call."
-  (when (default-value 'indent-tabs-mode)
-    (error "Tabs are the default"))
-  (dolist (file (emx-boot-check--config-files))
-    (with-temp-buffer
-      (insert-file-contents file)
-      (condition-case nil
-          (while t
-            (when (> (emx-boot-check--load-time-calls
-                      'indent-tabs-mode (macroexpand-all (read (current-buffer))))
-                     0)
-              (error "%s calls indent-tabs-mode as it loads"
-                     (file-relative-name file emx-source-dir))))
-        (end-of-file nil)))))
+(defun emx-boot-check--local-settings (&optional files)
+  "Return a failure for each buffer-local setting FILES make as they load.
+FILES are emx's files by default.  Such a setting takes effect only in
+whichever buffer is current then, never where it was meant to: Emacs's own
+default stays.  It runs once every package has loaded, so each package's
+buffer-local variables are known.  Spaces must also be the default."
+  (let ((failures (and (default-value 'indent-tabs-mode) (list "tabs are the default"))))
+    (dolist (file (or files (emx-boot-check--config-files)))
+      (with-temp-buffer
+        (insert-file-contents file)
+        (condition-case nil
+            (while t
+              (dolist (setting (emx-boot-check--load-time-locals
+                                (macroexpand-all (read (current-buffer)))))
+                (push (format "%s sets %s in whichever buffer loads it"
+                              (file-relative-name file emx-source-dir) setting)
+                      failures)))
+          (end-of-file nil))))
+    (nreverse failures)))
+
+(defconst emx-boot-check-local-cases
+  '(("sound"
+     ((defvar-local emx-boot-check-local nil)
+      (setq-default indent-tabs-mode nil)
+      (let ((indent-tabs-mode nil) (emx-boot-check-local t))
+        (ignore indent-tabs-mode emx-boot-check-local))
+      (add-hook 'makefile-mode-hook (lambda () (setq indent-tabs-mode t)))
+      (with-temp-buffer (setq-local fill-column 60) (visual-line-mode 1))))
+    ("unsound"
+     ((with-eval-after-load 'simple (setq indent-tabs-mode nil))
+      (setq-local emx-boot-check-local t)
+      (setq fill-column 60)
+      (visual-line-mode 1))
+     indent-tabs-mode emx-boot-check-local fill-column visual-line-mode))
+  "Files of settings, as (NAME FORMS . SETTINGS), for the load-time check.
+SETTINGS are what the check must report FORMS setting, in order.")
+
+(defun emx-boot-check--local-cases ()
+  "Return a failure for each case in `emx-boot-check-local-cases' that fails."
+  (let ((dir (make-temp-file "emx-boot-check-locals" t))
+        (failures '()))
+    (unwind-protect
+        (pcase-dolist (`(,name ,forms . ,settings) emx-boot-check-local-cases)
+          (let ((file (expand-file-name (concat name ".el") dir)))
+            (with-temp-file file
+              (dolist (form forms)
+                (prin1 form (current-buffer))
+                (insert "\n")))
+            (let* ((emx-source-dir dir)
+                   (found (emx-boot-check--local-settings (list file)))
+                   (expected (mapcar (lambda (setting)
+                                       (format "%s.el sets %s in whichever buffer loads it"
+                                               name setting))
+                                     settings)))
+              (unless (equal found expected)
+                (push (format "load-time case %s: found %S, not %S" name found expected)
+                      failures)))))
+      (delete-directory dir t))
+    failures))
 
 (defvar acm-mode)
 
@@ -745,6 +820,10 @@ included, while it is off.  Paredit must leave M-s to consult's search keys."
       (setq failures (nconc (emx-boot-check--bindings) (emx-boot-check--binding-cases)
                             failures))
     (error (push (format "key bindings: %s" (error-message-string err)) failures)))
+  (condition-case err
+      (setq failures (nconc (emx-boot-check--local-settings) (emx-boot-check--local-cases)
+                            failures))
+    (error (push (format "load-time settings: %s" (error-message-string err)) failures)))
   (dolist (module '("vterm-module" "jinx-mod"))
     (unless (locate-file module load-path (list module-file-suffix))
       (push (format "%s: native module missing" module) failures)))
@@ -760,7 +839,6 @@ included, while it is off.  Paredit must leave M-s to consult's search keys."
   (pcase-dolist (`(,what . ,check)
                  '(("claude-code-ide" . emx-boot-check--claude-code-ide)
                    ("Ef themes" . emx-boot-check--ef-rotation)
-                   ("tabs" . emx-boot-check--tabs)
                    ("acm popup" . emx-boot-check--acm-keys)))
     (condition-case err
         (funcall check)
